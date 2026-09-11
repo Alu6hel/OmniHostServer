@@ -1,0 +1,63 @@
+:root {
+    --bg: #090B10;
+    --surf: #111622;
+    --card: #182030;
+    --border: #242C40;
+    --accent: #10B981;
+    --blue: #3B82F6;
+    --purple: #8B5CF6;
+    --text: #F8FAFC;
+    --muted: #94A3B8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+body { background: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+.app-container { max-width: 1040px; margin: 0 auto; }
+
+.navbar { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: var(--surf); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 24px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand .icon { font-size: 1.8rem; }
+.brand h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; color: var(--accent); }
+.brand .tagline { font-size: 0.75rem; color: var(--muted); }
+.status-pill { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 700; background: var(--card); padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); }
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot.green { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.card { background: var(--surf); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.card-title { font-size: 0.8rem; font-weight: 800; color: var(--muted); }
+.badge { font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+.badge.green { background: rgba(16, 185, 129, 0.15); color: var(--accent); border: 1px solid var(--accent); }
+.badge.purple { background: rgba(139, 92, 246, 0.15); color: var(--purple); border: 1px solid var(--purple); }
+.badge.blue { background: rgba(59, 130, 246, 0.15); color: var(--blue); border: 1px solid var(--blue); }
+
+.url-display { font-family: monospace; font-size: 0.95rem; font-weight: bold; background: var(--bg); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 14px; word-break: break-all; }
+.card-actions { display: flex; align-items: center; gap: 8px; }
+.btn { padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; border: none; cursor: pointer; text-decoration: none; color: #fff; background: var(--card); }
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+.btn-outline { border: 1px solid var(--border); background: transparent; color: var(--text); }
+.btn-outline:hover { background: var(--card); }
+.btn-blue { background: var(--blue); }
+.mount-hint, .shield-hint { font-size: 0.75rem; color: var(--muted); margin-left: auto; }
+
+.metrics-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; background: var(--surf); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 24px; }
+.metric { display: flex; flex-direction: column; }
+.metric-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; }
+.metric-val { font-size: 1.15rem; font-weight: 800; }
+.metric-val.accent { color: var(--accent); }
+
+.content-section { margin-bottom: 24px; }
+.section-card { background: var(--surf); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+.section-card h2 { font-size: 1.1rem; margin-bottom: 6px; }
+.section-desc { font-size: 0.85rem; color: var(--muted); margin-bottom: 16px; }
+
+.site-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+.chip { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.chip.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+.log-terminal { background: #06080C; border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-family: monospace; font-size: 0.8rem; max-height: 200px; overflow-y: auto; }
+.log-row { padding: 2px 0; color: #CBD5E1; }
+.log-row .time { color: var(--accent); margin-right: 8px; }
+
+footer { text-align: center; color: var(--muted); font-size: 0.75rem; margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--border); }

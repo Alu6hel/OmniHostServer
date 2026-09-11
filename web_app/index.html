@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniHost Pro // Cloud Node Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#090B10">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navbar -->
+        <header class="navbar">
+            <div class="brand">
+                <span class="icon">🌐</span>
+                <div>
+                    <h1>OMNIHOST PRO</h1>
+                    <span class="tagline">Mobile & Web Node Controller</span>
+                </div>
+            </div>
+            <div class="status-pill" id="server-status">
+                <span class="dot green"></span> ONLINE (:8090)
+            </div>
+        </header>
+
+        <!-- Quick Access URL Cards -->
+        <section class="cards-grid">
+            <div class="card card-web">
+                <div class="card-header">
+                    <span class="card-title">LOCAL WEBSITE</span>
+                    <span class="badge green">HTTP :8090</span>
+                </div>
+                <div class="url-display" id="web-url">http://localhost:8090</div>
+                <div class="card-actions">
+                    <a href="http://localhost:8090" target="_blank" class="btn btn-sm">Open</a>
+                    <button class="btn btn-sm btn-outline" onclick="copyText('web-url')">Copy</button>
+                </div>
+            </div>
+
+            <div class="card card-ftp">
+                <div class="card-header">
+                    <span class="card-title">WIFI FTP SERVER</span>
+                    <span class="badge purple">RFC 959 :2121</span>
+                </div>
+                <div class="url-display" id="ftp-url">ftp://192.168.x.x:2121</div>
+                <div class="card-actions">
+                    <button class="btn btn-sm btn-outline" onclick="copyText('ftp-url')">Copy FTP</button>
+                    <span class="mount-hint">Mount: sites/default</span>
+                </div>
+            </div>
+
+            <div class="card card-tunnel">
+                <div class="card-header">
+                    <span class="card-title">CLOUDFLARE PUBLIC HTTPS</span>
+                    <span class="badge blue">🛡️ IP MASKED</span>
+                </div>
+                <div class="url-display" id="tunnel-url">https://...trycloudflare.com</div>
+                <div class="card-actions">
+                    <button class="btn btn-sm btn-blue" onclick="copyText('tunnel-url')">Copy HTTPS</button>
+                    <span class="shield-hint">Zero Port Forwarding</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Metrics Bar -->
+        <section class="metrics-bar">
+            <div class="metric">
+                <span class="metric-label">Queries / Sec</span>
+                <span class="metric-val" id="metric-qps">0.0 req/s</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Total Requests</span>
+                <span class="metric-val" id="metric-hits">0</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Bandwidth Served</span>
+                <span class="metric-val" id="metric-bytes">0 KB</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Active Site</span>
+                <span class="metric-val accent" id="metric-site">default</span>
+            </div>
+        </section>
+
+        <!-- Site Switcher & Management -->
+        <section class="content-section">
+            <div class="section-card">
+                <h2>Modular Site Switcher</h2>
+                <p class="section-desc">Switch between dropped-in websites with zero downtime:</p>
+                <div class="site-chips" id="site-chips">
+                    <button class="chip active" onclick="switchSite('default')">default ★</button>
+                    <button class="chip" onclick="switchSite('portfolio')">portfolio</button>
+                    <button class="chip" onclick="switchSite('business')">business</button>
+                    <button class="chip" onclick="switchSite('blog')">blog</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Logs Section -->
+        <section class="content-section">
+            <div class="section-card">
+                <h2>Live Telemetry Feed</h2>
+                <div class="log-terminal" id="log-feed">
+                    <div class="log-row"><span class="time">[INIT]</span> OmniHost Pro Web Dashboard Connected.</div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            OmniHost Pro &bull; Cloudflare Encrypted Outbound Tunnel &bull; WiFi FTP Engine &bull; Alumungandr Master Charter &copy; 2026
+        </footer>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alex River // Systems Architect & Developer</title>
+    <style>
+        :root { --bg: #090B10; --card: #131722; --border: #242C40; --accent: #10B981; --text: #F8FAFC; --muted: #94A3B8; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text); line-height: 1.6; padding: 0 20px; }
+        .container { max-width: 900px; margin: 60px auto; }
+        header { margin-bottom: 60px; }
+        .badge { display: inline-block; padding: 4px 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 16px; }
+        h1 { font-size: 3rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
+        p.sub { font-size: 1.25rem; color: var(--muted); max-width: 600px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; transition: transform 0.2s, border-color 0.2s; }
+        .card:hover { transform: translateY(-3px); border-color: var(--accent); }
+        .card h3 { font-size: 1.2rem; margin-bottom: 8px; color: var(--text); }
+        .card p { color: var(--muted); font-size: 0.95rem; margin-bottom: 16px; }
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag { background: #1B2030; color: #CBD5E1; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; }
+        footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; color: var(--muted); font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="badge">HOSTED ON OMNIHOST PRO</div>
+            <h1>Alex River</h1>
+            <p class="sub">Crafting high-throughput distributed systems, offline-first applications, and reactive interfaces.</p>
+        </header>
+        <section>
+            <h2 style="font-size: 1.5rem; margin-bottom: 20px;">Featured Deployments</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Kybalion Data Engine</h3>
+                    <p>Sub-millisecond persistent transaction ledger built for low-memory environments.</p>
+                    <div class="tags"><span class="tag">Python 3.11</span><span class="tag">WAL Mode</span><span class="tag">Zero-Leak</span></div>
+                </div>
+                <div class="card">
+                    <h3>Aura-FM Synthesizer</h3>
+                    <p>WebAudio 16-step algorithmic sequencer with harmonic FM feedback loops.</p>
+                    <div class="tags"><span class="tag">WebAudio</span><span class="tag">Canvas</span><span class="tag">PWA</span></div>
+                </div>
+                <div class="card">
+                    <h3>OmniHost Cloud Node</h3>
+                    <p>Encrypted tunneling and wireless FTP server serving high-concurrency traffic.</p>
+                    <div class="tags"><span class="tag">RFC 959</span><span class="tag">Cloudflare Tunnel</span><span class="tag">IPv6</span></div>
+                </div>
+            </div>
+        </section>
+        <footer>
+            <p>&copy; 2026 Alex River. Served with pride via OmniHost Pro &bull; Hiding real IP via Cloudflare Anycast.</p>
+        </footer>
+    </div>
+</body>
+</html>

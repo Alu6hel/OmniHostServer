@@ -1,0 +1,55 @@
+{
+  "product_name": "OmniHost Pro",
+  "version": "1.0.0",
+  "release_date": "2026-09-11",
+  "founder": "David Anthony Jones ('Alu')",
+  "license": "Proprietary Commercial",
+  "description": "All-in-One Modular Website & High-Speed WiFi FTP Cloud Server with Cloudflare Encrypted Outbound Tunneling.",
+  "binaries": {
+    "windows_x64": "OmniHostServer.exe",
+    "android_apk": "omnihost.apk",
+    "web_pwa": "web_app/index.html"
+  },
+  "features": [
+    "Modular Multi-Site Engine with 4 pre-bundled templates (portfolio, business, blog, default)",
+    "RFC 959 WiFi FTP Server with custom directory mounting and website root sync",
+    "Cloudflare Encrypted Outbound Tunnel for 100% home IP masking and zero router port forwarding",
+    "Step-by-step DNS Wizard for Namecheap, GoDaddy, Porkbun, and Squarespace",
+    "Fluent Dark Desktop GUI with real-time QPS & visitor telemetry",
+    "Mobile-optimized Progressive Web App (PWA) controller"
+  ],
+  "files": {
+    "OmniHostServer.exe": {
+      "sha256": "ef5617600451a9b95523d419ec7d03c6d66a53d41d500cf5b0a1097249f83a46",
+      "size_bytes": 12384719
+    },
+    "omnihost.apk": {
+      "sha256": "11e6831b487f8475d4532c2eda75c8cab052b14c744542f9e21cfe2aa6108a93",
+      "size_bytes": 69508
+    },
+    "run_omnihost_server.py": {
+      "sha256": "192bde14d42799a3b83e7bf153b12b072a060a211f8a9626041973f263a82510",
+      "size_bytes": 2638
+    },
+    "COMMERCIAL_PITCH.md": {
+      "sha256": "808757a6950f45bc1dd4073453c0196561e0084f1d910afc8d667b67ccbe4020",
+      "size_bytes": 4333
+    },
+    "USER_MANUAL.md": {
+      "sha256": "c8922696453a1d68547caa2ea1bc1356b71d5c1a3b69bb243b3206e22a488f72",
+      "size_bytes": 4302
+    },
+    "PRICING_TIERS.md": {
+      "sha256": "8518b07faa387b5e73eaa2639aed1a9668f9812f883b9966f1c1b7592608d758",
+      "size_bytes": 1825
+    },
+    "QUICK_START.md": {
+      "sha256": "f76e167eb994f5074a33fbaf39c92b813e93317f2eb39703c9fb2a7391a4fe11",
+      "size_bytes": 483
+    },
+    "alu.toml": {
+      "sha256": "d21ac3b4524bf8bc079dc200e7816499c71f1deeaa59408da4f63c0bdf848e3c",
+      "size_bytes": 437
+    }
+  }
+}
