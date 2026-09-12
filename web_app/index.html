@@ -77,6 +77,14 @@
             <button class="theme-btn" onclick="setTheme('theme-slate')">Slate</button>
         </div>
 
+        <div class="drawer-section-title" style="margin-top: 14px;">Gauge Layout Shape</div>
+        <div class="theme-selector-grid" style="grid-template-columns: 1fr 1fr;">
+            <button class="theme-btn shape-btn active" data-shape="round" onclick="setPowerShape('round')">⚪ Round Dial</button>
+            <button class="theme-btn shape-btn" data-shape="square" onclick="setPowerShape('square')">⬛ Cyber Square</button>
+            <button class="theme-btn shape-btn" data-shape="hexagon" onclick="setPowerShape('hexagon')">⬡ Hex Shield</button>
+            <button class="theme-btn shape-btn" data-shape="capsule" onclick="setPowerShape('capsule')">💊 Capsule</button>
+        </div>
+
         <div class="drawer-footer">
             <div class="pro-badge">
                 <span>👑</span>
@@ -119,17 +127,45 @@
                     <span class="status-text" id="global-status-text">Serving :8090 &amp; :2121</span>
                 </div>
 
-                <!-- Big Circular Power Toggle Button (Image 2 Centerpiece) -->
-                <div class="power-toggle-container">
+                <!-- Shape Switcher Pills (Round, Square, Hexagon, Capsule) -->
+                <div class="shape-selector-container">
+                    <span class="shape-selector-label">SHAPE:</span>
+                    <div class="shape-pills">
+                        <button class="shape-btn active" id="shape-btn-round" onclick="setPowerShape('round')" title="Classic Round Dial">⚪ Round</button>
+                        <button class="shape-btn" id="shape-btn-square" onclick="setPowerShape('square')" title="Cyber Squircle">⬛ Square</button>
+                        <button class="shape-btn" id="shape-btn-hexagon" onclick="setPowerShape('hexagon')" title="Hex Shield">⬡ Hex</button>
+                        <button class="shape-btn" id="shape-btn-capsule" onclick="setPowerShape('capsule')" title="Reactor Capsule">💊 Pill</button>
+                    </div>
+                </div>
+
+                <!-- Power Toggle Button with Dynamic Shape & Live Black Hole -->
+                <div class="power-toggle-container shape-round" onclick="toggleMasterPower()">
+                    <!-- Live Black Hole Relativistic Accretion Canvas -->
+                    <canvas id="blackhole-canvas" class="blackhole-canvas" width="260" height="260"></canvas>
+
                     <div class="radial-ring" id="radial-ring">
-                        <!-- 36 Radial Hashes dynamically rendered via CSS/SVG -->
+                        <!-- Dynamic Shape Tracks rendered via CSS/SVG -->
                         <svg class="radial-svg" viewBox="0 0 260 260">
-                            <circle cx="130" cy="130" r="115" class="radial-base" />
-                            <circle cx="130" cy="130" r="115" class="radial-glow-track" id="radial-track" />
+                            <!-- Round Track -->
+                            <circle cx="130" cy="130" r="115" class="radial-base round-track" />
+                            <circle cx="130" cy="130" r="115" class="radial-glow-track round-track" id="radial-track" />
+
+                            <!-- Square / Squircle Track -->
+                            <rect x="18" y="18" width="224" height="224" rx="36" class="radial-base square-track" />
+                            <rect x="18" y="18" width="224" height="224" rx="36" class="radial-glow-track square-track" />
+
+                            <!-- Hexagon Track -->
+                            <polygon points="130,16 230,73 230,187 130,244 30,187 30,73" class="radial-base hex-track" />
+                            <polygon points="130,16 230,73 230,187 130,244 30,187 30,73" class="radial-glow-track hex-track" />
+
+                            <!-- Capsule / Pill Track -->
+                            <rect x="16" y="32" width="228" height="196" rx="98" class="radial-base capsule-track" />
+                            <rect x="16" y="32" width="228" height="196" rx="98" class="radial-glow-track capsule-track" />
                         </svg>
                     </div>
 
-                    <button class="power-btn active" id="main-power-btn" onclick="toggleMasterPower()">
+                    <button class="power-btn active" id="main-power-btn" onclick="toggleMasterPower(); event.stopPropagation();" title="Tap to Toggle Server Power">
+                        <div class="power-singularity-core"></div>
                         <svg class="power-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                             <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                             <line x1="12" y1="2" x2="12" y2="12"></line>

@@ -33,6 +33,8 @@ const hasNativeBridge = typeof window.OmniHostBridge !== 'undefined';
 function initApp() {
     setupDeviceState();
     initLiveThemeCanvas();
+    initPowerShape();
+    initBlackHole();
     pollTelemetry();
     pollTunnelStatus();
     setInterval(pollTelemetry, 2000);
@@ -224,6 +226,9 @@ function toggleMasterPower() {
     isServersRunning = !isServersRunning;
     if (hasNativeBridge && window.OmniHostBridge.toggleAllServers) {
         window.OmniHostBridge.toggleAllServers(isServersRunning);
+    }
+    if (typeof triggerBlackHoleWave === 'function') {
+        triggerBlackHoleWave();
     }
     updatePowerButtonUI();
     updateUrls();
@@ -587,6 +592,331 @@ function showToast(message) {
     }, 2800);
 }
 
+// ==============================================================================
+// LIVE BLACK HOLE ENGINE (Relativistic Accretion, Photon Ring & Gravitational Lensing)
+// Responsive to Themes & State (Active Server Vortex vs. Quiescent Void)
+// ==============================================================================
+let blackholeCanvas = null;
+let blackholeCtx = null;
+let blackholeAnimId = null;
+let blackholeParticles = [];
+let blackholeWave = { radius: 0, maxRadius: 130, alpha: 0, speed: 4 };
+
+function initBlackHole() {
+    blackholeCanvas = document.getElementById('blackhole-canvas');
+    if (!blackholeCanvas) return;
+    blackholeCtx = blackholeCanvas.getContext('2d');
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const size = 260;
+    blackholeCanvas.width = size * dpr;
+    blackholeCanvas.height = size * dpr;
+    blackholeCtx.scale(dpr, dpr);
+
+    initBlackHoleParticles();
+
+    if (blackholeAnimId) cancelAnimationFrame(blackholeAnimId);
+    let lastTime = performance.now();
+    function loop(now) {
+        const dt = Math.min((now - lastTime) / 1000, 0.1);
+        lastTime = now;
+        renderBlackHole(blackholeCtx, size, size, dt);
+        blackholeAnimId = requestAnimationFrame(loop);
+    }
+    blackholeAnimId = requestAnimationFrame(loop);
+}
+
+function initBlackHoleParticles() {
+    blackholeParticles = [];
+    const count = 135;
+    const rMin = 34;
+    const rMax = 124;
+    for (let i = 0; i < count; i++) {
+        const u = Math.random();
+        const r = rMin + (rMax - rMin) * Math.pow(u, 1.6);
+        const angle = Math.random() * Math.PI * 2;
+        blackholeParticles.push({
+            r: r,
+            angle: angle,
+            size: Math.random() * 1.8 + 0.9,
+            speedFactor: Math.random() * 0.35 + 0.85,
+            infallRate: Math.random() * 0.09 + 0.02,
+            alpha: Math.random() * 0.6 + 0.35,
+            colorIdx: Math.floor(Math.random() * 5),
+            history: []
+        });
+    }
+}
+
+function triggerBlackHoleWave() {
+    blackholeWave.radius = 28;
+    blackholeWave.alpha = 1.0;
+}
+
+function getBlackHolePalette() {
+    const body = document.body;
+    if (body.classList.contains('theme-cyberpunk')) {
+        return {
+            photonGlow: '#00F5FF',
+            photonCore: '#FFFFFF',
+            lensingColor: 'rgba(0, 245, 255, 0.38)',
+            lensingGlow: 'rgba(255, 0, 127, 0.28)',
+            colors: ['#00F5FF', '#FF007F', '#FFE600', '#D946EF', '#FFFFFF'],
+            jetColor: 'rgba(0, 245, 255, 0.65)',
+            jetGlow: 'rgba(255, 0, 127, 0.45)',
+            ambientGlow: 'rgba(0, 245, 255, 0.18)'
+        };
+    } else if (body.classList.contains('theme-gold')) {
+        return {
+            photonGlow: '#FFB800',
+            photonCore: '#FFFDF0',
+            lensingColor: 'rgba(255, 184, 0, 0.42)',
+            lensingGlow: 'rgba(245, 158, 11, 0.32)',
+            colors: ['#FFB800', '#F59E0B', '#EF4444', '#FDE047', '#FFFFFF'],
+            jetColor: 'rgba(255, 184, 0, 0.75)',
+            jetGlow: 'rgba(245, 158, 11, 0.5)',
+            ambientGlow: 'rgba(245, 158, 11, 0.2)'
+        };
+    } else if (body.classList.contains('theme-nord')) {
+        return {
+            photonGlow: '#38BDF8',
+            photonCore: '#ECEFF4',
+            lensingColor: 'rgba(56, 189, 248, 0.35)',
+            lensingGlow: 'rgba(136, 192, 208, 0.25)',
+            colors: ['#88C0D0', '#81A1C1', '#38BDF8', '#E5E9F0', '#FFFFFF'],
+            jetColor: 'rgba(56, 189, 248, 0.65)',
+            jetGlow: 'rgba(136, 192, 208, 0.4)',
+            ambientGlow: 'rgba(56, 189, 248, 0.16)'
+        };
+    } else if (body.classList.contains('theme-slate')) {
+        return {
+            photonGlow: '#E4E4E7',
+            photonCore: '#FFFFFF',
+            lensingColor: 'rgba(16, 185, 129, 0.32)',
+            lensingGlow: 'rgba(228, 228, 231, 0.22)',
+            colors: ['#E4E4E7', '#10B981', '#94A3B8', '#6EE7B7', '#FFFFFF'],
+            jetColor: 'rgba(228, 228, 231, 0.68)',
+            jetGlow: 'rgba(16, 185, 129, 0.4)',
+            ambientGlow: 'rgba(16, 185, 129, 0.16)'
+        };
+    } else {
+        // Obsidian / Default Fluent Dark
+        return {
+            photonGlow: '#00D2FF',
+            photonCore: '#FFFFFF',
+            lensingColor: 'rgba(37, 99, 235, 0.38)',
+            lensingGlow: 'rgba(0, 210, 255, 0.28)',
+            colors: ['#00D2FF', '#2563EB', '#60A5FA', '#38BDF8', '#FFFFFF'],
+            jetColor: 'rgba(0, 210, 255, 0.68)',
+            jetGlow: 'rgba(37, 99, 235, 0.45)',
+            ambientGlow: 'rgba(0, 210, 255, 0.18)'
+        };
+    }
+}
+
+function renderBlackHole(ctx, w, h, dt) {
+    if (!ctx || w === 0 || h === 0) return;
+    const cx = w / 2;
+    const cy = h / 2;
+    const palette = getBlackHolePalette();
+    const isRunning = isServersRunning;
+
+    ctx.clearRect(0, 0, w, h);
+
+    const speedMult = isRunning ? 1.65 : 0.35;
+    const activityFactor = isRunning ? 1.0 : 0.4;
+    const rEventHorizon = 28;
+    const rPhoton = 32;
+
+    // 1. Relativistic Jets (Collimated Bipolar Outflows when servers active)
+    if (isRunning) {
+        ctx.save();
+        const jetGradTop = ctx.createLinearGradient(cx, cy - rEventHorizon, cx, cy - 122);
+        jetGradTop.addColorStop(0, palette.photonCore);
+        jetGradTop.addColorStop(0.2, palette.jetColor);
+        jetGradTop.addColorStop(1, 'transparent');
+
+        ctx.fillStyle = jetGradTop;
+        ctx.beginPath();
+        ctx.moveTo(cx - 3, cy - rEventHorizon + 2);
+        ctx.lineTo(cx + 3, cy - rEventHorizon + 2);
+        ctx.lineTo(cx + 8, cy - 122);
+        ctx.lineTo(cx - 8, cy - 122);
+        ctx.closePath();
+        ctx.fill();
+
+        const jetGradBot = ctx.createLinearGradient(cx, cy + rEventHorizon, cx, cy + 122);
+        jetGradBot.addColorStop(0, palette.photonCore);
+        jetGradBot.addColorStop(0.2, palette.jetColor);
+        jetGradBot.addColorStop(1, 'transparent');
+
+        ctx.fillStyle = jetGradBot;
+        ctx.beginPath();
+        ctx.moveTo(cx - 3, cy + rEventHorizon - 2);
+        ctx.lineTo(cx + 3, cy + rEventHorizon - 2);
+        ctx.lineTo(cx + 8, cy + 122);
+        ctx.lineTo(cx - 8, cy + 122);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // 2. Ambient Gravitational Lensing Halo / Corona
+    ctx.save();
+    const haloGrad = ctx.createRadialGradient(cx, cy, rEventHorizon, cx, cy, 120);
+    haloGrad.addColorStop(0, palette.ambientGlow);
+    haloGrad.addColorStop(0.5, palette.lensingGlow);
+    haloGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = haloGrad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 120, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 3. Gravitational Lensing Warp: Upper Arc (Interstellar Gargantua Effect)
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy - 10, 58, 38, -0.15, Math.PI * 0.95, Math.PI * 2.05);
+    ctx.strokeStyle = palette.lensingColor;
+    ctx.lineWidth = isRunning ? 16 : 8;
+    ctx.filter = isRunning ? 'blur(4px)' : 'blur(2px)';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(cx, cy - 10, 56, 36, -0.15, Math.PI * 0.98, Math.PI * 2.02);
+    ctx.strokeStyle = palette.photonCore;
+    ctx.lineWidth = isRunning ? 2.5 : 1;
+    ctx.filter = 'none';
+    ctx.stroke();
+    ctx.restore();
+
+    // 4. Accretion Disk Swirling Matter Particles (Keplerian Velocity & Relativistic Beaming)
+    const tilt = -0.18; // ~10.3 deg tilt
+    const cosTilt = Math.cos(tilt);
+    const sinTilt = Math.sin(tilt);
+    const yAspect = 0.38; // 3D projection aspect ratio
+
+    ctx.save();
+    for (let i = 0; i < blackholeParticles.length; i++) {
+        const p = blackholeParticles[i];
+
+        // Keplerian angular velocity: v = k / r^1.4 (inner particles whip much faster)
+        const omega = (220 / Math.pow(p.r, 1.35)) * speedMult * p.speedFactor;
+        p.angle += omega * dt;
+        p.r -= p.infallRate * (isRunning ? 1.5 : 0.5);
+
+        // Particle swallowed by singularity -> respawn at outer rim
+        if (p.r < rEventHorizon - 1) {
+            p.r = 114 + Math.random() * 10;
+            p.angle = Math.random() * Math.PI * 2;
+            p.history = [];
+        }
+
+        // 3D coordinate mapping
+        const rawX = p.r * Math.cos(p.angle);
+        const rawY = p.r * Math.sin(p.angle) * yAspect;
+        const screenX = cx + (rawX * cosTilt - rawY * sinTilt);
+        const screenY = cy + (rawX * sinTilt + rawY * cosTilt);
+
+        // Relativistic Doppler Beaming:
+        // Left-side particles move toward observer -> boosted brightness & white shift
+        // Right-side particles move away -> dimmed
+        const doppler = -Math.sin(p.angle); // approaches when sin < 0
+        let dopplerBoost = 1.0 + (doppler * 0.65);
+        if (dopplerBoost < 0.25) dopplerBoost = 0.25;
+
+        const alpha = Math.min(1.0, p.alpha * dopplerBoost * activityFactor);
+        const col = (doppler > 0.4 && isRunning) ? palette.photonCore : palette.colors[p.colorIdx % palette.colors.length];
+
+        // Draw particle trail
+        p.history.push({ x: screenX, y: screenY });
+        if (p.history.length > (isRunning ? 4 : 2)) p.history.shift();
+
+        if (p.history.length > 1) {
+            ctx.beginPath();
+            ctx.moveTo(p.history[0].x, p.history[0].y);
+            for (let h = 1; h < p.history.length; h++) {
+                ctx.lineTo(p.history[h].x, p.history[h].y);
+            }
+            ctx.strokeStyle = col;
+            ctx.globalAlpha = alpha * 0.6;
+            ctx.lineWidth = p.size;
+            ctx.stroke();
+        }
+
+        // Draw particle head
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = col;
+        ctx.globalAlpha = alpha;
+        ctx.fill();
+    }
+    ctx.restore();
+
+    // 5. Gravitational Lensing Warp: Lower Arc
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 10, 56, 32, -0.15, 0, Math.PI);
+    ctx.strokeStyle = palette.lensingGlow;
+    ctx.lineWidth = isRunning ? 10 : 5;
+    ctx.filter = 'blur(3px)';
+    ctx.stroke();
+    ctx.restore();
+
+    // 6. Brilliant Photon Sphere (Einstein Ring) with Doppler Crescent
+    ctx.save();
+    // Inner diffuse glow
+    ctx.beginPath();
+    ctx.arc(cx, cy, rPhoton + 3, 0, Math.PI * 2);
+    ctx.strokeStyle = palette.photonGlow;
+    ctx.lineWidth = isRunning ? 6 : 3;
+    ctx.filter = 'blur(4px)';
+    ctx.stroke();
+
+    // Sharp Photon Ring
+    ctx.filter = 'none';
+    ctx.beginPath();
+    ctx.arc(cx, cy, rPhoton, 0, Math.PI * 2);
+    ctx.strokeStyle = palette.photonGlow;
+    ctx.lineWidth = isRunning ? 3.5 : 2;
+    ctx.stroke();
+
+    // Intense Doppler Blueshift Crescent on the approaching (left) side
+    ctx.beginPath();
+    ctx.arc(cx, cy, rPhoton, Math.PI * 0.6, Math.PI * 1.4);
+    ctx.strokeStyle = palette.photonCore;
+    ctx.lineWidth = isRunning ? 4.5 : 2.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // 7. Event Horizon (Central Pitch-Black Singularity Core)
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, rEventHorizon, 0, Math.PI * 2);
+    ctx.fillStyle = '#000000';
+    ctx.shadowColor = '#000000';
+    ctx.shadowBlur = 12;
+    ctx.fill();
+    ctx.restore();
+
+    // 8. Gravitational Wave Shockwave Ripple (triggered on power click)
+    if (blackholeWave.alpha > 0.01) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, blackholeWave.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = palette.photonGlow;
+        ctx.lineWidth = 4 * blackholeWave.alpha;
+        ctx.globalAlpha = blackholeWave.alpha;
+        ctx.shadowColor = palette.photonGlow;
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+        ctx.restore();
+
+        blackholeWave.radius += blackholeWave.speed;
+        blackholeWave.alpha *= 0.93;
+    }
+}
+
 // LIVE THEME ENGINE (Cyberpunk & Gold Canvas Animation)
 let themeCanvasCtx = null;
 let themeCanvasW = 0, themeCanvasH = 0;
@@ -751,6 +1081,51 @@ function setTheme(themeClass) {
     initParticlesForTheme();
     const name = themeClass.replace('theme-', '');
     showToast(`Live Theme: ${name.charAt(0).toUpperCase() + name.slice(1)}`);
+}
+
+// Power Gauge Shape Switcher (Round, Square, Hexagon, Capsule)
+let currentPowerShape = 'round';
+
+function initPowerShape() {
+    try {
+        const saved = localStorage.getItem('omnihost_power_shape');
+        if (saved) currentPowerShape = saved;
+    } catch (e) {}
+    setPowerShape(currentPowerShape, false);
+}
+
+function setPowerShape(shape, showNotification = true) {
+    if (!['round', 'square', 'hexagon', 'capsule'].includes(shape)) shape = 'round';
+    currentPowerShape = shape;
+    try {
+        localStorage.setItem('omnihost_power_shape', shape);
+    } catch (e) {}
+
+    const container = document.querySelector('.power-toggle-container');
+    if (container) {
+        container.classList.remove('shape-round', 'shape-square', 'shape-hexagon', 'shape-capsule');
+        container.classList.add(`shape-${shape}`);
+    }
+
+    // Update shape buttons (both toolbar and drawer)
+    document.querySelectorAll('.shape-btn').forEach(btn => {
+        const btnShape = btn.getAttribute('data-shape') || (btn.id ? btn.id.replace('shape-btn-', '') : '');
+        if (btnShape === shape) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    if (showNotification) {
+        const shapeLabels = {
+            round: '⚪ Round Dial',
+            square: '⬛ Cyber Squircle',
+            hexagon: '⬡ Hex Shield',
+            capsule: '💊 Reactor Capsule'
+        };
+        showToast(`Layout: ${shapeLabels[shape] || shape}`);
+    }
 }
 
 // Modals

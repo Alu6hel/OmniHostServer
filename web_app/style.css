@@ -244,6 +244,19 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Live Black Hole Singularity Engine */
+.blackhole-canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 260px;
+    height: 260px;
+    pointer-events: none;
+    z-index: 1;
 }
 
 .radial-ring {
@@ -275,38 +288,215 @@ body {
     transition: stroke 0.3s;
 }
 
-.power-btn {
-    width: 118px;
-    height: 118px;
+/* Shape Variations */
+.round-track { display: block; opacity: 1; }
+.square-track, .hex-track, .capsule-track { display: none !important; opacity: 0 !important; visibility: hidden !important; }
+
+/* Round Shape (Default) */
+.power-toggle-container.shape-round .round-track { display: block !important; opacity: 1 !important; visibility: visible !important; }
+.power-toggle-container.shape-round .square-track,
+.power-toggle-container.shape-round .hex-track,
+.power-toggle-container.shape-round .capsule-track { display: none !important; opacity: 0 !important; visibility: hidden !important; }
+.power-toggle-container.shape-round .power-btn {
     border-radius: 50%;
-    background: linear-gradient(145deg, #162032, #0E1524);
+}
+
+/* Square / Squircle Shape */
+.power-toggle-container.shape-square {
+    border-radius: 32px;
+}
+.power-toggle-container.shape-square .round-track,
+.power-toggle-container.shape-square .hex-track,
+.power-toggle-container.shape-square .capsule-track {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+.power-toggle-container.shape-square .square-track {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    stroke: var(--primary);
+    filter: drop-shadow(0 0 10px var(--primary));
+}
+.power-toggle-container.shape-square .power-btn {
+    border-radius: 26px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.04);
+}
+.power-toggle-container.shape-square .power-btn.active {
+    box-shadow: 0 0 35px var(--primary-glow), inset 0 0 20px rgba(96, 165, 250, 0.3);
+}
+
+/* Hexagon Shape */
+.power-toggle-container.shape-hexagon .round-track,
+.power-toggle-container.shape-hexagon .square-track,
+.power-toggle-container.shape-hexagon .capsule-track {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+.power-toggle-container.shape-hexagon .hex-track {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    stroke: var(--primary);
+    filter: drop-shadow(0 0 12px var(--primary));
+}
+.power-toggle-container.shape-hexagon .power-btn {
+    border-radius: 0;
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+}
+.power-toggle-container.shape-hexagon .power-btn.active {
+    box-shadow: 0 0 40px var(--primary-glow);
+}
+
+/* Capsule / Pill Shape */
+.power-toggle-container.shape-capsule {
+    width: 220px;
+    height: 150px;
+}
+.power-toggle-container.shape-capsule .round-track,
+.power-toggle-container.shape-capsule .square-track,
+.power-toggle-container.shape-capsule .hex-track {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+.power-toggle-container.shape-capsule .capsule-track {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    stroke: var(--primary);
+    filter: drop-shadow(0 0 10px var(--primary));
+}
+.power-toggle-container.shape-capsule .power-btn {
+    width: 154px;
+    height: 94px;
+    border-radius: 47px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+/* Shape Selector Toolbar */
+.shape-selector-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 4px auto 14px;
+    padding: 4px 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+    width: fit-content;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.shape-selector-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    color: var(--text-dim);
+    padding-left: 4px;
+}
+
+.shape-pills {
+    display: flex;
+    gap: 4px;
+}
+
+.shape-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.shape-btn:hover {
+    color: var(--text-bright);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.shape-btn.active {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.power-singularity-core {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, #000000 68%, rgba(0, 0, 0, 0.9) 88%, transparent 100%);
+    box-shadow: 0 0 16px rgba(0, 0, 0, 1);
+    pointer-events: none;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.power-btn {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.94) 0%, rgba(3, 6, 14, 0.82) 48%, rgba(15, 23, 42, 0.65) 100%);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     border: 2px solid var(--border-bright);
     color: var(--text-dim);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.05);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 25px rgba(0, 0, 0, 0.95);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 2;
 }
 
+.power-btn:hover {
+    transform: scale(1.03);
+    border-color: var(--primary);
+    box-shadow: 0 0 25px var(--primary-glow), 0 12px 35px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.9);
+}
+
 .power-btn.active {
-    background: linear-gradient(145deg, #1D4ED8, #1E40AF);
-    border-color: #60A5FA;
+    border-color: var(--primary);
     color: #FFFFFF;
-    box-shadow: 0 0 35px var(--primary-glow), 0 10px 25px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 40px var(--primary-glow), 0 12px 35px rgba(0, 0, 0, 0.8), inset 0 0 25px rgba(0, 0, 0, 0.95);
     transform: scale(1.02);
 }
 
 .power-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
 }
 
 .power-icon {
+    position: relative;
+    z-index: 3;
     width: 44px;
     height: 44px;
-    transition: transform 0.2s;
+    pointer-events: none;
+    stroke: var(--text-dim);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.95));
+}
+
+.power-btn.active .power-icon {
+    stroke: #FFFFFF;
+    filter: drop-shadow(0 0 12px var(--primary)) drop-shadow(0 0 4px #FFFFFF);
 }
 
 .power-subtext {
@@ -1160,9 +1350,8 @@ body.theme-cyberpunk .power-btn.active {
 }
 
 body.theme-gold .power-btn.active {
-    background: linear-gradient(135deg, #FFB800, #B45309);
-    box-shadow: 0 0 35px rgba(255, 184, 0, 0.7), 0 0 70px rgba(245, 158, 11, 0.35);
     border: 2px solid #FFE082;
+    box-shadow: 0 0 35px rgba(255, 184, 0, 0.7), 0 0 70px rgba(245, 158, 11, 0.35), inset 0 0 25px rgba(245, 158, 11, 0.25);
     animation: goldPowerPulse 3s ease-in-out infinite alternate;
 }
 

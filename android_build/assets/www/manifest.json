@@ -1,0 +1,8 @@
+{
+    "name": "OmniHost Pro",
+    "short_name": "OmniHost",
+    "start_url": "/web_app/index.html",
+    "display": "standalone",
+    "background_color": "#090B10",
+    "theme_color": "#10B981"
+}
