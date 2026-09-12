@@ -82,7 +82,12 @@ WebsiteServer/
 ├── RELEASE_MANIFEST.json          # Build manifest & SHA-256 verification
 ├── CHECKSUMS.txt                  # Integrity checksums
 ├── OmniHostServer.exe             # Standalone Windows executable (12.3 MB)
-├── omnihost.apk                   # Standalone Android release package (69.5 KB)
+├── omnihost.apk                   # Standalone Native Android Release APK (474 KB)
+├── android_build/                 # Complete Native Android Build System
+│   ├── build_apk.sh               # 1-command AAPT2, javac, d8, apksigner build script
+│   ├── AndroidManifest.xml        # Full permissions, foreground service, resizeable
+│   ├── src/com/omnihost/pro/      # Multi-threaded HTTP & RFC 959 FTP Java engines
+│   └── assets/                    # Bundled modular sites and high-performance UI
 └── run_omnihost_server.py         # Universal Python launcher (GUI & --headless)
 ```
 

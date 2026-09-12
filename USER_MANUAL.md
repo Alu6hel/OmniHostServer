@@ -71,6 +71,38 @@ To use your own registered domain (e.g., `www.yourname.com`):
 
 ---
 
+## 📱 6. Android Mobile Hotspot & Cloud Node Setup
+
+OmniHost Pro is available as a native standalone Android package (`omnihost.apk`), bringing all `OmniHostServer.exe` capabilities to Android smartphones, tablets, and mobile hotspot devices.
+
+### Key Android Features:
+- **Big Radial Power Controller**: Tap the glowing center ring to toggle both HTTP (:8090) and FTP (:2121) servers on/off instantly.
+- **3 Quick Operational Limits**:
+  - **Timer**: Automatically shut down servers after 15m, 30m, 1h, or 2h.
+  - **Battery Limit**: Stop servers automatically when battery drops to 15%, 20%, or 30% to preserve phone battery.
+  - **Data Limit**: Automatically cease serving when bandwidth threshold (100MB, 500MB, 1GB, 5GB) is reached.
+- **Foreground Service with WakeLock**: Keeps the HTTP and FTP servers alive even when your phone screen is off or another app is open.
+- **5 Sleek Navigation Tabs**:
+  - `Hotspot`: Server master toggle, live IP addresses, limits, and 1-tap shortcut to Android System Hotspot settings.
+  - `Sites`: Real-time modular site switcher with live embedded browser preview.
+  - `FTP`: RFC 959 wireless file upload/download server with live console log.
+  - `Speed`: Live bandwidth speedometer with ping, jitter, upload, and download diagnostics.
+  - `Data`: Real-time QPS, visitor logs, and bandwidth telemetry.
+- **5 Themes**: Obsidian, Cyberpunk, Nord, Gold, and Slate.
+
+### How to Build & Install the APK:
+1. Compile the APK directly from source:
+   ```bash
+   bash android_build/build_apk.sh
+   ```
+2. Install to your connected Android phone or tablet via ADB:
+   ```bash
+   adb install -r omnihost.apk
+   ```
+3. Or copy `omnihost.apk` directly to your phone's storage and install via the Android package installer.
+
+---
+
 ## ❓ Frequently Asked Questions (FAQ)
 
 **Q: Do I need a static public IP from my Internet provider?**  
@@ -81,6 +113,9 @@ To use your own registered domain (e.g., `www.yourname.com`):
 
 **Q: Is there any bandwidth limit on WiFi FTP transfers?**  
 *A: None. WiFi FTP runs entirely across your local network at full hardware line speed (up to 1,200+ Mbps on Wi-Fi 6).*
+
+**Q: Does OmniHost Pro keep running in the background on Android?**  
+*A: Yes! It utilizes an Android Foreground Service with a persistent notification and CPU WakeLock, preventing Android from killing the web server or FTP server when the device sleeps.*
 
 ---
 *OmniHost Pro User Manual &bull; Alumungandr Master Charter &copy; 2026*

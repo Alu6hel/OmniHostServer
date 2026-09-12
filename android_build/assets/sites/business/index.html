@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusFlow // The Enterprise Event Engine</title>
+    <style>
+        :root { --bg: #030712; --card: #111827; --border: #1F2937; --accent: #3B82F6; --text: #F9FAFB; --muted: #9CA3AF; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text); }
+        .hero { text-align: center; padding: 100px 20px 60px; max-width: 800px; margin: 0 auto; }
+        .badge { background: #1E3A8A; color: #93C5FD; padding: 6px 16px; border-radius: 30px; font-size: 0.85rem; font-weight: 600; display: inline-block; margin-bottom: 24px; }
+        h1 { font-size: 3.5rem; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 20px; }
+        p.lead { font-size: 1.25rem; color: var(--muted); margin-bottom: 36px; line-height: 1.5; }
+        .cta-btn { display: inline-block; background: var(--accent); color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 1.05rem; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4); }
+        .features { max-width: 1000px; margin: 60px auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding: 0 20px; }
+        .f-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px 24px; }
+        .f-card h3 { margin-bottom: 10px; font-size: 1.25rem; }
+        .f-card p { color: var(--muted); font-size: 0.95rem; }
+        footer { text-align: center; padding: 40px; color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--border); margin-top: 60px; }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="badge">✦ Enterprise-Ready Distributed Infrastructure</div>
+        <h1>Event processing at the speed of thought.</h1>
+        <p class="lead">Ingest 500,000+ events per second with zero drop rates, automatic circuit breakers, and end-to-end trace telemetry.</p>
+        <a href="#contact" class="cta-btn">Deploy Free Cluster &rarr;</a>
+    </div>
+    <div class="features">
+        <div class="f-card">
+            <h3>⚡ 12μs Latency</h3>
+            <p>Direct memory-mapped streaming pipelines ensure absolute lowest execution overhead.</p>
+        </div>
+        <div class="f-card">
+            <h3>🛡️ Cloudflare Protected</h3>
+            <p>Real server origin IPs are 100% masked from DDoS probes and automated port scanners.</p>
+        </div>
+        <div class="f-card">
+            <h3>🔄 Multi-Site Routing</h3>
+            <p>Route unlimited micro-frontends and brand domains straight from a single OmniHost instance.</p>
+        </div>
+    </div>
+    <footer>
+        &copy; 2026 NexusFlow Technologies. Hosted autonomously via OmniHost Pro.
+    </footer>
+</body>
+</html>
