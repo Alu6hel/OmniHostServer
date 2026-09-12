@@ -322,6 +322,11 @@ function selectTab(tabId) {
     const titleEl = document.getElementById('top-bar-title');
     if (titleEl && titleMap[tabId]) titleEl.innerText = titleMap[tabId];
 
+    const backBtn = document.getElementById('top-bar-back-btn');
+    if (backBtn) {
+        backBtn.style.display = (tabId === 'hotspot') ? 'none' : 'inline-flex';
+    }
+
     if (tabId === 'sites') {
         previewSite(activeSite);
     }

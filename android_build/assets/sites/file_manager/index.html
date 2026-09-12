@@ -198,11 +198,36 @@
             align-items: center;
             gap: 6px;
             transition: all 0.2s;
+            text-decoration: none;
         }
 
         .btn-crumb-back:hover {
             background: var(--bg-card-hover);
             border-color: var(--border-bright);
+        }
+
+        .btn-crumb-back.dashboard {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.4);
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        .btn-crumb-back.dashboard:hover {
+            background: rgba(59, 130, 246, 0.25);
+            border-color: rgba(59, 130, 246, 0.7);
+        }
+
+        .btn-crumb-back.exit-category {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .btn-crumb-back.exit-category:hover {
+            background: rgba(245, 158, 11, 0.25);
+            border-color: rgba(245, 158, 11, 0.7);
         }
 
         .crumb-path {
@@ -829,11 +854,11 @@
 
     <!-- Sidebar Navigation (Matching Images 2 & 4) -->
     <aside class="sidebar">
-        <div class="sidebar-brand">
+        <div class="sidebar-brand" onclick="exitToDashboard()" style="cursor: pointer;" title="Back to OmniHost Pro Dashboard">
             <div class="brand-icon-box">🌐</div>
             <div class="brand-text">
                 <h2>OMNIHOST PRO</h2>
-                <span>WiFi File Transfer &bull; :8090</span>
+                <span>WiFi File Transfer &bull; :8090 ➔</span>
             </div>
         </div>
 
@@ -883,7 +908,18 @@
         <!-- Top Workspace Bar -->
         <header class="workspace-header">
             <div class="breadcrumb-group">
-                <button class="btn-crumb-back" id="btn-back" onclick="navigateUp()" style="display: none;">
+                <!-- Back to Main Dashboard Button -->
+                <button class="btn-crumb-back dashboard" id="btn-back-dashboard" onclick="exitToDashboard()" title="Back to OmniHost Pro Dashboard">
+                    <span>🏠</span>
+                    <span>Dashboard</span>
+                </button>
+                <!-- Exit Category Button -->
+                <button class="btn-crumb-back exit-category" id="btn-category-back" onclick="exitCategory()" style="display: none;" title="Exit this category back to all files">
+                    <span>⬅️</span>
+                    <span id="btn-category-back-text">Exit Option</span>
+                </button>
+                <!-- Folder Up Back Button -->
+                <button class="btn-crumb-back" id="btn-back" onclick="navigateUp()" style="display: none;" title="Go up to parent folder">
                     <span>⬅️</span>
                     <span>Back</span>
                 </button>
@@ -970,7 +1006,13 @@
     <!-- Image & Video Lightbox Modal (Matching Image 2) -->
     <div id="preview-modal" class="preview-modal" onclick="closePreview()">
         <div class="preview-modal-header" onclick="event.stopPropagation()">
-            <span class="preview-title" id="preview-filename">Media Preview</span>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="action-btn" style="background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; padding: 6px 12px; font-size: 13px; font-weight: 600;" onclick="closePreview()" title="Exit preview and go back">
+                    <span>⬅️</span>
+                    <span>Back</span>
+                </button>
+                <span class="preview-title" id="preview-filename">Media Preview</span>
+            </div>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <button id="preview-wallpaper-btn" class="action-btn" style="background: linear-gradient(135deg, #F59E0B, #D97706); color: #000; font-weight: 700; padding: 6px 14px; display: none;" onclick="setPreviewWallpaper()">
                     <span>🖼️</span>
@@ -980,7 +1022,7 @@
                     <span>📥</span>
                     <span>Download</span>
                 </a>
-                <button class="preview-close-btn" onclick="closePreview()">✕</button>
+                <button class="preview-close-btn" onclick="closePreview()" title="Close (Esc)">✕</button>
             </div>
         </div>
         <div class="preview-container" id="preview-body" onclick="event.stopPropagation()">
@@ -1041,11 +1083,37 @@
             }
         }
 
+        function exitToDashboard() {
+            if (window.location.protocol === 'file:') {
+                window.location.href = 'index.html';
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        function exitCategory() {
+            setCategory('all');
+        }
+
         function renderBreadcrumbs(path) {
             const elCrumb = document.getElementById('current-crumb');
             const elBack = document.getElementById('btn-back');
+            const elCatBack = document.getElementById('btn-category-back');
+            const elCatText = document.getElementById('btn-category-back-text');
+
+            if (elCatBack) {
+                if (currentCategory !== 'all') {
+                    elCatBack.style.display = 'inline-flex';
+                    const catLabel = currentCategory === 'pictures' ? 'GalaxSee Photos' : 
+                                     (currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1));
+                    if (elCatText) elCatText.innerText = `Exit ${catLabel}`;
+                } else {
+                    elCatBack.style.display = 'none';
+                }
+            }
+
             if (!path || path === '/' || path === '') {
-                elCrumb.innerText = 'Root';
+                elCrumb.innerText = currentCategory !== 'all' ? `Root [${currentCategory.toUpperCase()}]` : 'Root';
                 elBack.style.display = 'none';
             } else {
                 elCrumb.innerText = 'Root / ' + path.replace(/^\//, '');
@@ -1161,9 +1229,14 @@
                         <h3>🌌 GalaxSee Photo Gallery &amp; Wallpaper Studio</h3>
                         <p>Right-click any photo to set as your desktop wallpaper wirelessly</p>
                     </div>
-                    <button class="action-btn" style="background: linear-gradient(135deg, #F59E0B, #D97706); color: #000; font-weight:700; font-size:12px; padding: 6px 14px;" onclick="document.getElementById('file-picker').click()">
-                        <span>➕</span> Upload Photos
-                    </button>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <button class="action-btn" style="background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; font-weight: 600; font-size: 12px; padding: 6px 14px;" onclick="exitCategory()" title="Exit GalaxSee back to My Files">
+                            <span>⬅️</span> Exit GalaxSee
+                        </button>
+                        <button class="action-btn" style="background: linear-gradient(135deg, #F59E0B, #D97706); color: #000; font-weight: 700; font-size: 12px; padding: 6px 14px;" onclick="document.getElementById('file-picker').click()">
+                            <span>➕</span> Upload Photos
+                        </button>
+                    </div>
                 `;
                 gridContainer.parentElement.insertBefore(banner, gridContainer);
             }
