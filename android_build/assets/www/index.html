@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="theme-fluent-dark">
+    <!-- Live Theme Animated Background Canvas -->
+    <canvas id="live-theme-canvas"></canvas>
+
     <!-- Sidebar Drawer (Image 1 Inspiration) -->
     <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer(false)"></div>
     <aside id="drawer" class="drawer">
@@ -155,7 +158,7 @@
                 <!-- Fast Server Access Cards -->
                 <div class="cards-stack">
                     <!-- Modular Web Server Card -->
-                    <div class="service-card">
+                    <div class="service-card" id="card-web">
                         <div class="service-head">
                             <div class="service-icon-box blue">🌐</div>
                             <div class="service-meta">
@@ -164,14 +167,14 @@
                             </div>
                             <div class="service-port">HTTP :8090</div>
                         </div>
-                        <div class="url-strip">
-                            <span class="url-text" id="display-web-url">http://192.168.x.x:8090</span>
-                            <button class="btn-copy" onclick="copyValue('display-web-url')">Copy</button>
+                        <div class="url-strip" id="strip-web">
+                            <span class="url-text" id="display-web-url">● Offline — Tap Power to Start</span>
+                            <button class="btn-copy" id="btn-copy-web" onclick="copyValue('display-web-url')">Copy</button>
                         </div>
                     </div>
 
                     <!-- WiFi FTP Server Card -->
-                    <div class="service-card">
+                    <div class="service-card" id="card-ftp">
                         <div class="service-head">
                             <div class="service-icon-box purple">📡</div>
                             <div class="service-meta">
@@ -180,42 +183,43 @@
                             </div>
                             <div class="service-port">FTP :2121</div>
                         </div>
-                        <div class="url-strip">
-                            <span class="url-text" id="display-ftp-url">ftp://192.168.x.x:2121</span>
-                            <button class="btn-copy" onclick="copyValue('display-ftp-url')">Copy</button>
+                        <div class="url-strip" id="strip-ftp">
+                            <span class="url-text" id="display-ftp-url">● Offline — Tap Power to Start</span>
+                            <button class="btn-copy" id="btn-copy-ftp" onclick="copyValue('display-ftp-url')">Copy</button>
                         </div>
                     </div>
 
                     <!-- Cloudflare Public HTTPS Tunnel Card -->
-                    <div class="service-card">
+                    <div class="service-card" id="card-tunnel">
                         <div class="service-head">
                             <div class="service-icon-box green">🛡️</div>
                             <div class="service-meta">
                                 <div class="service-name">Cloudflare Outbound Tunnel</div>
                                 <div class="service-tag">Zero Port Forwarding &bull; Origin IP Masked</div>
                             </div>
-                            <div class="service-badge">SSL HTTPS</div>
+                            <div class="service-badge" id="tunnel-badge" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10B981; color: #10B981; font-size: 10px; padding: 2px 8px; border-radius: 6px;">STANDBY</div>
                         </div>
-                        <div class="url-strip">
-                            <span class="url-text" id="display-tunnel-url">https://omnihost-live.trycloudflare.com</span>
-                            <button class="btn-copy" onclick="copyValue('display-tunnel-url')">Copy</button>
+                        <div class="url-strip" id="strip-tunnel">
+                            <span class="url-text" id="display-tunnel-url">● Standby — Tap to Activate</span>
+                            <button class="btn-copy" id="btn-toggle-tunnel" style="background: #10B981; color: #000; font-weight: 700;" onclick="toggleTunnelAction()">Activate</button>
+                            <button class="btn-copy" id="btn-copy-tunnel" onclick="copyValue('display-tunnel-url')">Copy</button>
                         </div>
                     </div>
 
                     <!-- Web File Explorer & Media Hub Card (Matching Images 2, 3, 4) -->
-                    <div class="service-card" style="border-color: rgba(6, 182, 212, 0.4);">
+                    <div class="service-card" id="card-explorer" style="border-color: rgba(6, 182, 212, 0.4);">
                         <div class="service-head">
                             <div class="service-icon-box" style="background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); font-size: 18px;">📁</div>
                             <div class="service-meta">
-                                <div class="service-name">Web File Explorer &amp; Media Hub</div>
-                                <div class="service-tag">Video/Image Preview &bull; Full Folder ZIP Downloads</div>
+                                <div class="service-name">Web File Explorer &amp; GalaxSee Hub</div>
+                                <div class="service-tag">GalaxSee Photos &bull; Video Streaming &bull; ZIP Downloads</div>
                             </div>
                             <div class="service-port" style="color: #06B6D4;">:8090/files</div>
                         </div>
-                        <div class="url-strip">
-                            <span class="url-text" id="display-explorer-url">http://192.168.x.x:8090/files</span>
-                            <button class="btn-copy" onclick="copyValue('display-explorer-url')">Copy</button>
-                            <button class="btn-copy" style="background: #06B6D4; color: #000; font-weight: 700;" onclick="openExplorerUrl()">Open</button>
+                        <div class="url-strip" id="strip-explorer">
+                            <span class="url-text" id="display-explorer-url">● Offline — Tap Power to Start</span>
+                            <button class="btn-copy" id="btn-copy-explorer" onclick="copyValue('display-explorer-url')">Copy</button>
+                            <button class="btn-copy" id="btn-open-explorer" style="background: #06B6D4; color: #000; font-weight: 700;" onclick="openExplorerUrl()">Open</button>
                         </div>
                     </div>
 
@@ -361,8 +365,11 @@
 
                 <div class="card-title-bar">Live FTP Event Log</div>
                 <div class="terminal-box" id="ftp-event-feed">
-                    <div class="terminal-row">[INIT] RFC 959 WiFi FTP Server Ready on port 2121.</div>
-                    <div class="terminal-row">[MOUNT] Mounted active storage directory.</div>
+                    <div class="empty-state-log" id="ftp-empty-placeholder">
+                        <span class="empty-log-icon">📡</span>
+                        <div class="empty-log-title">No Active FTP Sessions</div>
+                        <div class="empty-log-desc">Connect using ftp://... to mount storage wirelessly.</div>
+                    </div>
                 </div>
             </section>
 
@@ -440,7 +447,11 @@
 
                 <div class="card-title-bar">Live HTTP Visitor Log</div>
                 <div class="terminal-box" id="http-log-feed">
-                    <div class="terminal-row">[STANDBY] Waiting for inbound visitor requests...</div>
+                    <div class="empty-state-log" id="http-empty-placeholder">
+                        <span class="empty-log-icon">📊</span>
+                        <div class="empty-log-title">No Visitor Requests Yet</div>
+                        <div class="empty-log-desc">Inbound web traffic on :8090 will stream here in real-time.</div>
+                    </div>
                 </div>
             </section>
         </main>
@@ -481,7 +492,8 @@
                 <!-- Injected via JavaScript -->
             </div>
         </div>
-    </div>
+    <!-- Toast Notification Container -->
+    <div id="toast-notify" class="toast-container"></div>
 
     <script src="app.js"></script>
 </body>

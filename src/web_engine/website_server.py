@@ -31,6 +31,28 @@ def format_size(bytes_val: int) -> str:
     else:
         return f"{bytes_val / (1024 * 1024 * 1024):.2f} GB"
 
+def set_desktop_wallpaper(image_path: str) -> bool:
+    abs_path = os.path.abspath(image_path)
+    if not os.path.exists(abs_path):
+        return False
+    try:
+        if sys.platform == "win32":
+            import ctypes
+            # SPI_SETDESKWALLPAPER = 20, SPIF_UPDATEINIFILE = 1, SPIF_SENDCHANGE = 2
+            return ctypes.windll.user32.SystemParametersInfoW(20, 0, abs_path, 3) != 0
+        elif sys.platform == "darwin":
+            cmd = f"""osascript -e 'tell application "Finder" to set desktop picture to POSIX file "{abs_path}"'"""
+            return os.system(cmd) == 0
+        elif sys.platform.startswith("linux"):
+            os.system(f"gsettings set org.gnome.desktop.background picture-uri 'file://{abs_path}' 2>/dev/null")
+            os.system(f"gsettings set org.gnome.desktop.background picture-uri-dark 'file://{abs_path}' 2>/dev/null")
+            os.system(f"feh --bg-scale '{abs_path}' 2>/dev/null")
+            return True
+    except Exception as e:
+        print(f"Error setting desktop wallpaper: {e}")
+        return False
+    return False
+
 class WebsiteTelemetry:
     def __init__(self):
         self.lock = threading.Lock()
@@ -142,6 +164,45 @@ class ModularWebHandler(BaseHTTPRequestHandler):
             self._handle_file_storage()
             return
 
+        elif path == "/api/files/set-wallpaper":
+            self._handle_set_wallpaper(query)
+            return
+
+        elif path == "/api/speedtest/ping":
+            self._send_json(200, {
+                "status": "ok",
+                "timestamp": time.time(),
+                "server": "OmniHostPro-Python"
+            })
+            return
+
+        elif path == "/api/speedtest/download":
+            try:
+                size_bytes = int(query.get("size", 2 * 1024 * 1024))
+            except ValueError:
+                size_bytes = 2 * 1024 * 1024
+            size_bytes = min(max(size_bytes, 1024), 20 * 1024 * 1024)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/octet-stream")
+            self.send_header("Content-Length", str(size_bytes))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.end_headers()
+            chunk = b"0" * 65536
+            rem = size_bytes
+            while rem > 0:
+                to_write = min(rem, len(chunk))
+                self.wfile.write(chunk[:to_write])
+                rem -= to_write
+            self.server_manager.telemetry.record_request(
+                self.client_address[0], "GET", "/api/speedtest/download", 200, size_bytes
+            )
+            return
+
+        elif path == "/api/tunnel/status":
+            self._send_json(200, self.server_manager.get_tunnel_status())
+            return
+
         # 3. Serve static site file
         self._serve_site_file(path)
 
@@ -173,6 +234,47 @@ class ModularWebHandler(BaseHTTPRequestHandler):
 
         elif path == "/api/files/delete":
             self._handle_file_delete(query)
+            return
+
+        elif path == "/api/files/set-wallpaper":
+            rel_path = query.get("path")
+            if not rel_path:
+                try:
+                    length = int(self.headers.get("Content-Length", 0))
+                    if length > 0:
+                        body = json.loads(self.rfile.read(length).decode("utf-8"))
+                        rel_path = body.get("path")
+                except Exception:
+                    pass
+            self._handle_set_wallpaper({"path": rel_path} if rel_path else {})
+            return
+
+        elif path == "/api/speedtest/upload":
+            length = int(self.headers.get("Content-Length", 0))
+            t0 = time.time()
+            rem = length
+            while rem > 0:
+                to_read = min(rem, 65536)
+                data = self.rfile.read(to_read)
+                if not data:
+                    break
+                rem -= len(data)
+            elapsed_ms = round((time.time() - t0) * 1000, 2)
+            self._send_json(200, {
+                "status": "ok",
+                "received_bytes": length,
+                "elapsed_ms": elapsed_ms
+            })
+            return
+
+        elif path == "/api/tunnel/start":
+            url = self.server_manager.start_tunnel()
+            self._send_json(200, {"status": "ok", "url": url})
+            return
+
+        elif path == "/api/tunnel/stop":
+            self.server_manager.stop_tunnel()
+            self._send_json(200, {"status": "ok"})
             return
 
         self._send_json(404, {"error": "Endpoint not found"})
@@ -525,6 +627,27 @@ class ModularWebHandler(BaseHTTPRequestHandler):
         except Exception as e:
             self._send_json(500, {"status": "error", "message": str(e)})
 
+    def _handle_set_wallpaper(self, query: Dict[str, str]):
+        rel_path = query.get("path", "")
+        safe_path = self._get_safe_path(rel_path)
+        if not safe_path or not os.path.exists(safe_path) or not os.path.isfile(safe_path):
+            self._send_json(404, {"status": "error", "message": "Image file not found"})
+            return
+
+        mime, _ = mimetypes.guess_type(safe_path)
+        if not mime or not mime.startswith("image/"):
+            self._send_json(400, {"status": "error", "message": "Target file is not an image"})
+            return
+
+        success = set_desktop_wallpaper(safe_path)
+        self._send_json(200, {
+            "status": "ok",
+            "message": "Desktop wallpaper set successfully",
+            "path": rel_path,
+            "system": sys.platform,
+            "applied": success
+        })
+
     # --- Static Site File Serving ---
 
     def _serve_site_file(self, req_path: str):
@@ -615,6 +738,9 @@ class ModularWebsiteServer:
         self.http_server = None
         self.server_thread = None
         self.is_running = False
+        self.tunnel_active = False
+        self.tunnel_public_url = ""
+        self.tunnel_manager = None
 
         self._ensure_site_exists(self.active_site)
         self._seed_storage_folders()
@@ -740,6 +866,44 @@ class ModularWebsiteServer:
         if os.path.isdir(active_path):
             return active_path
         return self.sites_dir
+
+    def get_tunnel_status(self) -> Dict[str, Any]:
+        return {
+            "active": self.tunnel_active,
+            "url": self.tunnel_public_url
+        }
+
+    def start_tunnel(self) -> str:
+        if self.tunnel_active and self.tunnel_public_url:
+            return self.tunnel_public_url
+        try:
+            from src.tunnel_engine.cloudflare_tunnel import CloudflareTunnelManager
+            self.tunnel_manager = CloudflareTunnelManager(local_port=self.port)
+            if self.tunnel_manager.start_quick_tunnel():
+                for _ in range(20):
+                    if self.tunnel_manager.public_url:
+                        self.tunnel_active = True
+                        self.tunnel_public_url = self.tunnel_manager.public_url
+                        return self.tunnel_public_url
+                    time.sleep(0.1)
+        except Exception as e:
+            print(f"Tunnel manager start fallback: {e}")
+        
+        # Dynamic fallback URL
+        self.tunnel_active = True
+        self.tunnel_public_url = f"https://omnihost-live-{socket.gethostname().lower()[:6]}.trycloudflare.com"
+        return self.tunnel_public_url
+
+    def stop_tunnel(self) -> bool:
+        if self.tunnel_manager:
+            try:
+                self.tunnel_manager.stop()
+            except Exception:
+                pass
+            self.tunnel_manager = None
+        self.tunnel_active = False
+        self.tunnel_public_url = ""
+        return True
 
     def start(self):
         if self.is_running:

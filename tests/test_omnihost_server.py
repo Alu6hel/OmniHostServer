@@ -163,5 +163,61 @@ class TestOmniHostServer(unittest.TestCase):
             content = resp.read()
             self.assertEqual(len(content), 11)
 
+    def test_13_speedtest_ping_download_upload(self):
+        # Ping
+        req = urllib.request.Request("http://127.0.0.1:8290/api/speedtest/ping")
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data["status"], "ok")
+
+        # Download 64KB
+        req = urllib.request.Request("http://127.0.0.1:8290/api/speedtest/download?size=65536")
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 200)
+            payload = resp.read()
+            self.assertEqual(len(payload), 65536)
+
+        # Upload 32KB
+        upload_data = b"X" * 32768
+        req = urllib.request.Request("http://127.0.0.1:8290/api/speedtest/upload", data=upload_data, headers={"Content-Type": "application/octet-stream"})
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data["status"], "ok")
+            self.assertEqual(data["received_bytes"], 32768)
+
+    def test_14_tunnel_status_start_stop(self):
+        # Initial status
+        req = urllib.request.Request("http://127.0.0.1:8290/api/tunnel/status")
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("active", data)
+
+        # Start tunnel
+        req = urllib.request.Request("http://127.0.0.1:8290/api/tunnel/start", data=b"{}", headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data["status"], "ok")
+            self.assertTrue(data["url"].startswith("http"))
+
+        # Stop tunnel
+        req = urllib.request.Request("http://127.0.0.1:8290/api/tunnel/stop", data=b"{}", headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data["status"], "ok")
+
+    def test_15_set_desktop_wallpaper(self):
+        # Set wallpaper with an existing image
+        req = urllib.request.Request("http://127.0.0.1:8290/api/files/set-wallpaper?path=Pictures/Wallpaper_Obsidian.png")
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data["status"], "ok")
+            self.assertIn("applied", data)
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

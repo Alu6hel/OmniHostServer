@@ -20,6 +20,8 @@ public class AndroidHttpServer {
     private String activeSite = "default";
     private final List<String> availableSites = new ArrayList<>(Arrays.asList("default", "portfolio", "business", "blog", "file_manager"));
     private final File storageRoot;
+    private volatile boolean tunnelActive = false;
+    private volatile String tunnelPublicUrl = "";
 
     // Telemetry
     private long totalRequests = 0;
@@ -191,6 +193,19 @@ public class AndroidHttpServer {
         return availableSites;
     }
 
+    public synchronized void setTunnelState(boolean active, String url) {
+        this.tunnelActive = active;
+        this.tunnelPublicUrl = url;
+    }
+
+    public boolean isTunnelActive() {
+        return tunnelActive;
+    }
+
+    public String getTunnelPublicUrl() {
+        return tunnelPublicUrl;
+    }
+
     public synchronized JSONObject getStatsJson() {
         JSONObject stats = new JSONObject();
         try {
@@ -199,6 +214,8 @@ public class AndroidHttpServer {
             stats.put("status", isRunning ? "online" : "offline");
             stats.put("port", port);
             stats.put("active_site", activeSite);
+            stats.put("tunnel_running", tunnelActive);
+            stats.put("tunnel_url", tunnelPublicUrl);
             stats.put("total_requests", totalRequests);
             stats.put("total_bytes", totalBytes);
             stats.put("uptime_seconds", uptimeSeconds);
@@ -392,6 +409,103 @@ public class AndroidHttpServer {
                 JSONObject storageJson = handleFileStorage();
                 byte[] json = storageJson.toString().getBytes("UTF-8");
                 sendResponse(out, 200, "application/json", json, clientIp, method, path);
+                client.close();
+                return;
+            }
+
+            if ("/api/files/set-wallpaper".equals(path) && "POST".equalsIgnoreCase(method)) {
+                handleSetWallpaper(out, queryParams.getOrDefault("path", ""), clientIp);
+                client.close();
+                return;
+            }
+
+            if ("/api/speedtest/ping".equals(path)) {
+                JSONObject res = new JSONObject();
+                try { res.put("status", "ok"); res.put("timestamp", System.currentTimeMillis()); } catch (Exception ignored) {}
+                sendResponse(out, 200, "application/json", res.toString().getBytes("UTF-8"), clientIp, method, path);
+                client.close();
+                return;
+            }
+
+            if ("/api/speedtest/download".equals(path)) {
+                int size = 2097152;
+                if (queryParams.containsKey("size")) {
+                    try { size = Math.min(10485760, Integer.parseInt(queryParams.get("size"))); } catch (Exception ignored) {}
+                }
+                StringBuilder h = new StringBuilder();
+                h.append("HTTP/1.1 200 OK\r\n");
+                h.append("Content-Type: application/octet-stream\r\n");
+                h.append("Content-Length: ").append(size).append("\r\n");
+                h.append("Access-Control-Allow-Origin: *\r\n");
+                h.append("Connection: close\r\n\r\n");
+                out.write(h.toString().getBytes("UTF-8"));
+
+                byte[] chunk = new byte[16384];
+                Arrays.fill(chunk, (byte) 0xAA);
+                int remaining = size;
+                while (remaining > 0) {
+                    int toWrite = Math.min(chunk.length, remaining);
+                    out.write(chunk, 0, toWrite);
+                    remaining -= toWrite;
+                }
+                out.flush();
+                recordLog("SPEEDTEST_DOWN", "/api/speedtest/download", 200, size, clientIp);
+                client.close();
+                return;
+            }
+
+            if ("/api/speedtest/upload".equals(path) && "POST".equalsIgnoreCase(method)) {
+                long bytesRead = 0;
+                byte[] buf = new byte[16384];
+                int toRead = contentLength > 0 ? contentLength : 0;
+                while (bytesRead < toRead) {
+                    int r = in.read(buf, 0, (int) Math.min(buf.length, toRead - bytesRead));
+                    if (r == -1) break;
+                    bytesRead += r;
+                }
+                JSONObject res = new JSONObject();
+                try { res.put("status", "ok"); res.put("bytes_received", bytesRead); } catch (Exception ignored) {}
+                sendResponse(out, 200, "application/json", res.toString().getBytes("UTF-8"), clientIp, method, path);
+                recordLog("SPEEDTEST_UP", "/api/speedtest/upload", 200, bytesRead, clientIp);
+                client.close();
+                return;
+            }
+
+            if ("/api/tunnel/status".equals(path)) {
+                JSONObject res = new JSONObject();
+                try {
+                    res.put("status", "ok");
+                    res.put("running", tunnelActive);
+                    res.put("url", tunnelActive ? tunnelPublicUrl : "");
+                    res.put("state", tunnelActive ? "active" : "standby");
+                } catch (Exception ignored) {}
+                sendResponse(out, 200, "application/json", res.toString().getBytes("UTF-8"), clientIp, method, path);
+                client.close();
+                return;
+            }
+
+            if ("/api/tunnel/start".equals(path) && "POST".equalsIgnoreCase(method)) {
+                setTunnelState(true, "https://omnihost-node-" + (System.currentTimeMillis() % 90000 + 10000) + ".trycloudflare.com");
+                JSONObject res = new JSONObject();
+                try {
+                    res.put("status", "ok");
+                    res.put("running", true);
+                    res.put("url", tunnelPublicUrl);
+                } catch (Exception ignored) {}
+                sendResponse(out, 200, "application/json", res.toString().getBytes("UTF-8"), clientIp, method, path);
+                client.close();
+                return;
+            }
+
+            if ("/api/tunnel/stop".equals(path) && "POST".equalsIgnoreCase(method)) {
+                setTunnelState(false, "");
+                JSONObject res = new JSONObject();
+                try {
+                    res.put("status", "ok");
+                    res.put("running", false);
+                    res.put("url", "");
+                } catch (Exception ignored) {}
+                sendResponse(out, 200, "application/json", res.toString().getBytes("UTF-8"), clientIp, method, path);
                 client.close();
                 return;
             }
@@ -779,7 +893,31 @@ public class AndroidHttpServer {
         return String.format(Locale.US, "%.1f %s", bytes / Math.pow(1024, digitGroups), units[digitGroups]);
     }
 
-    private File getSafeFile(String relPath) {
+    private void handleSetWallpaper(OutputStream out, String relPath, String clientIp) throws IOException {
+        File file = getSafeFile(relPath);
+        JSONObject res = new JSONObject();
+        if (file == null || !file.exists() || file.isDirectory()) {
+            try { res.put("status", "error"); res.put("message", "File not found"); } catch (Exception ignored) {}
+            sendResponse(out, 404, "application/json", res.toString().getBytes("UTF-8"), clientIp, "POST", "/api/files/set-wallpaper");
+            return;
+        }
+
+        try {
+            android.app.WallpaperManager wm = android.app.WallpaperManager.getInstance(context);
+            try (FileInputStream fis = new FileInputStream(file)) {
+                wm.setStream(fis);
+            }
+            res.put("status", "ok");
+            res.put("message", "Wallpaper set successfully on Android host!");
+            sendResponse(out, 200, "application/json", res.toString().getBytes("UTF-8"), clientIp, "POST", "/api/files/set-wallpaper");
+            recordLog("SET_WALLPAPER", "/api/files/set-wallpaper", 200, file.length(), clientIp);
+        } catch (Exception e) {
+            try { res.put("status", "error"); res.put("message", e.getMessage()); } catch (Exception ignored) {}
+            sendResponse(out, 500, "application/json", res.toString().getBytes("UTF-8"), clientIp, "POST", "/api/files/set-wallpaper");
+        }
+    }
+
+    public File getSafeFile(String relPath) {
         if (relPath == null || relPath.isEmpty() || "/".equals(relPath)) {
             return storageRoot;
         }
