@@ -76,9 +76,13 @@ window.onFtpEvent = function(type, details) {
 function updateUrls() {
     const webUrl = `http://${lanIp}:8090`;
     const ftpUrl = `ftp://${lanIp}:2121`;
+    const explorerUrl = `http://${lanIp}:8090/files`;
 
     const elWeb = document.getElementById('display-web-url');
     if (elWeb) elWeb.innerText = webUrl;
+
+    const elExplorer = document.getElementById('display-explorer-url');
+    if (elExplorer) elExplorer.innerText = explorerUrl;
 
     const elFtp = document.getElementById('display-ftp-url');
     if (elFtp) elFtp.innerText = ftpUrl;
@@ -263,6 +267,10 @@ function previewSite(siteName) {
 function openWebUrl(siteName) {
     selectSite(siteName);
     window.open(`http://${lanIp}:8090/`, '_blank');
+}
+
+function openExplorerUrl() {
+    window.open(`http://${lanIp}:8090/files`, '_blank');
 }
 
 // Hotspot Settings Shortcut

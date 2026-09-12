@@ -1,0 +1,5 @@
+COURT-READY FILING PACKET INDEX
+Document 1: Formal 28-Line Pleading Complaint Face Sheet
+Document 2: Civil Case Cover Sheet Summary
+Document 3: Exhibit Index with SHA-256 Cryptographic Hashes
+Document 4: Proof of Service (Certified Mail / Hand Delivery)

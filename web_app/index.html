@@ -27,6 +27,10 @@
                 <span class="item-icon">📶</span>
                 <span>WiFi Hotspot &amp; Server</span>
             </button>
+            <button class="drawer-item" onclick="openExplorerUrl(); toggleDrawer(false)">
+                <span class="item-icon">📁</span>
+                <span>Web File Explorer &amp; Hub</span>
+            </button>
             <button class="drawer-item" onclick="openHotspotSettings(); toggleDrawer(false)">
                 <span class="item-icon">⚙️</span>
                 <span>System Hotspot Settings</span>
@@ -198,6 +202,24 @@
                         </div>
                     </div>
 
+                    <!-- Web File Explorer & Media Hub Card (Matching Images 2, 3, 4) -->
+                    <div class="service-card" style="border-color: rgba(6, 182, 212, 0.4);">
+                        <div class="service-head">
+                            <div class="service-icon-box" style="background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); font-size: 18px;">📁</div>
+                            <div class="service-meta">
+                                <div class="service-name">Web File Explorer &amp; Media Hub</div>
+                                <div class="service-tag">Video/Image Preview &bull; Full Folder ZIP Downloads</div>
+                            </div>
+                            <div class="service-port" style="color: #06B6D4;">:8090/files</div>
+                        </div>
+                        <div class="url-strip">
+                            <span class="url-text" id="display-explorer-url">http://192.168.x.x:8090/files</span>
+                            <button class="btn-copy" onclick="copyValue('display-explorer-url')">Copy</button>
+                            <button class="btn-copy" style="background: #06B6D4; color: #000; font-weight: 700;" onclick="openExplorerUrl()">Open</button>
+                        </div>
+                    </div>
+
+
                     <!-- Hotspot System Action -->
                     <div class="service-card hotspot-action-card" onclick="openHotspotSettings()">
                         <div class="hotspot-action-content">
@@ -269,6 +291,19 @@
                         <div class="site-actions">
                             <button class="btn-sm" onclick="event.stopPropagation(); previewSite('blog')">Preview</button>
                             <button class="btn-sm btn-outline" onclick="event.stopPropagation(); openWebUrl('blog')">Open :8090</button>
+                        </div>
+                    </div>
+
+                    <div class="site-card" id="card-site-file_manager" onclick="selectSite('file_manager')">
+                        <div class="site-card-header">
+                            <span class="site-badge">Template</span>
+                            <span class="site-type">Media &amp; Files</span>
+                        </div>
+                        <h3>file_manager</h3>
+                        <p>Web File Explorer &amp; Media Hub (Streaming Video, Instant ZIP, Search).</p>
+                        <div class="site-actions">
+                            <button class="btn-sm" onclick="event.stopPropagation(); previewSite('file_manager')">Preview</button>
+                            <button class="btn-sm btn-outline" onclick="event.stopPropagation(); openWebUrl('file_manager')">Open :8090</button>
                         </div>
                     </div>
                 </div>

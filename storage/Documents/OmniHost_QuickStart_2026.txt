@@ -1,0 +1,12 @@
+==========================================================
+OMNIHOST PRO - CLOUD NODE & HIGH SPEED WIFI FTP SERVER
+==========================================================
+
+Key Capabilities:
+1. WiFi FTP Server (Port :2121) - Mount wirelessly on PC
+2. Web File Explorer & Media Hub (Port :8090/files) - Zero internet
+3. 1-Click Folder ZIP Downloads (Streamed dynamically)
+4. In-Browser Image & Video Preview (HTTP 206 Partial Content)
+5. Cloudflare Tunnel integration (Origin IP masked)
+
+All transfers occur over local WiFi at router line-speed.

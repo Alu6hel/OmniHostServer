@@ -12,6 +12,8 @@ import ftplib
 import unittest
 import urllib.request
 import urllib.parse
+import io
+import zipfile
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.web_engine.website_server import ModularWebsiteServer
@@ -115,6 +117,51 @@ class TestOmniHostServer(unittest.TestCase):
 
         godaddy_guide = DomainManager.get_guide("godaddy", "test-tunnel.cfargotunnel.com")
         self.assertEqual(godaddy_guide["provider_name"], "GoDaddy")
+
+    def test_08_file_manager_page(self):
+        req = urllib.request.Request("http://127.0.0.1:8290/files")
+        with urllib.request.urlopen(req) as resp:
+            body = resp.read().decode("utf-8")
+            self.assertEqual(resp.status, 200)
+            self.assertIn("WiFi File Transfer", body)
+
+    def test_09_file_manager_list_api(self):
+        req = urllib.request.Request("http://127.0.0.1:8290/api/files/list")
+        with urllib.request.urlopen(req) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data["status"], "ok")
+            folder_names = [f["name"] for f in data["folders"]]
+            self.assertIn("Documents", folder_names)
+            self.assertIn("Videos", folder_names)
+
+    def test_10_file_manager_video_category(self):
+        req = urllib.request.Request("http://127.0.0.1:8290/api/files/list?category=videos")
+        with urllib.request.urlopen(req) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data["status"], "ok")
+            self.assertTrue(len(data["files"]) > 0)
+            for f in data["files"]:
+                self.assertTrue(f["is_video"])
+
+    def test_11_file_manager_folder_zip_streaming(self):
+        import zipfile
+        req = urllib.request.Request("http://127.0.0.1:8290/api/files/download-folder?path=Documents")
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 200)
+            self.assertEqual(resp.headers.get("Content-Type"), "application/zip")
+            zip_bytes = resp.read()
+            with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+                names = zf.namelist()
+                self.assertTrue(any("OmniHost_QuickStart_2026.txt" in n for n in names))
+
+    def test_12_file_manager_media_preview_range(self):
+        req = urllib.request.Request("http://127.0.0.1:8290/api/files/preview?path=Videos/Server_Demo_2026.mp4")
+        req.add_header("Range", "bytes=0-10")
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 206)
+            self.assertIn("bytes 0-10/", resp.headers.get("Content-Range"))
+            content = resp.read()
+            self.assertEqual(len(content), 11)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
