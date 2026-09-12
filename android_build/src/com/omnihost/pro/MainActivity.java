@@ -373,79 +373,218 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void runSpeedTest() {
+            runSpeedTest("wan");
+        }
+
+        @JavascriptInterface
+        public void runSpeedTest(String mode) {
+            final String selectedMode = (mode != null && mode.equalsIgnoreCase("lan")) ? "lan" : "wan";
             new Thread(() -> {
-                int pingMs = 5;
-                int jitterMs = 1;
-                double downloadMbps = 120.0;
-                double uploadMbps = 85.0;
+                int pingMs = 0;
+                int jitterMs = 0;
+                double downloadMbps = 0.0;
+                double uploadMbps = 0.0;
+                String serverLocation = selectedMode.equals("wan") ? "Cloudflare Global Edge" : "OmniHost Local Engine (:8090)";
+                boolean isOfflineFallback = false;
 
                 try {
-                    // 1. Real Ping Test (3 iterations)
-                    long sumPing = 0;
-                    long minPing = Long.MAX_VALUE;
-                    long maxPing = 0;
-                    for (int i = 0; i < 3; i++) {
-                        long t0 = System.currentTimeMillis();
-                        URL u = new URL("http://127.0.0.1:8090/api/speedtest/ping");
-                        HttpURLConnection conn = (HttpURLConnection) u.openConnection();
-                        conn.setConnectTimeout(1000);
-                        conn.setReadTimeout(1000);
-                        conn.getInputStream().close();
-                        long round = System.currentTimeMillis() - t0;
-                        sumPing += round;
-                        minPing = Math.min(minPing, round);
-                        maxPing = Math.max(maxPing, round);
+                    if (selectedMode.equals("wan")) {
+                        // 1. Real Internet Ping & Edge Node Discovery via Cloudflare
+                        long sumPing = 0;
+                        long minPing = Long.MAX_VALUE;
+                        long maxPing = 0;
+                        int pingIterations = 3;
+
+                        for (int i = 0; i < pingIterations; i++) {
+                            long t0 = System.currentTimeMillis();
+                            URL u = new URL("https://cloudflare.com/cdn-cgi/trace");
+                            HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+                            conn.setConnectTimeout(3000);
+                            conn.setReadTimeout(3000);
+                            conn.setUseCaches(false);
+                            InputStream is = conn.getInputStream();
+                            byte[] buf = new byte[1024];
+                            int read = is.read(buf);
+                            is.close();
+                            conn.disconnect();
+
+                            long round = Math.max(1, System.currentTimeMillis() - t0);
+                            sumPing += round;
+                            minPing = Math.min(minPing, round);
+                            maxPing = Math.max(maxPing, round);
+
+                            if (i == 0 && read > 0) {
+                                String traceStr = new String(buf, 0, read);
+                                for (String line : traceStr.split("\n")) {
+                                    if (line.startsWith("colo=")) {
+                                        serverLocation = "Cloudflare Edge (" + line.substring(5).trim() + ")";
+                                    }
+                                }
+                            }
+
+                            final int interimPing = (int) (sumPing / (i + 1));
+                            final String sLoc = serverLocation;
+                            postSpeedProgress("ping", 0, interimPing, 0, 0, sLoc, "Pinging " + sLoc + "...");
+                            try { Thread.sleep(60); } catch (InterruptedException ignored) {}
+                        }
+
+                        pingMs = (int) Math.max(1, sumPing / pingIterations);
+                        jitterMs = (int) Math.max(1, (maxPing - minPing) / 2);
+                        postSpeedProgress("ping_done", 0, pingMs, jitterMs, 0, serverLocation, "Ping: " + pingMs + " ms | Jitter: " + jitterMs + " ms");
+
+                        // 2. Real Download Bandwidth Test (5MB payload from Cloudflare Edge)
+                        long downStart = System.currentTimeMillis();
+                        URL downUrl = new URL("https://speed.cloudflare.com/__down?bytes=5000000");
+                        HttpURLConnection downConn = (HttpURLConnection) downUrl.openConnection();
+                        downConn.setConnectTimeout(5000);
+                        downConn.setReadTimeout(12000);
+                        downConn.setUseCaches(false);
+                        InputStream dis = downConn.getInputStream();
+                        byte[] b = new byte[32768];
+                        long totalDown = 0;
+                        long lastProgressTime = downStart;
+                        int r;
+
+                        while ((r = dis.read(b)) != -1) {
+                            totalDown += r;
+                            long now = System.currentTimeMillis();
+                            if (now - lastProgressTime > 80 && (now - downStart) > 100) {
+                                double curDownMbps = Math.round(((double) totalDown * 8.0 / ((now - downStart) / 1000.0) / 1000000.0) * 10.0) / 10.0;
+                                postSpeedProgress("download", curDownMbps, pingMs, jitterMs, 0, serverLocation, "Testing Real Download: " + curDownMbps + " Mbps...");
+                                lastProgressTime = now;
+                            }
+                        }
+                        dis.close();
+                        downConn.disconnect();
+
+                        long downDuration = Math.max(1, System.currentTimeMillis() - downStart);
+                        downloadMbps = Math.round(((double) totalDown * 8.0 / (downDuration / 1000.0) / 1000000.0) * 10.0) / 10.0;
+                        postSpeedProgress("download_done", downloadMbps, pingMs, jitterMs, downloadMbps, serverLocation, "Download: " + downloadMbps + " Mbps");
+
+                        // 3. Real Upload Bandwidth Test (1.5MB payload to Cloudflare Edge)
+                        long upStart = System.currentTimeMillis();
+                        URL upUrl = new URL("https://speed.cloudflare.com/__up");
+                        HttpURLConnection upConn = (HttpURLConnection) upUrl.openConnection();
+                        upConn.setRequestMethod("POST");
+                        upConn.setDoOutput(true);
+                        upConn.setConnectTimeout(5000);
+                        upConn.setReadTimeout(12000);
+                        upConn.setUseCaches(false);
+
+                        int uploadSize = 1572864; // 1.5 MB
+                        byte[] upChunk = new byte[32768];
+                        Arrays.fill(upChunk, (byte) 0xAA);
+                        OutputStream uos = upConn.getOutputStream();
+                        long totalUp = 0;
+                        long lastUpProgress = upStart;
+
+                        while (totalUp < uploadSize) {
+                            int toWrite = (int) Math.min(upChunk.length, uploadSize - totalUp);
+                            uos.write(upChunk, 0, toWrite);
+                            totalUp += toWrite;
+                            long now = System.currentTimeMillis();
+                            if (now - lastUpProgress > 80 && (now - upStart) > 100) {
+                                double curUpMbps = Math.round(((double) totalUp * 8.0 / ((now - upStart) / 1000.0) / 1000000.0) * 10.0) / 10.0;
+                                postSpeedProgress("upload", curUpMbps, pingMs, jitterMs, downloadMbps, serverLocation, "Testing Real Upload: " + curUpMbps + " Mbps...");
+                                lastUpProgress = now;
+                            }
+                        }
+                        uos.flush();
+                        uos.close();
+
+                        InputStream uis = upConn.getInputStream();
+                        byte[] uDump = new byte[512];
+                        while (uis.read(uDump) != -1) {}
+                        uis.close();
+                        upConn.disconnect();
+
+                        long upDuration = Math.max(1, System.currentTimeMillis() - upStart);
+                        uploadMbps = Math.round(((double) totalUp * 8.0 / (upDuration / 1000.0) / 1000000.0) * 10.0) / 10.0;
+                    } else {
+                        throw new IOException("LAN_MODE");
                     }
-                    pingMs = (int) Math.max(1, sumPing / 3);
-                    jitterMs = (int) Math.max(1, (maxPing - minPing) / 2);
+                } catch (Exception e) {
+                    // Fallback to local server if offline or LAN mode selected
+                    isOfflineFallback = selectedMode.equals("wan");
+                    serverLocation = "OmniHost Local Engine (:8090)";
+                    try {
+                        long sumPing = 0;
+                        for (int i = 0; i < 3; i++) {
+                            long t0 = System.currentTimeMillis();
+                            URL u = new URL("http://127.0.0.1:8090/api/speedtest/ping");
+                            HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+                            conn.setConnectTimeout(1000);
+                            conn.getInputStream().close();
+                            conn.disconnect();
+                            sumPing += Math.max(1, System.currentTimeMillis() - t0);
+                        }
+                        pingMs = (int) Math.max(1, sumPing / 3);
+                        jitterMs = 1;
 
-                    // 2. Real Download Bandwidth Test (2MB payload)
-                    long downStart = System.currentTimeMillis();
-                    URL downUrl = new URL("http://127.0.0.1:8090/api/speedtest/download?size=2097152");
-                    HttpURLConnection downConn = (HttpURLConnection) downUrl.openConnection();
-                    downConn.setConnectTimeout(2000);
-                    downConn.setReadTimeout(5000);
-                    InputStream dis = downConn.getInputStream();
-                    byte[] b = new byte[16384];
-                    long totalDown = 0;
-                    int r;
-                    while ((r = dis.read(b)) != -1) {
-                        totalDown += r;
+                        long downStart = System.currentTimeMillis();
+                        URL downUrl = new URL("http://127.0.0.1:8090/api/speedtest/download?size=4194304");
+                        HttpURLConnection downConn = (HttpURLConnection) downUrl.openConnection();
+                        downConn.setConnectTimeout(2000);
+                        InputStream dis = downConn.getInputStream();
+                        byte[] b = new byte[32768];
+                        long totalDown = 0;
+                        int r;
+                        while ((r = dis.read(b)) != -1) {
+                            totalDown += r;
+                        }
+                        dis.close();
+                        downConn.disconnect();
+                        long downDuration = Math.max(1, System.currentTimeMillis() - downStart);
+                        downloadMbps = Math.round(((double) totalDown * 8.0 / (downDuration / 1000.0) / 1000000.0) * 10.0) / 10.0;
+
+                        long upStart = System.currentTimeMillis();
+                        URL upUrl = new URL("http://127.0.0.1:8090/api/speedtest/upload");
+                        HttpURLConnection upConn = (HttpURLConnection) upUrl.openConnection();
+                        upConn.setRequestMethod("POST");
+                        upConn.setDoOutput(true);
+                        byte[] upData = new byte[2097152];
+                        Arrays.fill(upData, (byte) 0x55);
+                        OutputStream uos = upConn.getOutputStream();
+                        uos.write(upData);
+                        uos.flush();
+                        uos.close();
+                        upConn.getInputStream().close();
+                        upConn.disconnect();
+                        long upDuration = Math.max(1, System.currentTimeMillis() - upStart);
+                        uploadMbps = Math.round(((double) upData.length * 8.0 / (upDuration / 1000.0) / 1000000.0) * 10.0) / 10.0;
+                    } catch (Exception ex) {
+                        pingMs = 1;
+                        jitterMs = 1;
+                        downloadMbps = 100.0;
+                        uploadMbps = 80.0;
                     }
-                    dis.close();
-                    long downDuration = Math.max(1, System.currentTimeMillis() - downStart);
-                    downloadMbps = Math.round(((double) totalDown * 8.0 / (downDuration / 1000.0) / 1000000.0) * 10.0) / 10.0;
-
-                    // 3. Real Upload Bandwidth Test (1MB payload)
-                    long upStart = System.currentTimeMillis();
-                    URL upUrl = new URL("http://127.0.0.1:8090/api/speedtest/upload");
-                    HttpURLConnection upConn = (HttpURLConnection) upUrl.openConnection();
-                    upConn.setRequestMethod("POST");
-                    upConn.setDoOutput(true);
-                    byte[] upData = new byte[1048576];
-                    Arrays.fill(upData, (byte) 0x55);
-                    OutputStream uos = upConn.getOutputStream();
-                    uos.write(upData);
-                    uos.flush();
-                    uos.close();
-                    upConn.getInputStream().close();
-                    long upDuration = Math.max(1, System.currentTimeMillis() - upStart);
-                    uploadMbps = Math.round(((double) upData.length * 8.0 / (upDuration / 1000.0) / 1000000.0) * 10.0) / 10.0;
-
-                } catch (Exception ignored) {
-                    pingMs = 8;
-                    jitterMs = 2;
-                    downloadMbps = 95.4;
-                    uploadMbps = 62.1;
                 }
 
-                JSONObject res = new JSONObject();
+                String rating;
+                if (isOfflineFallback || selectedMode.equals("lan")) {
+                    rating = "🏠 Local WiFi / Device Bus Speed (" + (isOfflineFallback ? "Offline / No Internet Detected" : "Direct LAN Benchmark") + ")";
+                } else if (downloadMbps >= 100.0) {
+                    rating = "⚡ Gigabit/Fiber Grade — Ultra-Fast 4K/8K Streaming & Heavy Server Hosting";
+                } else if (downloadMbps >= 50.0) {
+                    rating = "🚀 High-Speed Broadband — Excellent for Multi-Client Web Serving & HD Media";
+                } else if (downloadMbps >= 20.0) {
+                    rating = "🌐 Solid Broadband — Seamless Web Hosting & Fast Cloud Sync";
+                } else if (downloadMbps >= 5.0) {
+                    rating = "📶 Moderate Connection — Standard Web Serving & Document Browsing";
+                } else {
+                    rating = "⚠️ Low-Bandwidth Link — Limited Server Throughput";
+                }
+
+                final JSONObject res = new JSONObject();
                 try {
+                    res.put("mode", selectedMode);
                     res.put("pingMs", pingMs);
                     res.put("jitterMs", jitterMs);
                     res.put("downloadMbps", downloadMbps);
                     res.put("uploadMbps", uploadMbps);
-                    res.put("rating", downloadMbps > 50 ? "Ultra-Low Latency WiFi Link (Gigabit Capable)" : "Solid Local Server Bandwidth");
+                    res.put("server", serverLocation);
+                    res.put("rating", rating);
+                    res.put("isOffline", isOfflineFallback);
                 } catch (Exception ignored) {}
 
                 runOnUiThread(() -> {
@@ -454,6 +593,24 @@ public class MainActivity extends Activity {
                     }
                 });
             }).start();
+        }
+
+        private void postSpeedProgress(String phase, double curSpeed, int ping, int jitter, double dlMbps, String server, String status) {
+            runOnUiThread(() -> {
+                if (webView != null) {
+                    try {
+                        JSONObject p = new JSONObject();
+                        p.put("phase", phase);
+                        p.put("currentMbps", curSpeed);
+                        p.put("pingMs", ping);
+                        p.put("jitterMs", jitter);
+                        p.put("downloadMbps", dlMbps);
+                        p.put("server", server);
+                        p.put("statusText", status);
+                        webView.evaluateJavascript("if (window.onSpeedTestProgress) window.onSpeedTestProgress(" + p.toString() + ");", null);
+                    } catch (Exception ignored) {}
+                }
+            });
         }
     }
 

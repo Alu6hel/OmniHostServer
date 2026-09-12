@@ -406,15 +406,25 @@
             <section id="tab-speed" class="tab-view">
                 <div class="section-banner">
                     <h2>Network &amp; Server Speedometer</h2>
-                    <p>Test WiFi latency, jitter, and real-time bandwidth capabilities:</p>
+                    <p>Test real internet bandwidth, latency, jitter, and local server throughput:</p>
+                </div>
+
+                <!-- Mode Selector Pills -->
+                <div class="speed-mode-toggle">
+                    <button class="speed-mode-btn active" id="btn-mode-wan" onclick="setSpeedTestMode('wan')">
+                        🌐 Real Internet (WAN)
+                    </button>
+                    <button class="speed-mode-btn" id="btn-mode-lan" onclick="setSpeedTestMode('lan')">
+                        🏠 Local Server (LAN)
+                    </button>
                 </div>
 
                 <div class="speedometer-container">
-                    <div class="gauge-ring">
+                    <div class="gauge-ring" id="gauge-ring">
                         <div class="gauge-fill" id="gauge-fill"></div>
                         <div class="gauge-center">
                             <span class="gauge-num" id="gauge-speed-val">0.0</span>
-                            <span class="gauge-unit">Mbps</span>
+                            <span class="gauge-unit" id="gauge-speed-unit">Mbps</span>
                         </div>
                     </div>
 
@@ -442,8 +452,13 @@
                     </div>
                 </div>
 
+                <div class="speed-server-info" id="speed-server-info">
+                    <span class="server-badge">Target Edge:</span>
+                    <span class="server-name" id="speed-server-name">Cloudflare Global Edge Network</span>
+                </div>
+
                 <div class="speed-rating-card" id="speed-rating-card">
-                    <span class="rating-icon">🚀</span>
+                    <span class="rating-icon" id="speed-rating-icon">🚀</span>
                     <span class="rating-text" id="speed-rating-text">Tap "Run Network Speed Test" to diagnose connection.</span>
                 </div>
             </section>

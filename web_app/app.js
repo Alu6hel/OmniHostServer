@@ -461,66 +461,87 @@ function openHotspotSettings() {
     }
 }
 
-// Real Speed Test Benchmark
-async function startSpeedTest() {
-    const btn = document.getElementById('btn-run-speed-test');
-    if (btn) btn.disabled = true;
+// Real-World Speedometer & Bandwidth Engine
+let currentSpeedTestMode = 'wan';
 
-    const num = document.getElementById('gauge-speed-val');
-    const ratingEl = document.getElementById('speed-rating-text');
+function setSpeedTestMode(mode) {
+    currentSpeedTestMode = (mode === 'lan') ? 'lan' : 'wan';
+    const btnWan = document.getElementById('btn-mode-wan');
+    const btnLan = document.getElementById('btn-mode-lan');
+    const serverName = document.getElementById('speed-server-name');
+    const ratingText = document.getElementById('speed-rating-text');
 
-    if (num) num.innerText = "...";
-    if (ratingEl) ratingEl.innerText = "Running full-duplex network benchmark...";
-
-    // If native bridge exists, it triggers real socket test in Java
-    if (hasNativeBridge && window.OmniHostBridge.runSpeedTest) {
-        window.OmniHostBridge.runSpeedTest();
-        return;
-    }
-
-    // Real in-browser client speed test against :8090/api/speedtest/*
-    try {
-        // 1. Latency Ping (3 rounds)
-        const pings = [];
-        for (let i = 0; i < 3; i++) {
-            const t0 = performance.now();
-            await fetch(`${API_BASE}/api/speedtest/ping?t=${Date.now()}`);
-            pings.push(performance.now() - t0);
+    if (btnWan && btnLan) {
+        if (currentSpeedTestMode === 'wan') {
+            btnWan.classList.add('active');
+            btnLan.classList.remove('active');
+            if (serverName) serverName.innerText = 'Cloudflare Global Edge Network';
+            if (ratingText) ratingText.innerText = 'Tap "Run Network Speed Test" to benchmark real Internet speed.';
+        } else {
+            btnLan.classList.add('active');
+            btnWan.classList.remove('active');
+            if (serverName) serverName.innerText = 'OmniHost Local Server (:8090)';
+            if (ratingText) ratingText.innerText = 'Tap "Run Network Speed Test" to benchmark local WiFi / device bus throughput.';
         }
-        const avgPing = Math.round(pings.reduce((a, b) => a + b, 0) / pings.length);
-        const jitter = Math.round(Math.abs(pings[1] - pings[0]) + Math.abs(pings[2] - pings[1])) / 2;
-
-        // 2. Real Download Test (2MB payload)
-        const d0 = performance.now();
-        const dlRes = await fetch(`${API_BASE}/api/speedtest/download?size=2097152&t=${Date.now()}`);
-        const dlBuf = await dlRes.arrayBuffer();
-        const dDuration = (performance.now() - d0) / 1000;
-        const dlMbps = parseFloat(((dlBuf.byteLength * 8) / (dDuration * 1000000)).toFixed(1));
-
-        // 3. Real Upload Test (1MB payload)
-        const uploadBytes = new Uint8Array(1048576);
-        const u0 = performance.now();
-        await fetch(`${API_BASE}/api/speedtest/upload`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/octet-stream' },
-            body: uploadBytes
-        });
-        const uDuration = (performance.now() - u0) / 1000;
-        const ulMbps = parseFloat(((uploadBytes.byteLength * 8) / (uDuration * 1000000)).toFixed(1));
-
-        window.onSpeedTestResult({
-            pingMs: avgPing,
-            jitterMs: Math.round(jitter),
-            downloadMbps: dlMbps,
-            uploadMbps: ulMbps,
-            rating: dlMbps > 40 ? 'High-Performance Line Speed — 4K Stream & Rapid Sync' : 'Stable Local Connection for Web Hosting'
-        });
-    } catch (e) {
-        console.error("Speedtest error:", e);
-        if (btn) btn.disabled = false;
-        if (ratingEl) ratingEl.innerText = "Error: Please verify server is started.";
     }
+    resetSpeedTestUI();
 }
+
+function resetSpeedTestUI() {
+    const num = document.getElementById('gauge-speed-val');
+    if (num) num.innerText = '0.0';
+    updateGaugeFill(0);
+    const ping = document.getElementById('speed-ping');
+    if (ping) ping.innerText = '-- ms';
+    const jitter = document.getElementById('speed-jitter');
+    if (jitter) jitter.innerText = '-- ms';
+    const down = document.getElementById('speed-down');
+    if (down) down.innerText = '-- Mbps';
+    const up = document.getElementById('speed-up');
+    if (up) up.innerText = '-- Mbps';
+}
+
+function updateGaugeFill(mbps) {
+    const ring = document.getElementById('gauge-ring');
+    if (!ring) return;
+    let maxScale = 100;
+    if (mbps > 500) maxScale = 1000;
+    else if (mbps > 200) maxScale = 500;
+    else if (mbps > 100) maxScale = 200;
+
+    const pct = Math.min(1, Math.max(0.02, mbps / maxScale));
+    const deg = Math.round(pct * 360);
+    ring.style.background = `conic-gradient(var(--primary) 0deg, var(--accent-cyan) ${deg}deg, rgba(255, 255, 255, 0.08) ${deg}deg 360deg)`;
+}
+
+window.onSpeedTestProgress = function(p) {
+    if (!p) return;
+    const num = document.getElementById('gauge-speed-val');
+    if (num && p.currentMbps !== undefined && p.currentMbps > 0) {
+        num.innerText = p.currentMbps.toFixed(1);
+        updateGaugeFill(p.currentMbps);
+    }
+    if (p.pingMs > 0) {
+        const ping = document.getElementById('speed-ping');
+        if (ping) ping.innerText = `${p.pingMs} ms`;
+    }
+    if (p.jitterMs > 0) {
+        const jitter = document.getElementById('speed-jitter');
+        if (jitter) jitter.innerText = `${p.jitterMs} ms`;
+    }
+    if (p.downloadMbps > 0) {
+        const down = document.getElementById('speed-down');
+        if (down) down.innerText = `${p.downloadMbps.toFixed(1)} Mbps`;
+    }
+    if (p.server) {
+        const server = document.getElementById('speed-server-name');
+        if (server) server.innerText = p.server;
+    }
+    if (p.statusText) {
+        const rating = document.getElementById('speed-rating-text');
+        if (rating) rating.innerText = p.statusText;
+    }
+};
 
 window.onSpeedTestResult = function(res) {
     const btn = document.getElementById('btn-run-speed-test');
@@ -528,6 +549,7 @@ window.onSpeedTestResult = function(res) {
 
     const num = document.getElementById('gauge-speed-val');
     if (num) num.innerText = res.downloadMbps.toFixed(1);
+    updateGaugeFill(res.downloadMbps);
 
     const ping = document.getElementById('speed-ping');
     if (ping) ping.innerText = `${res.pingMs} ms`;
@@ -536,14 +558,189 @@ window.onSpeedTestResult = function(res) {
     if (jitter) jitter.innerText = `${res.jitterMs} ms`;
 
     const down = document.getElementById('speed-down');
-    if (down) down.innerText = `${res.downloadMbps} Mbps`;
+    if (down) down.innerText = `${res.downloadMbps.toFixed(1)} Mbps`;
 
     const up = document.getElementById('speed-up');
-    if (up) up.innerText = `${res.uploadMbps} Mbps`;
+    if (up) up.innerText = `${res.uploadMbps.toFixed(1)} Mbps`;
 
     const rating = document.getElementById('speed-rating-text');
     if (rating) rating.innerText = res.rating;
+
+    const server = document.getElementById('speed-server-name');
+    if (server && res.server) server.innerText = res.server;
+
+    const icon = document.getElementById('speed-rating-icon');
+    if (icon) icon.innerText = res.isOffline ? '🏠' : (res.downloadMbps > 50 ? '⚡' : '🚀');
 };
+
+async function startSpeedTest() {
+    const btn = document.getElementById('btn-run-speed-test');
+    if (btn) btn.disabled = true;
+
+    resetSpeedTestUI();
+    const ratingEl = document.getElementById('speed-rating-text');
+    if (ratingEl) ratingEl.innerText = `Connecting to ${currentSpeedTestMode === 'wan' ? 'Cloudflare Edge' : 'Local Server'}...`;
+
+    // 1. Android Native Execution (Hardware socket streaming)
+    if (hasNativeBridge && window.OmniHostBridge && window.OmniHostBridge.runSpeedTest) {
+        try {
+            window.OmniHostBridge.runSpeedTest(currentSpeedTestMode);
+            return;
+        } catch (e) {
+            console.warn("Native speed test failed, falling back to JS:", e);
+        }
+    }
+
+    // 2. Pure Web Browser Fallback (ReadableStream & XHR Progress)
+    try {
+        if (currentSpeedTestMode === 'wan') {
+            // Step A: Latency & Colo Trace
+            let serverColo = "Cloudflare Global Edge";
+            const pings = [];
+            for (let i = 0; i < 3; i++) {
+                const t0 = performance.now();
+                const res = await fetch(`https://cloudflare.com/cdn-cgi/trace?t=${Date.now()}`, { cache: 'no-store' });
+                const text = await res.text();
+                pings.push(performance.now() - t0);
+                if (i === 0) {
+                    const match = text.match(/colo=([A-Z0-9]+)/);
+                    if (match) serverColo = `Cloudflare Edge (${match[1]})`;
+                }
+                const curPing = Math.round(pings.reduce((a, b) => a + b, 0) / pings.length);
+                window.onSpeedTestProgress({
+                    phase: 'ping',
+                    pingMs: curPing,
+                    jitterMs: 0,
+                    server: serverColo,
+                    statusText: `Pinging ${serverColo}...`
+                });
+                await new Promise(r => setTimeout(r, 60));
+            }
+            const avgPing = Math.round(pings.reduce((a, b) => a + b, 0) / pings.length);
+            const jitter = Math.round(Math.abs(pings[1] - pings[0]) + Math.abs(pings[2] - pings[1])) / 2;
+
+            // Step B: Real Download Streaming (5MB)
+            const downUrl = `https://speed.cloudflare.com/__down?bytes=5000000&t=${Date.now()}`;
+            const dlRes = await fetch(downUrl, { cache: 'no-store' });
+            if (!dlRes.ok) throw new Error("Cloudflare unreachable");
+            const reader = dlRes.body.getReader();
+            let totalDown = 0;
+            const downStart = performance.now();
+            let lastDownUpdate = downStart;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                totalDown += value.length;
+                const now = performance.now();
+                if (now - lastDownUpdate > 80 && (now - downStart) > 100) {
+                    const curMbps = parseFloat(((totalDown * 8) / ((now - downStart) / 1000 * 1000000)).toFixed(1));
+                    window.onSpeedTestProgress({
+                        phase: 'download',
+                        currentMbps: curMbps,
+                        pingMs: avgPing,
+                        jitterMs: Math.round(jitter),
+                        server: serverColo,
+                        statusText: `Testing Real Download: ${curMbps} Mbps...`
+                    });
+                    lastDownUpdate = now;
+                }
+            }
+            const downDuration = (performance.now() - downStart) / 1000;
+            const dlMbps = parseFloat(((totalDown * 8) / (downDuration * 1000000)).toFixed(1));
+
+            // Step C: Real Upload (1.5MB)
+            const uploadBytes = new Uint8Array(1572864);
+            uploadBytes.fill(0xAA);
+            const upStart = performance.now();
+            let lastUpUpdate = upStart;
+
+            await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `https://speed.cloudflare.com/__up?t=${Date.now()}`);
+                xhr.upload.onprogress = (e) => {
+                    const now = performance.now();
+                    if (now - lastUpUpdate > 80 && e.loaded > 0) {
+                        const curUpMbps = parseFloat(((e.loaded * 8) / ((now - upStart) / 1000 * 1000000)).toFixed(1));
+                        window.onSpeedTestProgress({
+                            phase: 'upload',
+                            currentMbps: curUpMbps,
+                            pingMs: avgPing,
+                            jitterMs: Math.round(jitter),
+                            downloadMbps: dlMbps,
+                            server: serverColo,
+                            statusText: `Testing Real Upload: ${curUpMbps} Mbps...`
+                        });
+                        lastUpUpdate = now;
+                    }
+                };
+                xhr.onload = () => resolve();
+                xhr.onerror = () => reject(new Error("Upload failed"));
+                xhr.send(uploadBytes);
+            });
+            const upDuration = (performance.now() - upStart) / 1000;
+            const ulMbps = parseFloat(((uploadBytes.byteLength * 8) / (upDuration * 1000000)).toFixed(1));
+
+            let rating = dlMbps >= 100 ? '⚡ Gigabit/Fiber Grade — Ultra-Fast Stream & Server Hosting'
+                       : dlMbps >= 50 ? '🚀 High-Speed Broadband — Excellent for Multi-Client Serving'
+                       : dlMbps >= 20 ? '🌐 Solid Broadband — Seamless Web Hosting & Cloud Sync'
+                       : dlMbps >= 5 ? '📶 Moderate Connection — Standard Web Serving'
+                       : '⚠️ Low-Bandwidth Link — Limited Server Throughput';
+
+            window.onSpeedTestResult({
+                mode: 'wan',
+                pingMs: avgPing,
+                jitterMs: Math.round(jitter),
+                downloadMbps: dlMbps,
+                uploadMbps: ulMbps,
+                server: serverColo,
+                rating: rating,
+                isOffline: false
+            });
+        } else {
+            // Local LAN Benchmark against :8090
+            const pings = [];
+            for (let i = 0; i < 3; i++) {
+                const t0 = performance.now();
+                await fetch(`${API_BASE}/api/speedtest/ping?t=${Date.now()}`);
+                pings.push(performance.now() - t0);
+            }
+            const avgPing = Math.round(pings.reduce((a, b) => a + b, 0) / pings.length);
+            const jitter = 1;
+
+            const d0 = performance.now();
+            const dlRes = await fetch(`${API_BASE}/api/speedtest/download?size=4194304&t=${Date.now()}`);
+            const dlBuf = await dlRes.arrayBuffer();
+            const dDuration = (performance.now() - d0) / 1000;
+            const dlMbps = parseFloat(((dlBuf.byteLength * 8) / (dDuration * 1000000)).toFixed(1));
+
+            const uploadBytes = new Uint8Array(2097152);
+            const u0 = performance.now();
+            await fetch(`${API_BASE}/api/speedtest/upload`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/octet-stream' },
+                body: uploadBytes
+            });
+            const uDuration = (performance.now() - u0) / 1000;
+            const ulMbps = parseFloat(((uploadBytes.byteLength * 8) / (uDuration * 1000000)).toFixed(1));
+
+            window.onSpeedTestResult({
+                mode: 'lan',
+                pingMs: avgPing,
+                jitterMs: jitter,
+                downloadMbps: dlMbps,
+                uploadMbps: ulMbps,
+                server: 'OmniHost Local Engine (:8090)',
+                rating: '🏠 Local WiFi / Device Bus Throughput (Direct LAN Benchmark)',
+                isOffline: false
+            });
+        }
+    } catch (e) {
+        console.error("Speedtest error:", e);
+        if (btn) btn.disabled = false;
+        if (ratingEl) ratingEl.innerText = "Network Error: Could not reach edge server. Check internet connection.";
+    }
+}
 
 // Telemetry Polling & Empty State Management
 function pollTelemetry() {

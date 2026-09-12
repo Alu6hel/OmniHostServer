@@ -912,12 +912,13 @@ body {
     width: 170px;
     height: 170px;
     border-radius: 50%;
-    background: conic-gradient(var(--primary) 0deg, var(--accent-cyan) 180deg, var(--border-subtle) 180deg);
+    background: conic-gradient(var(--primary) 0deg, var(--accent-cyan) 0deg, rgba(255, 255, 255, 0.08) 0deg 360deg);
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 20px;
     box-shadow: 0 0 25px var(--primary-glow);
+    transition: background 0.15s ease, box-shadow 0.2s ease;
 }
 
 .gauge-center {
@@ -958,6 +959,63 @@ body {
 
 .btn-primary:active {
     transform: scale(0.97);
+}
+
+.speed-mode-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.speed-mode-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    padding: 7px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.speed-mode-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.speed-mode-btn.active {
+    background: linear-gradient(135deg, var(--primary), #1D4ED8);
+    border-color: var(--primary);
+    color: #FFFFFF;
+    box-shadow: 0 0 14px var(--primary-glow);
+}
+
+.speed-server-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.server-badge {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-subtle);
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.server-name {
+    font-weight: 700;
+    color: var(--accent-cyan);
 }
 
 .speed-metrics-grid {
