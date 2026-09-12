@@ -28,6 +28,25 @@ public class MainActivity extends Activity {
     private long dataLimitMegabytes = 0;
     private Handler timerHandler = new Handler(Looper.getMainLooper());
     private Runnable timerRunnable;
+    private Runnable batteryMonitorRunnable = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if (batteryLimitPercent > 0 && ((httpServer != null && httpServer.isRunning()) || (ftpServer != null && ftpServer.isRunning()))) {
+                    if (!isBatteryCharging()) {
+                        int currentPct = getBatteryPercentage();
+                        if (currentPct <= batteryLimitPercent) {
+                            runOnUiThread(() -> {
+                                Toast.makeText(MainActivity.this, "⚠️ OmniHost: Battery reached " + currentPct + "% (Limit: " + batteryLimitPercent + "%). Stopping servers to preserve battery.", Toast.LENGTH_LONG).show();
+                                stopServers();
+                            });
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+            timerHandler.postDelayed(this, 1000);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +115,7 @@ public class MainActivity extends Activity {
 
         webView.addJavascriptInterface(new OmniHostBridge(), "OmniHostBridge");
         webView.loadUrl("file:///android_asset/www/index.html");
+        timerHandler.post(batteryMonitorRunnable);
     }
 
     private void startServers() {
@@ -129,6 +149,8 @@ public class MainActivity extends Activity {
                 state.put("httpPort", 8090);
                 state.put("ftpPort", 2121);
                 state.put("activeSite", httpServer != null ? httpServer.getActiveSite() : "default");
+                state.put("batteryLevel", getBatteryPercentage());
+                state.put("isCharging", isBatteryCharging());
                 webView.evaluateJavascript("if (window.onHostStateSync) window.onHostStateSync(" + state.toString() + ");", null);
             } catch (Exception ignored) {}
         });
@@ -261,10 +283,14 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public String getTelemetryJson() {
-            if (httpServer != null) {
-                return httpServer.getStatsJson().toString();
+            try {
+                JSONObject stats = httpServer != null ? httpServer.getStatsJson() : new JSONObject();
+                stats.put("batteryLevel", getBatteryPercentage());
+                stats.put("isCharging", isBatteryCharging());
+                return stats.toString();
+            } catch (Exception e) {
+                return "{}";
             }
-            return "{}";
         }
 
         @JavascriptInterface

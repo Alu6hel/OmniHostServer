@@ -22,6 +22,8 @@ let timerIndex = 0;
 let batteryLimitPct = 0;
 const batteryOptions = [0, 15, 20, 30];
 let batteryIndex = 0;
+let currentBatteryPct = 100;
+let isDeviceCharging = false;
 
 let dataLimitMb = 0;
 const dataOptions = [0, 100, 500, 1024, 5120];
@@ -37,7 +39,7 @@ function initApp() {
     initBlackHole();
     pollTelemetry();
     pollTunnelStatus();
-    setInterval(pollTelemetry, 2000);
+    setInterval(pollTelemetry, 1000); // 1-second ultra-responsive live telemetry & battery refresh
     setInterval(pollTunnelStatus, 4000);
 }
 
@@ -51,6 +53,9 @@ function setupDeviceState() {
             if (dev.httpRunning !== undefined) isServersRunning = dev.httpRunning;
             if (dev.tunnelActive !== undefined) isTunnelActive = dev.tunnelActive;
             if (dev.tunnelUrl !== undefined) tunnelPublicUrl = dev.tunnelUrl;
+            if (dev.batteryLevel !== undefined) currentBatteryPct = dev.batteryLevel;
+            if (dev.isCharging !== undefined) isDeviceCharging = dev.isCharging;
+            updateBatteryCardUI();
             updateUrls();
             updatePowerButtonUI();
         } catch (e) {
@@ -62,6 +67,7 @@ function setupDeviceState() {
             lanIp = window.location.hostname;
         }
         updateUrls();
+        initWebBatteryApi();
     }
 }
 
@@ -72,6 +78,10 @@ window.onHostStateSync = function(state) {
     if (state.httpRunning !== undefined) isServersRunning = state.httpRunning;
     if (state.tunnelActive !== undefined) isTunnelActive = state.tunnelActive;
     if (state.tunnelUrl !== undefined) tunnelPublicUrl = state.tunnelUrl;
+    if (state.batteryLevel !== undefined) currentBatteryPct = state.batteryLevel;
+    if (state.isCharging !== undefined) isDeviceCharging = state.isCharging;
+    updateBatteryCardUI();
+    checkBatteryLimitEnforcement();
     updateUrls();
     updatePowerButtonUI();
     highlightActiveSiteCard();
@@ -280,11 +290,50 @@ function cycleTimerLimit() {
 function cycleBatteryLimit() {
     batteryIndex = (batteryIndex + 1) % batteryOptions.length;
     batteryLimitPct = batteryOptions[batteryIndex];
-    const el = document.getElementById('limit-battery-val');
-    if (el) {
-        el.innerText = batteryLimitPct === 0 ? 'Disabled' : `${batteryLimitPct}%`;
-    }
+    updateBatteryCardUI();
     pushLimitsToBridge();
+    checkBatteryLimitEnforcement();
+    showToast(batteryLimitPct === 0 ? "🔋 Battery Limit: Disabled" : `🔋 Battery Limit: Stop at ${batteryLimitPct}% (Live: ${currentBatteryPct}%)`);
+}
+
+function updateBatteryCardUI() {
+    const el = document.getElementById('limit-battery-val');
+    if (!el) return;
+    const chargeIcon = isDeviceCharging ? '⚡' : '';
+    if (batteryLimitPct === 0) {
+        el.innerHTML = `Disabled <span style="font-size:9px; color:var(--text-dim); display:block; margin-top:2px;">Live: ${currentBatteryPct}% ${chargeIcon}</span>`;
+    } else {
+        el.innerHTML = `<span style="color:#10B981; font-weight:700;">${batteryLimitPct}%</span> <span style="font-size:9px; color:var(--text-dim); display:block; margin-top:2px;">Live: ${currentBatteryPct}% ${chargeIcon}</span>`;
+    }
+}
+
+function checkBatteryLimitEnforcement() {
+    if (batteryLimitPct > 0 && isServersRunning && !isDeviceCharging) {
+        if (currentBatteryPct <= batteryLimitPct) {
+            toggleMasterPower();
+            showToast(`🛑 Battery dropped to ${currentBatteryPct}% (Limit: ${batteryLimitPct}%). Servers stopped to save battery!`);
+        }
+    }
+}
+
+function initWebBatteryApi() {
+    if (!hasNativeBridge && typeof navigator !== 'undefined' && navigator.getBattery) {
+        navigator.getBattery().then(battery => {
+            currentBatteryPct = Math.round(battery.level * 100);
+            isDeviceCharging = battery.charging;
+            updateBatteryCardUI();
+
+            battery.addEventListener('levelchange', () => {
+                currentBatteryPct = Math.round(battery.level * 100);
+                updateBatteryCardUI();
+                checkBatteryLimitEnforcement();
+            });
+            battery.addEventListener('chargingchange', () => {
+                isDeviceCharging = battery.charging;
+                updateBatteryCardUI();
+            });
+        }).catch(() => {});
+    }
 }
 
 function cycleDataLimit() {
@@ -535,6 +584,17 @@ function applyTelemetryData(data) {
         const s = data.uptime_seconds;
         uptime.innerText = s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`;
     }
+
+    if (data.batteryLevel !== undefined) currentBatteryPct = data.batteryLevel;
+    if (data.isCharging !== undefined) isDeviceCharging = data.isCharging;
+    updateBatteryCardUI();
+    checkBatteryLimitEnforcement();
+
+    const batEl = document.getElementById('telemetry-battery-val');
+    if (batEl) batEl.innerText = `${currentBatteryPct}%`;
+
+    const chgEl = document.getElementById('telemetry-charging-val');
+    if (chgEl) chgEl.innerText = isDeviceCharging ? 'Charging (AC/USB) ⚡' : 'Running on Battery 🔋';
 
     const feed = document.getElementById('http-log-feed');
     const emptyPl = document.getElementById('http-empty-placeholder');
