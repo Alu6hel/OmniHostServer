@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy & Zero-Knowledge Architecture | Alumungandr™</title>
+  <meta name="description" content="Zero-knowledge privacy policy and local-first data architecture for Alumungandr apps and web tools by David Anthony Jones.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090a0f;
+      --bg-card: #12151e;
+      --bg-surface: #181c29;
+      --border: #23293a;
+      --border-focus: #00ff88;
+      --signal-green: #00ff88;
+      --signal-green-glow: rgba(0, 255, 136, 0.35);
+      --signal-red: #ff3366;
+      --text-main: #f3f4f6;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --serif: 'Cinzel', Georgia, serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--sans);
+      line-height: 1.7;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Reading Progress Bar (Feton Micro-Interaction) */
+    #readingProgress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00ff88, #60efff);
+      width: 0%;
+      z-index: 999;
+      transition: width 0.1s ease-out;
+      box-shadow: 0 0 10px var(--signal-green);
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 3px;
+      left: 0;
+      width: 100%;
+      z-index: 100;
+      background: rgba(9, 10, 15, 0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.85rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: var(--signal-green);
+      color: #090a0f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-weight: 800;
+      font-size: 1rem;
+    }
+
+    .brand-name {
+      font-family: var(--sans);
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: #fff;
+      background: var(--bg-surface);
+    }
+
+    .nav-links a.active {
+      color: var(--signal-green);
+      font-weight: 600;
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 7rem 1.5rem 5rem;
+    }
+
+    /* Hero Header - Feton Aggressive Content-First */
+    .hero {
+      margin-bottom: 3.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 2.5rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--signal-green);
+      background: rgba(0, 255, 136, 0.08);
+      border: 1px solid rgba(0, 255, 136, 0.25);
+      padding: 0.3rem 0.85rem;
+      border-radius: 100px;
+      margin-bottom: 1.25rem;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--signal-green);
+      box-shadow: 0 0 6px var(--signal-green);
+    }
+
+    .hero-title {
+      font-size: 3.2rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+      color: #ffffff;
+    }
+
+    .hero-title span {
+      color: var(--signal-green);
+    }
+
+    .hero-lead {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 780px;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    /* Interactive Zero-Knowledge Packet Simulator (Micro-Interaction) */
+    .simulator-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      margin-bottom: 3.5rem;
+    }
+
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .sim-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .sim-toggle-group {
+      display: flex;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .sim-toggle-btn {
+      padding: 0.4rem 0.9rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .sim-toggle-btn.active {
+      background: var(--signal-green);
+      color: #090a0f;
+    }
+
+    .sim-toggle-btn.active.danger {
+      background: var(--signal-red);
+      color: #fff;
+    }
+
+    /* Tactile Micro-Interactions & Button Depression */
+    .sim-toggle-btn:active,
+    .nav-btn:active,
+    .nav-links a:active,
+    .footer-links a:active {
+      transform: scale(0.96) !important;
+      transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .sim-viewport {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .route-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      margin: 1.5rem 0;
+    }
+
+    .route-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      z-index: 2;
+    }
+
+    .node-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.2rem;
+    }
+
+    .node-label {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .route-track {
+      position: absolute;
+      top: 23px;
+      left: 46px;
+      right: 46px;
+      height: 2px;
+      background: var(--border);
+      z-index: 1;
+    }
+
+    .route-packet {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      top: -6px;
+      background: var(--signal-green);
+      box-shadow: 0 0 10px var(--signal-green);
+      animation: packetTravel 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes packetTravel {
+      0% { left: 0%; opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { left: 100%; opacity: 0; }
+    }
+
+    .sim-explanation {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--signal-green);
+      background: rgba(0, 255, 136, 0.05);
+      border-left: 3px solid var(--signal-green);
+      padding: 0.75rem 1rem;
+      border-radius: 0 6px 6px 0;
+    }
+
+    /* Content Layout */
+    .policy-grid {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 3.5rem;
+      align-items: start;
+    }
+
+    /* Sticky Sidebar Navigation */
+    .sidebar {
+      position: sticky;
+      top: 5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .sidebar-heading {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.6rem;
+    }
+
+    .sidebar-link {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      border-left: 2px solid transparent;
+    }
+
+    .sidebar-link:hover {
+      color: #fff;
+      background: var(--bg-surface);
+    }
+
+    .sidebar-link.active {
+      color: var(--signal-green);
+      border-left-color: var(--signal-green);
+      background: rgba(0, 255, 136, 0.05);
+      font-weight: 600;
+    }
+
+    /* Policy Document Body */
+    .policy-body {
+      display: flex;
+      flex-direction: column;
+      gap: 3rem;
+    }
+
+    .policy-section {
+      scroll-margin-top: 6rem;
+    }
+
+    .section-num {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--signal-green);
+      margin-bottom: 0.35rem;
+    }
+
+    .section-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+
+    .policy-p {
+      color: var(--text-muted);
+      font-size: 0.98rem;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Data Matrix Table */
+    .data-matrix {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.85rem;
+      background: var(--bg-card);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .data-matrix th {
+      background: var(--bg-surface);
+      text-align: left;
+      padding: 0.85rem 1rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-matrix td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-main);
+    }
+
+    .data-matrix tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge-no {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      background: rgba(0, 255, 136, 0.1);
+      color: var(--signal-green);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      font-weight: 600;
+    }
+
+    .badge-ephemeral {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      background: rgba(96, 239, 255, 0.1);
+      color: #60efff;
+      border: 1px solid rgba(96, 239, 255, 0.3);
+      font-weight: 600;
+    }
+
+    /* Highlight Notice Box */
+    .callout {
+      background: rgba(0, 255, 136, 0.04);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .callout-title {
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .callout-p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      background: #06070a;
+      padding: 2.5rem 1.5rem;
+      margin-top: 5rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--signal-green);
+    }
+
+    @media (max-width: 850px) {
+      .policy-grid {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        display: none;
+      }
+      .hero-title {
+        font-size: 2.4rem;
+      }
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Micro-Interaction: Reading Progress Indicator -->
+  <div id="readingProgress"></div>
+
+  <!-- Top Navigation -->
+  <nav>
+    <a href="/" class="brand">
+      <div class="brand-logo">ZK</div>
+      <span class="brand-name">Alumungandr Privacy</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Apps & Ecosystem</a></li>
+      <li><a href="/speedtest">Speed Test</a></li>
+      <li><a href="/invoice">Invoice Studio</a></li>
+      <li><a href="/resizer">Social Resizer</a></li>
+      <li><a href="/subscriptions">Reality Check</a></li>
+      <li><a href="/ip">What Is My IP</a></li>
+      <li><a href="/timezone">Meeting Matcher</a></li>
+      <li><a href="/about">About & Journey</a></li>
+      <li><a href="/faq">FAQ Matrix</a></li>
+      <li><a href="/contact">Contact Uplink</a></li>
+      <li><a href="/privacy" class="active">Privacy</a></li>
+      <li><a href="/terms">Terms</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <!-- Hero Header -->
+    <div class="hero">
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        <span>ARCHITECTURAL GUARANTEE: ZERO-KNOWLEDGE EXECUTION</span>
+      </div>
+      <h1 class="hero-title">Your data stays <span>on your machine.</span></h1>
+      <p class="hero-lead">
+        Privacy is not a marketing checkbox at Alumungandr. It is an immutable mathematical property baked into how David Anthony Jones architects software.
+      </p>
+    </div>
+
+    <!-- Feton Micro-Interaction: Interactive Zero-Knowledge vs Cloud Leaks Simulator -->
+    <div class="simulator-card">
+      <div class="sim-header">
+        <div class="sim-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--signal-green)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Architecture In Action: Visual Packet Route</span>
+        </div>
+        <div class="sim-toggle-group">
+          <button class="sim-toggle-btn active" id="modeAlu" onclick="setSimMode('alu')">ALUMUNGANDR LOCAL-FIRST</button>
+          <button class="sim-toggle-btn" id="modeCloud" onclick="setSimMode('cloud')">CONVENTIONAL CLOUD SPYWARE</button>
+        </div>
+      </div>
+
+      <div class="sim-viewport">
+        <div class="route-diagram">
+          <div class="route-node">
+            <div class="node-icon">💻</div>
+            <span class="node-label">Your Device (RAM)</span>
+          </div>
+
+          <div class="route-node" id="nodeMid">
+            <div class="node-icon" id="nodeMidIcon">🛡️</div>
+            <span class="node-label" id="nodeMidLabel">OmniHost Core (Local)</span>
+          </div>
+
+          <div class="route-node" id="nodeTarget">
+            <div class="node-icon" id="nodeTargetIcon">🔒</div>
+            <span class="node-label" id="nodeTargetLabel">Isolated Session</span>
+          </div>
+
+          <div class="route-track">
+            <div class="route-packet" id="routePacket"></div>
+          </div>
+        </div>
+
+        <div class="sim-explanation" id="simExplanation">
+          [MODE: ZERO-KNOWLEDGE] Invoices generated in memory; Speedtest telemetry is masked and never sold; Applications run 100% offline. Zero cross-site cookies, zero profiling trackers.
+        </div>
+      </div>
+    </div>
+
+    <!-- Policy Documentation Grid -->
+    <div class="policy-grid">
+      <!-- Sticky Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-heading">Contents</div>
+        <a href="#core-doctrine" class="sidebar-link active">1. Core Doctrine</a>
+        <a href="#data-collected" class="sidebar-link">2. Data Matrix & Collection</a>
+        <a href="#speedtest-telemetry" class="sidebar-link">3. Diagnostic Telemetry</a>
+        <a href="#offline-apps" class="sidebar-link">4. Offline APK Integrity</a>
+        <a href="#third-parties" class="sidebar-link">5. Third-Party Policy</a>
+        <a href="#legal-rights" class="sidebar-link">6. GDPR / CCPA Rights</a>
+        <a href="#governance" class="sidebar-link">7. Legal Governance</a>
+      </aside>
+
+      <!-- Main Policy Body -->
+      <div class="policy-body">
+        <!-- Section 1 -->
+        <section class="policy-section" id="core-doctrine">
+          <div class="section-num">SECTION 01</div>
+          <h2 class="section-title">The Local-First Core Doctrine</h2>
+          <p class="policy-p">
+            Alumungandr products, created and maintained by David Anthony Jones ("Alu"), operate on a strict <strong>Zero-Knowledge, Local-First</strong> paradigm. When you use our web utilities—such as the No-BS Invoice & Receipt Generator, the OmniHost Speed Test, or our downloadable APK applications—the processing happens on your hardware or within transient, non-persistent RAM buffers.
+          </p>
+          <div class="callout">
+            <div class="callout-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>The Alumungandr Guarantee</span>
+            </div>
+            <p class="callout-p">
+              We do not build advertising dossiers on you. We do not sell, rent, trade, or monetize your IP address, device fingerprints, or business records under any circumstances.
+            </p>
+          </div>
+        </section>
+
+        <!-- Section 2 -->
+        <section class="policy-section" id="data-collected">
+          <div class="section-num">SECTION 02</div>
+          <h2 class="section-title">Data Matrix: What We Do (and Do NOT) Collect</h2>
+          <p class="policy-p">
+            To provide radical transparency, here is the exact architectural breakdown of data flows across every tool on this platform:
+          </p>
+          
+          <table class="data-matrix">
+            <thead>
+              <tr>
+                <th>DATA TYPE</th>
+                <th>PURPOSE</th>
+                <th>STORAGE LOCATION</th>
+                <th>PERSISTENCE</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Invoice & Financial Data</strong></td>
+                <td>Client generation of PDF receipts & invoices</td>
+                <td><span class="badge-no">Client Browser RAM Only</span></td>
+                <td>Zero on Server (Wiped on reload)</td>
+              </tr>
+              <tr>
+                <td><strong>Speed Test Throughput</strong></td>
+                <td>Measure ping, jitter, upload & download mbps</td>
+                <td><span class="badge-ephemeral">Volatile Server Memory</span></td>
+                <td>Masked IP (`xx.xx.*.*`) only</td>
+              </tr>
+              <tr>
+                <td><strong>Contact Uplink Tickets</strong></td>
+                <td>Process licensing, support, and inquiries</td>
+                <td>Local Server JSON File</td>
+                <td>Retained solely to respond to user</td>
+              </tr>
+              <tr>
+                <td><strong>Browser Fingerprinting</strong></td>
+                <td>Cross-site tracking, advertising pixels</td>
+                <td><span class="badge-no">NEVER COLLECTED</span></td>
+                <td>Non-existent</td>
+              </tr>
+              <tr>
+                <td><strong>Telemetry Beacons</strong></td>
+                <td>Third-party analytics (Google Analytics, Meta)</td>
+                <td><span class="badge-no">ZERO THIRD-PARTY SCRIPTS</span></td>
+                <td>Non-existent</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Section 3 -->
+        <section class="policy-section" id="speedtest-telemetry">
+          <div class="section-num">SECTION 03</div>
+          <h2 class="section-title">Speed Test & Diagnostic Telemetry</h2>
+          <p class="policy-p">
+            When executing an internet performance benchmark via our Speed Test utility:
+          </p>
+          <ul style="margin-left: 1.5rem; margin-bottom: 1.25rem; color: var(--text-muted); font-size: 0.95rem;">
+            <li style="margin-bottom: 0.5rem;">The server streams pre-allocated random bytes from memory to measure throughput. No executable code is sent to your device.</li>
+            <li style="margin-bottom: 0.5rem;">Uploaded test chunks are discarded immediately upon reception—they are never written to physical disk.</li>
+            <li style="margin-bottom: 0.5rem;">If you choose to generate a public share link for your benchmark report, the public record displays an anonymized IP address (e.g. <code>192.168.*.*</code>) to protect your location.</li>
+          </ul>
+        </section>
+
+        <!-- Section 4 -->
+        <section class="policy-section" id="offline-apps">
+          <div class="section-num">SECTION 04</div>
+          <h2 class="section-title">Offline APK Application Integrity</h2>
+          <p class="policy-p">
+            All proprietary Android packages provided under the Alumungandr banner (including <strong>GalaxSee</strong>, <strong>SueChef</strong>, and <strong>OmniHost</strong>) are engineered for offline resilience:
+          </p>
+          <p class="policy-p">
+            They do not require online user authentication, do not connect to surveillance ad networks, and do not transmit contacts, device photos, or clipboard data to any external server.
+          </p>
+        </section>
+
+        <!-- Section 5 -->
+        <section class="policy-section" id="third-parties">
+          <div class="section-num">SECTION 05</div>
+          <h2 class="section-title">Zero Third-Party Data Sharing</h2>
+          <p class="policy-p">
+            We reject the surveillance capitalism model. We do not integrate:
+          </p>
+          <ul style="margin-left: 1.5rem; margin-bottom: 1.25rem; color: var(--text-muted); font-size: 0.95rem;">
+            <li style="margin-bottom: 0.4rem;">Google Analytics or Firebase Crashlytics tracking beacons.</li>
+            <li style="margin-bottom: 0.4rem;">Facebook / Meta pixel tracking tags.</li>
+            <li style="margin-bottom: 0.4rem;">Cross-site behavioral data aggregators.</li>
+          </ul>
+          <p class="policy-p">
+            CDN and tunnel connectivity (such as Cloudflare Edge) are utilized strictly for encrypted transport and DDoS defense.
+          </p>
+        </section>
+
+        <!-- Section 6 -->
+        <section class="policy-section" id="legal-rights">
+          <div class="section-num">SECTION 06</div>
+          <h2 class="section-title">Your Rights Under GDPR and CCPA</h2>
+          <p class="policy-p">
+            Regardless of whether you reside in the European Union, the United States, or anywhere globally, you enjoy the following rights:
+          </p>
+          <ul style="margin-left: 1.5rem; margin-bottom: 1.25rem; color: var(--text-muted); font-size: 0.95rem;">
+            <li style="margin-bottom: 0.5rem;"><strong>Right to Know:</strong> You have the right to know what information is processed. Because our tools operate locally in RAM, there is typically zero personal record to inspect.</li>
+            <li style="margin-bottom: 0.5rem;"><strong>Right to Erasure (Forget Me):</strong> If you submit a support ticket or contact message, you may request its instant deletion at any time by transmitting an inquiry to our legal desk.</li>
+            <li style="margin-bottom: 0.5rem;"><strong>Right to Non-Discrimination:</strong> Every feature of our apps and utilities is equally available without requiring personal data surrender.</li>
+          </ul>
+        </section>
+
+        <!-- Section 7 -->
+        <section class="policy-section" id="governance">
+          <div class="section-num">SECTION 07</div>
+          <h2 class="section-title">Proprietorship & Governance</h2>
+          <p class="policy-p">
+            This policy is issued under the authority of David Anthony Jones ("Alu"), sole author and master copyright holder of the Alumungandr suite.
+          </p>
+          <p class="policy-p">
+            For questions, legal audits, or cryptographic correspondence, utilize our <a href="/contact" style="color: var(--signal-green); text-decoration: underline;">Contact Uplink</a>.
+          </p>
+          <p style="font-family: var(--mono); font-size: 0.8rem; color: var(--text-dim); margin-top: 2rem;">
+            DOCUMENT REVISION: 2.4.0 // EFFECTIVE DATE: SEPTEMBER 2026 // HASH: 8F2A0B7C9D1E
+          </p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-links">
+        <a href="/">Apps & Ecosystem</a>
+        <a href="/speedtest">Speed Test</a>
+        <a href="/invoice">Invoice Studio</a>
+        <a href="/resizer">Social Resizer</a>
+        <a href="/subscriptions">Reality Check</a>
+        <a href="/ip">What Is My IP</a>
+        <a href="/timezone">Meeting Matcher</a>
+        <a href="/about">About & Journey</a>
+        <a href="/faq">FAQ Matrix</a>
+        <a href="/contact">Contact Uplink</a>
+        <a href="/privacy" class="active">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+    <p>© 2026 Alumungandr™. Founded and architected by David Anthony Jones ("Alu"). All Rights Reserved.</p>
+  </footer>
+
+  <!-- Feton Micro-Interactions Script -->
+  <script>
+    // 1. Reading Progress Bar
+    window.addEventListener('scroll', () => {
+      const winScroll = document.documentElement.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      document.getElementById('readingProgress').style.width = scrolled + '%';
+    });
+
+    // 2. Sticky Sidebar Active Link Spy
+    const sections = document.querySelectorAll('.policy-section');
+    const navLinks = document.querySelectorAll('.sidebar-link');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 120;
+        if (pageYOffset >= sectionTop) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+          link.classList.add('active');
+        }
+      });
+    });
+
+    // 3. Interactive Packet Route Simulator (Micro-Interaction)
+    function setSimMode(mode) {
+      const btnAlu = document.getElementById('modeAlu');
+      const btnCloud = document.getElementById('modeCloud');
+      const packet = document.getElementById('routePacket');
+      const midIcon = document.getElementById('nodeMidIcon');
+      const midLabel = document.getElementById('nodeMidLabel');
+      const targetIcon = document.getElementById('nodeTargetIcon');
+      const targetLabel = document.getElementById('nodeTargetLabel');
+      const exp = document.getElementById('simExplanation');
+
+      if (mode === 'alu') {
+        btnAlu.classList.add('active');
+        btnCloud.classList.remove('active', 'danger');
+
+        midIcon.textContent = '🛡️';
+        midLabel.textContent = 'OmniHost Core (Local)';
+        targetIcon.textContent = '🔒';
+        targetLabel.textContent = 'Isolated Session';
+
+        packet.style.background = 'var(--signal-green)';
+        packet.style.boxShadow = '0 0 10px var(--signal-green)';
+
+        exp.style.color = 'var(--signal-green)';
+        exp.style.borderLeftColor = 'var(--signal-green)';
+        exp.style.background = 'rgba(0, 255, 136, 0.05)';
+        exp.textContent = '[MODE: ZERO-KNOWLEDGE] Invoices generated in memory; Speedtest telemetry is masked and never sold; Applications run 100% offline. Zero cross-site cookies, zero profiling trackers.';
+      } else {
+        btnCloud.classList.add('active', 'danger');
+        btnAlu.classList.remove('active');
+
+        midIcon.textContent = '📡';
+        midLabel.textContent = 'Ad Exchange / Broker';
+        targetIcon.textContent = '👁️';
+        targetLabel.textContent = 'Profile Database';
+
+        packet.style.background = 'var(--signal-red)';
+        packet.style.boxShadow = '0 0 10px var(--signal-red)';
+
+        exp.style.color = 'var(--signal-red)';
+        exp.style.borderLeftColor = 'var(--signal-red)';
+        exp.style.background = 'rgba(255, 51, 102, 0.08)';
+        exp.textContent = '[CONVENTIONAL CLOUD LEAKAGE] Competitors upload your invoice PDFs to unencrypted S3 buckets, scrape customer emails, log raw IP addresses, and embed third-party tracking pixels.';
+      }
+    }
+  </script>
+</body>
+</html>

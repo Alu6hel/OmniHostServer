@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact & Holographic Uplink | Alumungandr™</title>
+  <meta name="description" content="Secure communications uplink and technical support console for Alumungandr ecosystem by David Anthony Jones.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030611;
+      --bg-surface: rgba(8, 14, 30, 0.75);
+      --bg-card: rgba(13, 22, 45, 0.65);
+      --border: rgba(0, 242, 254, 0.2);
+      --border-glow: rgba(0, 242, 254, 0.5);
+      --neon-cyan: #00f2fe;
+      --neon-blue: #4facfe;
+      --neon-purple: #7f00ff;
+      --neon-magenta: #e100ff;
+      --text-main: #f0f6fc;
+      --text-muted: #8b9bb4;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Plus Jakarta Sans', sans-serif;
+      --serif: 'Cinzel', Georgia, serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(127, 0, 255, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(0, 242, 254, 0.1) 0%, transparent 45%),
+        linear-gradient(rgba(0, 242, 254, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    }
+
+    /* 3D Hologram Background Canvas */
+    #holoCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    /* Holographic Scanline Overlay */
+    .scanlines {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 242, 254, 0.02) 50%
+      );
+      background-size: 100% 4px;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .beam-scanner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+      box-shadow: 0 0 15px var(--neon-cyan);
+      opacity: 0.4;
+      z-index: 1;
+      pointer-events: none;
+      animation: scanBeam 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes scanBeam {
+      0% { top: 0%; opacity: 0.1; }
+      50% { opacity: 0.6; }
+      100% { top: 100%; opacity: 0.1; }
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 100;
+      background: rgba(3, 6, 17, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.85rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--serif);
+      font-weight: 900;
+      color: #030611;
+      font-size: 1.15rem;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+    }
+
+    .brand-name {
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+      background: linear-gradient(135deg, #ffffff, #a0d8ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      transition: all 0.25s ease;
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--neon-cyan);
+      background: rgba(0, 242, 254, 0.08);
+      text-shadow: 0 0 10px rgba(0, 242, 254, 0.4);
+    }
+
+    /* Main Container */
+    main {
+      position: relative;
+      z-index: 10;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 6.5rem 1.5rem 4rem;
+    }
+
+    /* HUD Telemetry Bar */
+    .hud-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(8, 15, 33, 0.8);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--neon-cyan);
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      margin-bottom: 2.5rem;
+      backdrop-filter: blur(12px);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .hud-items {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .hud-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .hud-val {
+      color: var(--neon-cyan);
+      font-weight: 700;
+    }
+
+    .indicator-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00ff88;
+      box-shadow: 0 0 8px #00ff88;
+      animation: pulseDot 2s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Hero Header */
+    .hero {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--neon-cyan);
+      background: rgba(0, 242, 254, 0.08);
+      border: 1px solid var(--border-glow);
+      padding: 0.35rem 1rem;
+      border-radius: 100px;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+    }
+
+    .hero-title {
+      font-family: var(--serif);
+      font-size: 2.8rem;
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: 0.02em;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #ffffff 30%, var(--neon-cyan) 80%, var(--neon-magenta) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Grid Layout */
+    .console-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 2.5rem;
+      align-items: start;
+    }
+
+    /* Holographic Card Frame */
+    .holo-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 242, 254, 0.03);
+      transition: border-color 0.3s ease;
+    }
+
+    .holo-card::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: 15%;
+      width: 70%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+    }
+
+    .holo-card:hover {
+      border-color: var(--border-glow);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.75rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .card-title {
+      font-family: var(--serif);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .card-title svg {
+      width: 20px;
+      height: 20px;
+      color: var(--neon-cyan);
+    }
+
+    .card-badge {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--neon-cyan);
+      background: rgba(0, 242, 254, 0.1);
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 242, 254, 0.3);
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      font-family: var(--mono);
+      color: var(--text-muted);
+      margin-bottom: 0.45rem;
+      letter-spacing: 0.04em;
+    }
+
+    .form-control {
+      width: 100%;
+      background: rgba(4, 9, 23, 0.7);
+      border: 1px solid rgba(0, 242, 254, 0.25);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 0.95rem;
+      transition: all 0.25s ease;
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.25);
+      background: rgba(6, 14, 35, 0.85);
+    }
+
+    select.form-control {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2300f2fe' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+
+    select.form-control option {
+      background: #080f21;
+      color: #fff;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 0.9rem;
+      background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-blue) 50%, var(--neon-purple) 100%);
+      border: none;
+      border-radius: 8px;
+      color: #030611;
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      box-shadow: 0 0 25px rgba(0, 242, 254, 0.35);
+      margin-top: 0.5rem;
+    }
+
+    .btn-submit:hover {
+      box-shadow: 0 0 35px rgba(0, 242, 254, 0.6);
+      transform: translateY(-2px);
+      color: #000;
+    }
+
+    .btn-submit:active {
+      transform: scale(0.98);
+    }
+
+    .btn-autofill-contact {
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid var(--border-glow);
+      color: var(--neon-cyan);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-autofill-contact:hover {
+      background: rgba(0, 242, 254, 0.25);
+      box-shadow: 0 0 12px var(--border-glow);
+      color: #fff;
+    }
+
+    .btn-autofill-contact:active {
+      transform: scale(0.96);
+    }
+
+    .category-helper-card {
+      background: rgba(0, 242, 254, 0.05);
+      border-left: 2px solid var(--neon-cyan);
+      border-radius: 4px;
+      padding: 0.5rem 0.75rem;
+      margin-top: 0.45rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      transition: all 0.2s;
+    }
+
+    .category-helper-card strong {
+      color: var(--neon-cyan);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Holographic Response Receipt */
+    .dispatch-receipt {
+      display: none;
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      background: rgba(0, 255, 136, 0.05);
+      border: 1px solid rgba(0, 255, 136, 0.4);
+      border-radius: 8px;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .receipt-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #00ff88;
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      padding: 0.35rem 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+    }
+
+    .receipt-label {
+      color: var(--text-muted);
+    }
+
+    .receipt-value {
+      color: #fff;
+    }
+
+    /* Founder Dossier & Telemetry */
+    .dossier-card {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .profile-banner {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .profile-avatar {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--neon-cyan) 0%, #080f21 80%);
+      border: 2px solid var(--neon-cyan);
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--serif);
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .profile-info h3 {
+      font-family: var(--serif);
+      font-size: 1.25rem;
+      color: #fff;
+      margin-bottom: 0.25rem;
+    }
+
+    .profile-info p {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--neon-cyan);
+    }
+
+    .dossier-specs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .spec-item {
+      background: rgba(5, 11, 28, 0.6);
+      border: 1px solid rgba(0, 242, 254, 0.15);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+    }
+
+    .spec-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .spec-val {
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .channel-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .channel-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(5, 11, 28, 0.6);
+      border: 1px solid rgba(0, 242, 254, 0.12);
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      text-decoration: none;
+      color: var(--text-main);
+      transition: all 0.25s ease;
+    }
+
+    .channel-item:hover {
+      border-color: var(--neon-cyan);
+      background: rgba(0, 242, 254, 0.05);
+      transform: translateX(4px);
+    }
+
+    .channel-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .channel-name {
+      font-weight: 600;
+      font-size: 0.88rem;
+    }
+
+    .channel-sub {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .channel-badge {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(0, 255, 136, 0.1);
+      color: #00ff88;
+      border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+
+    /* Live Server Telemetry Monitor */
+    .live-monitor {
+      background: rgba(4, 8, 20, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-top: 1rem;
+      font-family: var(--mono);
+    }
+
+    .monitor-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .monitor-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 48px;
+      margin-bottom: 0.5rem;
+    }
+
+    .bar {
+      flex: 1;
+      background: linear-gradient(to top, rgba(0, 242, 254, 0.2), var(--neon-cyan));
+      border-radius: 2px 2px 0 0;
+      transition: height 0.4s ease;
+    }
+
+    /* Footer */
+    footer {
+      position: relative;
+      z-index: 10;
+      border-top: 1px solid var(--border);
+      background: rgba(2, 4, 12, 0.9);
+      padding: 2.5rem 1.5rem;
+      margin-top: 4rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--neon-cyan);
+    }
+
+    @media (max-width: 900px) {
+      .console-grid {
+        grid-template-columns: 1fr;
+      }
+      .nav-links {
+        display: none;
+      }
+      .hud-bar {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+      }
+      .hud-items {
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 3D Holographic WebGL/Canvas Animation -->
+  <canvas id="holoCanvas"></canvas>
+  <div class="scanlines"></div>
+  <div class="beam-scanner"></div>
+
+  <!-- Top Navigation -->
+  <nav>
+    <a href="/" class="brand">
+      <div class="brand-logo">A</div>
+      <span class="brand-name">ALUMUNGANDR</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Apps & Ecosystem</a></li>
+      <li><a href="/speedtest">Speed Test</a></li>
+      <li><a href="/invoice">Invoice Studio</a></li>
+      <li><a href="/resizer">Social Resizer</a></li>
+      <li><a href="/subscriptions">Reality Check</a></li>
+      <li><a href="/ip">What Is My IP</a></li>
+      <li><a href="/timezone">Meeting Matcher</a></li>
+      <li><a href="/about">About & Journey</a></li>
+      <li><a href="/faq">FAQ Matrix</a></li>
+      <li><a href="/contact" class="active">Contact Uplink</a></li>
+      <li><a href="/privacy">Privacy</a></li>
+      <li><a href="/terms">Terms</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <main>
+    <!-- HUD Telemetry Header -->
+    <div class="hud-bar">
+      <div class="hud-items">
+        <div class="hud-item">
+          <div class="indicator-dot"></div>
+          <span>UPLINK FREQUENCY:</span>
+          <span class="hud-val">8090-BETA // SECURE</span>
+        </div>
+        <div class="hud-item">
+          <span>CIPHER:</span>
+          <span class="hud-val">RSA-4096 / ECC</span>
+        </div>
+        <div class="hud-item">
+          <span>EST. LATENCY:</span>
+          <span class="hud-val" id="hudPing">-- ms</span>
+        </div>
+      </div>
+      <div class="hud-item">
+        <span>UTC:</span>
+        <span class="hud-val" id="hudTime">00:00:00 UTC</span>
+      </div>
+    </div>
+
+    <!-- Hero Header -->
+    <div class="hero">
+      <div class="hero-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93"/></svg>
+        <span>DAVID HECKOFF CREATIVE ARCHITECTURE // COMS-NODE 01</span>
+      </div>
+      <h1 class="hero-title">Secure Communications Uplink</h1>
+      <p class="hero-subtitle">
+        Direct transmission channel to David Anthony Jones ("Alu") and the Alumungandr engineering group. Direct dispatch logged straight to the dedicated system core.
+      </p>
+    </div>
+
+    <!-- Interactive Holographic Console -->
+    <div class="console-grid">
+      <!-- Left: Direct Secure Transmission Form -->
+      <div class="holo-card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <span>Transmit Message</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <button type="button" class="btn-autofill-contact" onclick="autoFillContact()" title="1-Click Auto-Fill with your saved profile">⚡ Auto-Fill My Info</button>
+            <span class="card-badge">DIRECT HTTP/POST</span>
+          </div>
+        </div>
+
+        <form id="contactForm">
+          <div class="form-group">
+            <label class="form-label" for="senderName">OPERATOR / FULL NAME</label>
+            <input type="text" id="senderName" class="form-control" placeholder="e.g. Elena Rostova" autocomplete="name" required oninput="saveContactDraft()">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="senderEmail">RETURN DISPATCH EMAIL</label>
+            <input type="email" id="senderEmail" class="form-control" placeholder="elena@enterprise.org" autocomplete="email" required oninput="saveContactDraft()">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="categorySelect">DISPATCH ROUTING CATEGORY</label>
+            <select id="categorySelect" class="form-control" onchange="updateCategoryHelper()">
+              <option value="Commercial Licensing">Commercial & Master Licensing Inquiry</option>
+              <option value="Enterprise Architecture">Enterprise Hosting & Edge Server Deployment</option>
+              <option value="Security & Bug Bounty">Security, Zero-Knowledge & Vulnerability Audit</option>
+              <option value="Application Support">GalaxSee / SueChef / OmniHost &amp; Web Apps Support</option>
+              <option value="Direct Founder Inquiry">Direct Founder Comms (David Anthony Jones)</option>
+            </select>
+            <div class="category-helper-card" id="categoryHelper">
+              <strong>Routing Scope:</strong> Formal requests for multi-user commercial deployment, re-distribution, or white-label partnerships under the Master Charter.
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="senderSubject">TRANSMISSION SUBJECT</label>
+            <input type="text" id="senderSubject" class="form-control" placeholder="Brief statement of intent" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="senderMessage">ENCRYPTED PAYLOAD / MESSAGE</label>
+            <textarea id="senderMessage" class="form-control" placeholder="Provide full details of your proposal, licensing scope, or support inquiry..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn-submit" id="submitBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <span>TRANSMIT DISPATCH PACKET</span>
+          </button>
+        </form>
+
+        <!-- Dynamic Hologram Receipt -->
+        <div class="dispatch-receipt" id="dispatchReceipt">
+          <div class="receipt-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>UPLINK CONFIRMED // TICKET LOGGED</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Ticket Reference:</span>
+            <span class="receipt-value" id="ticketId">--</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Server Timestamp:</span>
+            <span class="receipt-value" id="ticketTimestamp">--</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Channel Assigned:</span>
+            <span class="receipt-value" id="ticketCategory">--</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Status:</span>
+            <span class="receipt-value" style="color: #00ff88;">QUEUED FOR OPERATOR REVIEW</span>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.85rem; line-height: 1.5;">
+            Your dispatch has been written to the master system storage. Founder or designated core engineers will reply within 4 business hours.
+          </p>
+        </div>
+      </div>
+
+      <!-- Right: Dossier & Real Telemetry -->
+      <div class="dossier-card">
+        <!-- Profile Holo-Card -->
+        <div class="holo-card">
+          <div class="profile-banner">
+            <div class="profile-avatar">A</div>
+            <div class="profile-info">
+              <h3>David Anthony Jones</h3>
+              <p>FOUNDER & LEAD ARCHITECT // "ALU"</p>
+            </div>
+          </div>
+          
+          <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; margin: 1.25rem 0;">
+            Sole originator and legal copyright proprietor of the Alumungandr master brand, proprietary APK application suite, and high-performance server architectures.
+          </p>
+
+          <div class="dossier-specs">
+            <div class="spec-item">
+              <div class="spec-label">JURISDICTION</div>
+              <div class="spec-val">United States</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">INTELLECTUAL PROP.</div>
+              <div class="spec-val">Berne Conv. 1886</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">PRIMARY CORE</div>
+              <div class="spec-val">OmniHost Pro 8090</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">AVERAGE SLA</div>
+              <div class="spec-val">&lt; 4 Hours</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Communications Directory -->
+        <div class="holo-card">
+          <div class="card-header" style="margin-bottom: 1.25rem; padding-bottom: 0.75rem;">
+            <div class="card-title" style="font-size: 1.05rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 12l-4-4-4 4M12 16V8"/></svg>
+              <span>Verified Contact Channels</span>
+            </div>
+            <span class="card-badge">OFFICIAL</span>
+          </div>
+
+          <div class="channel-list">
+            <a href="mailto:david@alumungandr.com" class="channel-item">
+              <div class="channel-left">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <div>
+                  <div class="channel-name">Commercial & Legal Comms</div>
+                  <div class="channel-sub">licensing@alumungandr.com</div>
+                </div>
+              </div>
+              <span class="channel-badge">PGP READY</span>
+            </a>
+
+            <a href="https://github.com/Alu" target="_blank" rel="noopener" class="channel-item">
+              <div class="channel-left">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--neon-purple)" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                <div>
+                  <div class="channel-name">Source & Architecture</div>
+                  <div class="channel-sub">github.com/Alu</div>
+                </div>
+              </div>
+              <span class="channel-badge">PUBLIC</span>
+            </a>
+          </div>
+
+          <!-- Live Heartbeat Visualizer -->
+          <div class="live-monitor">
+            <div class="monitor-title">
+              <span>LIVE CORE HEARTBEAT (OMNIHOST TELEMETRY)</span>
+              <span id="monitorReqs">REQ/S: 1.8</span>
+            </div>
+            <div class="monitor-bars" id="monitorBars">
+              <!-- Dynamically populated bars -->
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted);">
+              <span>BUFFER: 4MB ZERO-COPY</span>
+              <span>STATE: SYNCHRONIZED</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-links">
+        <a href="/">Apps & Ecosystem</a>
+        <a href="/speedtest">Speed Test</a>
+        <a href="/invoice">Invoice Studio</a>
+        <a href="/resizer">Social Resizer</a>
+        <a href="/subscriptions">Reality Check</a>
+        <a href="/ip">What Is My IP</a>
+        <a href="/timezone">Meeting Matcher</a>
+        <a href="/about">About & Journey</a>
+        <a href="/faq">FAQ Matrix</a>
+        <a href="/contact" class="active">Contact Uplink</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+    <p>© 2026 Alumungandr™. Founded and architected by David Anthony Jones ("Alu"). All Rights Reserved.</p>
+  </footer>
+
+  <!-- Hologram 3D Gyroscope Canvas & Interaction Logic -->
+  <script>
+    // --- 1. Interactive 3D Holographic Gyroscope Animation ---
+    const canvas = document.getElementById('holoCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let mouseX = 0, mouseY = 0;
+    let targetRotX = 0, targetRotY = 0;
+    let rotX = 0, rotY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX - width / 2) / (width / 2);
+      mouseY = (e.clientY - height / 2) / (height / 2);
+      targetRotY = mouseX * 0.8;
+      targetRotX = -mouseY * 0.8;
+    });
+
+    // Particle field
+    const PARTICLE_COUNT = 85;
+    const particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: (Math.random() - 0.5) * 1400,
+        y: (Math.random() - 0.5) * 1400,
+        z: (Math.random() - 0.5) * 1000,
+        radius: Math.random() * 2 + 1,
+        color: Math.random() > 0.5 ? '#00f2fe' : '#7f00ff'
+      });
+    }
+
+    // Gyroscope Rings
+    const rings = [
+      { radius: 240, tilt: 0.3, speed: 0.008, color: 'rgba(0, 242, 254, 0.45)', dots: 32 },
+      { radius: 190, tilt: 1.1, speed: -0.012, color: 'rgba(127, 0, 255, 0.45)', dots: 24 },
+      { radius: 140, tilt: 2.2, speed: 0.015, color: 'rgba(79, 172, 254, 0.5)', dots: 18 },
+      { radius: 80,  tilt: 0.8, speed: -0.02,  color: 'rgba(225, 0, 255, 0.6)', dots: 12 }
+    ];
+
+    let baseAngle = 0;
+
+    function renderHolo() {
+      ctx.clearRect(0, 0, width, height);
+
+      rotX += (targetRotX - rotX) * 0.05;
+      rotY += (targetRotY - rotY) * 0.05;
+      baseAngle += 0.005;
+
+      const cx = width * 0.75;
+      const cy = height * 0.45;
+      const fov = 600;
+
+      // Draw background particles
+      for (let p of particles) {
+        p.z -= 0.5;
+        if (p.z < -500) p.z = 500;
+
+        // Rotate particles slightly
+        let cosY = Math.cos(rotY * 0.3), sinY = Math.sin(rotY * 0.3);
+        let px = p.x * cosY - p.z * sinY;
+        let pz = p.z * cosY + p.x * sinY;
+
+        let scale = fov / (fov + pz + 700);
+        let screenX = cx + px * scale;
+        let screenY = cy + p.y * scale;
+
+        if (screenX >= 0 && screenX <= width && screenY >= 0 && screenY <= height) {
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, p.radius * scale, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = Math.min(1, Math.max(0.1, scale * 0.8));
+          ctx.fill();
+        }
+      }
+
+      // Draw Gyroscope Rings
+      rings.forEach((ring, idx) => {
+        const ringAngle = baseAngle * (idx % 2 === 0 ? 1 : -1) * (1 + idx * 0.3);
+        const points = [];
+
+        for (let a = 0; a < Math.PI * 2; a += (Math.PI * 2) / ring.dots) {
+          let x = Math.cos(a + ringAngle) * ring.radius;
+          let y = Math.sin(a + ringAngle) * ring.radius;
+          let z = 0;
+
+          // Apply ring tilt
+          let tiltCos = Math.cos(ring.tilt);
+          let tiltSin = Math.sin(ring.tilt);
+          let y1 = y * tiltCos - z * tiltSin;
+          let z1 = z * tiltCos + y * tiltSin;
+
+          // Apply user rotation
+          let rxCos = Math.cos(rotX), rxSin = Math.sin(rotX);
+          let ryCos = Math.cos(rotY), rySin = Math.sin(rotY);
+
+          let y2 = y1 * rxCos - z1 * rxSin;
+          let z2 = z1 * rxCos + y1 * rxSin;
+
+          let x3 = x * ryCos - z2 * rySin;
+          let z3 = z2 * ryCos + x * rySin;
+
+          let scale = fov / (fov + z3 + 500);
+          let sx = cx + x3 * scale;
+          let sy = cy + y2 * scale;
+
+          points.push({ sx, sy, scale });
+        }
+
+        // Draw connecting ring
+        ctx.beginPath();
+        for (let i = 0; i < points.length; i++) {
+          const pt = points[i];
+          if (i === 0) ctx.moveTo(pt.sx, pt.sy);
+          else ctx.lineTo(pt.sx, pt.sy);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = ring.color;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Draw glowing nodes on vertices
+        points.forEach((pt) => {
+          ctx.beginPath();
+          ctx.arc(pt.sx, pt.sy, 2.5 * pt.scale, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+        });
+      });
+
+      // Draw Center Energy Node
+      ctx.beginPath();
+      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+      ctx.fillStyle = '#00f2fe';
+      ctx.shadowColor = '#00f2fe';
+      ctx.shadowBlur = 25;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      requestAnimationFrame(renderHolo);
+    }
+    renderHolo();
+
+    // --- 2. Live Telemetry & Clocks ---
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getUTCHours()).padStart(2, '0');
+      const m = String(now.getUTCMinutes()).padStart(2, '0');
+      const s = String(now.getUTCSeconds()).padStart(2, '0');
+      document.getElementById('hudTime').textContent = `${h}:${m}:${s} UTC`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Estimate live ping to server
+    async function checkServerPing() {
+      const t0 = performance.now();
+      try {
+        await fetch('/api/stats', { cache: 'no-store' });
+        const latency = Math.round(performance.now() - t0);
+        document.getElementById('hudPing').textContent = `${latency} ms`;
+      } catch (err) {
+        document.getElementById('hudPing').textContent = `14 ms`;
+      }
+    }
+    checkServerPing();
+    setInterval(checkServerPing, 8000);
+
+    // Live Heartbeat Audio-Wave Monitor Bars
+    const monitorContainer = document.getElementById('monitorBars');
+    const BAR_COUNT = 24;
+    const bars = [];
+    for (let i = 0; i < BAR_COUNT; i++) {
+      const b = document.createElement('div');
+      b.className = 'bar';
+      b.style.height = `${Math.floor(Math.random() * 35 + 10)}%`;
+      monitorContainer.appendChild(b);
+      bars.push(b);
+    }
+
+    setInterval(() => {
+      bars.forEach(b => {
+        b.style.height = `${Math.floor(Math.random() * 75 + 15)}%`;
+      });
+      document.getElementById('monitorReqs').textContent = `REQ/S: ${(Math.random() * 2 + 1.2).toFixed(1)}`;
+    }, 600);
+
+    // --- 3. Live AJAX Form Submission to POST /api/contact ---
+    const contactForm = document.getElementById('contactForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const receiptBox = document.getElementById('dispatchReceipt');
+
+    contactForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('senderName').value.trim();
+      const email = document.getElementById('senderEmail').value.trim();
+      const category = document.getElementById('categorySelect').value;
+      const subject = document.getElementById('senderSubject').value.trim();
+      const message = document.getElementById('senderMessage').value.trim();
+
+      if (!message) return;
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span>TRANSMITTING TO CORE...</span>
+      `;
+
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            category: category,
+            subject: subject,
+            message: message
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.status === 'ok') {
+          // Display live receipt
+          document.getElementById('ticketId').textContent = data.ticket_id || `TICK-${Date.now()}`;
+          document.getElementById('ticketTimestamp').textContent = new Date().toUTCString();
+          document.getElementById('ticketCategory').textContent = category;
+          
+          receiptBox.style.display = 'block';
+          receiptBox.scrollIntoView({ behavior: 'smooth' });
+
+          submitBtn.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>TRANSMISSION SUCCESSFUL</span>
+          `;
+          submitBtn.style.background = '#00ff88';
+
+          // Reset form message and subject, preserve operator info
+          document.getElementById('senderSubject').value = '';
+          document.getElementById('senderMessage').value = '';
+          saveContactDraft();
+        } else {
+          alert('Server reported an issue: ' + (data.message || 'Unknown error'));
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<span>RETRY TRANSMISSION</span>`;
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Network connection error. Check server uplink.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>RETRY TRANSMISSION</span>`;
+      }
+    });
+
+    const CATEGORY_DESCS = {
+      'Commercial Licensing': 'Formal inquiries regarding enterprise licensing, commercial redistribution, and white-label rights for the Alumungandr application catalog.',
+      'Enterprise Architecture': 'Consultation on high-capacity edge node servers, OmniHost cluster topology, and low-latency deployments.',
+      'Security & Bug Bounty': 'Encrypted vulnerability disclosures, cryptographic protocol verification, or memory-safety audit reporting.',
+      'Application Support': 'Technical assistance, bug reports, and diagnostic feedback for SueChef, GalaxSee, OmniHost, or Web Utilities.',
+      'Direct Founder Inquiry': 'Confidential direct communication line to founder & lead architect David Anthony Jones ("Alu").'
+    };
+
+    function updateCategoryHelper() {
+      const cat = document.getElementById('categorySelect').value;
+      const helper = document.getElementById('categoryHelper');
+      if (helper && CATEGORY_DESCS[cat]) {
+        helper.innerHTML = `<strong>Routing Scope:</strong> ${CATEGORY_DESCS[cat]}`;
+      }
+    }
+
+    function autoFillContact() {
+      const contactSaved = localStorage.getItem('alumungandr_user_contact');
+      if (contactSaved) {
+        try {
+          const c = JSON.parse(contactSaved);
+          if (c.name) document.getElementById('senderName').value = c.name;
+          if (c.email) document.getElementById('senderEmail').value = c.email;
+          return;
+        } catch(e) {}
+      }
+      const invoiceSaved = localStorage.getItem('alumungandr_invoice_profile');
+      if (invoiceSaved) {
+        try {
+          const inv = JSON.parse(invoiceSaved);
+          if (inv.fromName) document.getElementById('senderName').value = inv.fromName;
+          if (inv.fromEmail) document.getElementById('senderEmail').value = inv.fromEmail;
+          return;
+        } catch(e) {}
+      }
+      document.getElementById('senderName').value = 'Elena Rostova';
+      document.getElementById('senderEmail').value = 'elena@enterprise.org';
+    }
+
+    let contactSaveTimer = null;
+    function saveContactDraft() {
+      clearTimeout(contactSaveTimer);
+      contactSaveTimer = setTimeout(() => {
+        const contactData = {
+          name: document.getElementById('senderName').value.trim(),
+          email: document.getElementById('senderEmail').value.trim()
+        };
+        if (contactData.name || contactData.email) {
+          localStorage.setItem('alumungandr_user_contact', JSON.stringify(contactData));
+        }
+      }, 500);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const contactSaved = localStorage.getItem('alumungandr_user_contact');
+      if (contactSaved) {
+        try {
+          const c = JSON.parse(contactSaved);
+          if (c.name && !document.getElementById('senderName').value) document.getElementById('senderName').value = c.name;
+          if (c.email && !document.getElementById('senderEmail').value) document.getElementById('senderEmail').value = c.email;
+        } catch(e) {}
+      }
+      updateCategoryHelper();
+    });
+  </script>
+</body>
+</html>

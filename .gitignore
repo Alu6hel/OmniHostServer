@@ -4,3 +4,6 @@ __pycache__/
 android_build/build/
 android_build/aligned.apk
 android_build/unaligned.apk
+build/
+dist/
+*.log

@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master Terms of Service & Intellectual Property Charter | Alumungandr™</title>
+  <meta name="description" content="Official intellectual property charter, master commercial license, and terms of service for Alumungandr by David Anthony Jones.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #06090e;
+      --bg-surface: #0e141f;
+      --bg-card: #131b2a;
+      --gold-primary: #d4af37;
+      --gold-light: #f3e5ab;
+      --gold-dark: #aa820a;
+      --gold-glow: rgba(212, 175, 55, 0.35);
+      --border-steel: #243044;
+      --border-gold: rgba(212, 175, 55, 0.4);
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --text-steel: #64748b;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Space Grotesk', sans-serif;
+      --serif: 'Cinzel', Georgia, serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--sans);
+      line-height: 1.7;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        linear-gradient(to right, rgba(36, 48, 68, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(36, 48, 68, 0.15) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    /* Top Blueprint Ruler */
+    .blueprint-ruler {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--gold-primary),
+        var(--gold-primary) 10px,
+        transparent 10px,
+        transparent 20px
+      );
+      z-index: 1000;
+      opacity: 0.8;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 4px;
+      left: 0;
+      width: 100%;
+      z-index: 100;
+      background: rgba(6, 9, 14, 0.94);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-steel);
+      padding: 0.85rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 4px;
+      border: 1px solid var(--gold-primary);
+      background: linear-gradient(135deg, #1b2434, #0e141f);
+      color: var(--gold-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--serif);
+      font-weight: 900;
+      font-size: 1.1rem;
+      box-shadow: 0 0 10px var(--gold-glow);
+    }
+
+    .brand-name {
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: 0.08em;
+      color: #fff;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      padding: 0.35rem 0.65rem;
+      border-radius: 4px;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--gold-primary);
+      background: rgba(212, 175, 55, 0.08);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 7rem 1.5rem 5rem;
+    }
+
+    /* Industrial Notary Header */
+    .notary-header {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 2.5rem;
+      align-items: center;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-gold);
+      border-radius: 12px;
+      padding: 2.5rem;
+      margin-bottom: 3.5rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .notary-header::before {
+      content: 'LEGAL CHARTER // REF-1886-ALU';
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--gold-dark);
+      letter-spacing: 0.1em;
+    }
+
+    .notary-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--gold-primary);
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid var(--gold-primary);
+      padding: 0.3rem 0.85rem;
+      border-radius: 4px;
+      margin-bottom: 1.25rem;
+    }
+
+    .notary-title {
+      font-family: var(--serif);
+      font-size: 2.5rem;
+      font-weight: 900;
+      line-height: 1.15;
+      color: #ffffff;
+      margin-bottom: 1rem;
+    }
+
+    .notary-title span {
+      background: linear-gradient(135deg, var(--gold-light), var(--gold-primary), var(--gold-dark));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .notary-lead {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    /* 3D Gold Seal Canvas Frame */
+    .seal-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #sealCanvas {
+      width: 220px;
+      height: 220px;
+      cursor: grab;
+    }
+
+    .seal-caption {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--gold-primary);
+      margin-top: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Industrial Trademark Explorer */
+    .explorer-section {
+      margin-bottom: 3.5rem;
+    }
+
+    .explorer-title {
+      font-family: var(--serif);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .explorer-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .trademark-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .tm-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-steel);
+      border-radius: 8px;
+      padding: 1.25rem;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+
+    .tm-card:hover {
+      border-color: var(--gold-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Tactile Micro-Interactions & Button Depression */
+    .tm-card:active,
+    .nav-item:active,
+    .nav-btn:active,
+    .nav-links a:active,
+    .footer-links a:active {
+      transform: scale(0.97) !important;
+      transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .tm-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .tm-name {
+      font-family: var(--serif);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .tm-status {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      background: rgba(212, 175, 55, 0.12);
+      color: var(--gold-primary);
+      border: 1px solid var(--border-gold);
+    }
+
+    .tm-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Legal Articles Grid */
+    .articles-grid {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    .articles-nav {
+      position: sticky;
+      top: 5rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-steel);
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+
+    .nav-header {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--gold-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-steel);
+    }
+
+    .article-link {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.45rem 0.6rem;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .article-link:hover, .article-link.active {
+      color: #fff;
+      background: rgba(212, 175, 55, 0.1);
+      color: var(--gold-primary);
+    }
+
+    /* Article Body */
+    .article-content {
+      display: flex;
+      flex-direction: column;
+      gap: 3rem;
+    }
+
+    .legal-article {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-steel);
+      border-radius: 10px;
+      padding: 2rem;
+      scroll-margin-top: 6rem;
+      position: relative;
+    }
+
+    .article-ref {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--gold-primary);
+      margin-bottom: 0.35rem;
+    }
+
+    .article-title {
+      font-family: var(--serif);
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-steel);
+    }
+
+    .article-text {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .clause-box {
+      background: var(--bg);
+      border-left: 3px solid var(--gold-primary);
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+      font-size: 0.9rem;
+      color: var(--text-main);
+    }
+
+    /* Seal of David Anthony Jones */
+    .founder-affidavit {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(14, 20, 31, 0.9) 100%);
+      border: 1px solid var(--border-gold);
+      border-radius: 10px;
+      padding: 2rem;
+      margin-top: 3.5rem;
+    }
+
+    .affidavit-title {
+      font-family: var(--serif);
+      font-size: 1.3rem;
+      color: var(--gold-primary);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .affidavit-p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .affidavit-signature {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-top: 1px dashed var(--border-gold);
+      padding-top: 1.25rem;
+      margin-top: 1.5rem;
+    }
+
+    .sig-name {
+      font-family: var(--serif);
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 0.05em;
+    }
+
+    .sig-title {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--gold-primary);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-steel);
+      background: #04060a;
+      padding: 2.5rem 1.5rem;
+      margin-top: 5rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--gold-primary);
+    }
+
+    @media (max-width: 900px) {
+      .notary-header {
+        grid-template-columns: 1fr;
+      }
+      .articles-grid {
+        grid-template-columns: 1fr;
+      }
+      .articles-nav {
+        display: none;
+      }
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Industrial Blueprint Top Ruler -->
+  <div class="blueprint-ruler"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="/" class="brand">
+      <div class="brand-logo">A</div>
+      <span class="brand-name">ALUMUNGANDR</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Apps & Ecosystem</a></li>
+      <li><a href="/speedtest">Speed Test</a></li>
+      <li><a href="/invoice">Invoice Studio</a></li>
+      <li><a href="/resizer">Social Resizer</a></li>
+      <li><a href="/subscriptions">Reality Check</a></li>
+      <li><a href="/ip">What Is My IP</a></li>
+      <li><a href="/timezone">Meeting Matcher</a></li>
+      <li><a href="/about">About & Journey</a></li>
+      <li><a href="/faq">FAQ Matrix</a></li>
+      <li><a href="/contact">Contact Uplink</a></li>
+      <li><a href="/privacy">Privacy</a></li>
+      <li><a href="/terms" class="active">Terms</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <!-- Industrial Notary Header with 3D Gold Seal -->
+    <div class="notary-header">
+      <div>
+        <div class="notary-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>OFFICIAL INTELLECTUAL PROPERTY CHARTER</span>
+        </div>
+        <h1 class="notary-title">Master Terms of Service & <span>Proprietorship</span></h1>
+        <p class="notary-lead">
+          Binding legal covenant, trademark governance, and commercial licensing specifications for all digital assets, software runtimes, and engineering works produced under the Alumungandr banner.
+        </p>
+      </div>
+
+      <!-- Ferm Pipe 3D Manipulatable Product/Seal Canvas -->
+      <div class="seal-box">
+        <canvas id="sealCanvas" width="220" height="220"></canvas>
+        <span class="seal-caption">INTERACTIVE 3D NOTARY SEAL (ROTATE)</span>
+      </div>
+    </div>
+
+    <!-- Ferm Pipe Style: Industrial Trademark & Asset Explorer -->
+    <section class="explorer-section">
+      <h2 class="explorer-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--gold-primary)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span>Proprietary Asset & Trademark Schedule</span>
+      </h2>
+      <p class="explorer-subtitle">
+        Protected under the Berne Convention for the Protection of Literary and Artistic Works and United States Title 17 Copyright Enactments.
+      </p>
+
+      <div class="trademark-grid">
+        <div class="tm-card">
+          <div class="tm-header">
+            <h3 class="tm-name">Alumungandr™</h3>
+            <span class="tm-status">REGISTERED MASTER</span>
+          </div>
+          <p class="tm-desc">The master technology brand, operational entity, and ecosystem identifier authored by David Anthony Jones.</p>
+        </div>
+
+        <div class="tm-card">
+          <div class="tm-header">
+            <h3 class="tm-name">GalaxSee™ & Pro</h3>
+            <span class="tm-status">PROPRIETARY APK</span>
+          </div>
+          <p class="tm-desc">Astrodynamic celestial simulation engine and real-time planetary orbit visualization APK suite.</p>
+        </div>
+
+        <div class="tm-card">
+          <div class="tm-header">
+            <h3 class="tm-name">SueChef™</h3>
+            <span class="tm-status">PROPRIETARY APK</span>
+          </div>
+          <p class="tm-desc">Cognitive offline culinary assistant, recipe engineering logic, and pantry optimization engine.</p>
+        </div>
+
+
+        <div class="tm-card">
+          <div class="tm-header">
+            <h3 class="tm-name">OmniHost™ Pro</h3>
+            <span class="tm-status">SYSTEM ENGINE</span>
+          </div>
+          <p class="tm-desc">High-concurrency modular web server, host-header router, dynamic FTP engine, and edge tunnel orchestrator.</p>
+        </div>
+
+        <div class="tm-card">
+          <div class="tm-header">
+            <h3 class="tm-name">No-BS Invoice™</h3>
+            <span class="tm-status">WEB UTILITY</span>
+          </div>
+          <p class="tm-desc">Zero-knowledge split-screen financial receipt and enterprise invoice generation studio.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Detailed Legal Articles -->
+    <div class="articles-grid">
+      <!-- Table of Contents -->
+      <aside class="articles-nav">
+        <div class="nav-header">Index of Articles</div>
+        <a href="#art-proprietor" class="article-link active">Art. 1: Sole Proprietorship</a>
+        <a href="#art-license" class="article-link">Art. 2: Permitted Usage & Scope</a>
+        <a href="#art-restrictions" class="article-link">Art. 3: Reverse Engineering</a>
+        <a href="#art-warranty" class="article-link">Art. 4: Warranty & Liability</a>
+        <a href="#art-commercial" class="article-link">Art. 5: Commercial Licensing</a>
+        <a href="#art-jurisdiction" class="article-link">Art. 6: Governing Jurisdiction</a>
+      </aside>
+
+      <!-- Articles Body -->
+      <div class="article-content">
+        <!-- Article 1 -->
+        <article class="legal-article" id="art-proprietor">
+          <div class="article-ref">ARTICLE I // SECTION 1.01</div>
+          <h2 class="article-title">Sole Proprietorship & Original Authorship</h2>
+          <p class="article-text">
+            All codebases, designs, trademarks, graphic user interfaces, compiled APK binaries, and documentation published under the Alumungandr banner are the exclusive intellectual property of <strong>David Anthony Jones ("Alu")</strong>.
+          </p>
+          <div class="clause-box">
+            <strong>Statutory Declaration:</strong> Full moral and economic rights are asserted under the Berne Convention for the Protection of Literary and Artistic Works (Paris Act of July 24, 1971), 17 U.S.C. § 101 et seq., and reciprocal international treaties across all WTO signatory states.
+          </div>
+        </article>
+
+        <!-- Article 2 -->
+        <article class="legal-article" id="art-license">
+          <div class="article-ref">ARTICLE II // SECTION 2.01</div>
+          <h2 class="article-title">Permitted End-User License Scope</h2>
+          <p class="article-text">
+            End users are granted a revocable, non-exclusive, non-transferable personal license to utilize the web utilities (including the Internet Speed Test and Invoice Generator) and install provided APK packages on personal hardware.
+          </p>
+          <ul style="margin-left: 1.5rem; color: var(--text-muted); font-size: 0.95rem;">
+            <li style="margin-bottom: 0.5rem;">Invoices generated via the Invoice Studio are the sole legal property of the user who authored them. Alumungandr claims zero royalty or title to documents produced.</li>
+            <li style="margin-bottom: 0.5rem;">Public speed test telemetry may be benchmarked and shared via canonical permalinks without restriction.</li>
+          </ul>
+        </article>
+
+        <!-- Article 3 -->
+        <article class="legal-article" id="art-restrictions">
+          <div class="article-ref">ARTICLE III // SECTION 3.01</div>
+          <h2 class="article-title">Prohibitions on Decompilation & Imitation</h2>
+          <p class="article-text">
+            Except where explicitly permitted by mandatory applicable law, users and corporate entities shall not:
+          </p>
+          <div class="clause-box">
+            (a) Decompile, disassemble, reverse engineer, or extract trade secrets from compiled binaries (including <code>omnihost.apk</code>, <code>galaxsee.apk</code>, and <code>suechef.apk</code>);<br>
+            (b) Remove or modify copyright, trademark, or author watermarks bearing the name of David Anthony Jones or Alumungandr;<br>
+            (c) Re-host, repackage, or distribute modified clones of these services without prior written commercial licensing.
+          </div>
+        </article>
+
+        <!-- Article 4 -->
+        <article class="legal-article" id="art-warranty">
+          <div class="article-ref">ARTICLE IV // SECTION 4.01</div>
+          <h2 class="article-title">Disclaimer of Warranties & Limitation of Liability</h2>
+          <p class="article-text">
+            THE SERVICES, SOFTWARE, AND TOOLS ARE PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR FREEDOM FROM TRANSMISSION DELAYS.
+          </p>
+          <p class="article-text">
+            In no event shall David Anthony Jones or Alumungandr be liable for any direct, indirect, incidental, or consequential damages resulting from connection dropouts during speed testing or document drafting discrepancies.
+          </p>
+        </article>
+
+        <!-- Article 5 -->
+        <article class="legal-article" id="art-commercial">
+          <div class="article-ref">ARTICLE V // SECTION 5.01</div>
+          <h2 class="article-title">Enterprise & Commercial Licensing</h2>
+          <p class="article-text">
+            Organizations seeking to embed OmniHost server architectures, deploy multi-tenant speed test probes, or white-label Alumungandr applications must execute a formal Commercial Master License Agreement.
+          </p>
+          <p class="article-text">
+            To initiate commercial licensing negotiations or obtain multi-seat enterprise deployment credentials, direct correspondence to the <a href="/contact" style="color: var(--gold-primary); text-decoration: underline;">Alumungandr Licensing Desk</a>.
+          </p>
+        </article>
+
+        <!-- Article 6 -->
+        <article class="legal-article" id="art-jurisdiction">
+          <div class="article-ref">ARTICLE VI // SECTION 6.01</div>
+          <h2 class="article-title">Governing Jurisdiction & Dispute Resolution</h2>
+          <p class="article-text">
+            This Charter and any controversy arising from platform use shall be governed in accordance with the laws of the United States and international intellectual property conventions, without giving effect to conflict of laws principles.
+          </p>
+        </article>
+      </div>
+    </div>
+
+    <!-- Official Affidavit of David Anthony Jones -->
+    <div class="founder-affidavit">
+      <div class="affidavit-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Affidavit of Original Authorship</span>
+      </div>
+      <p class="affidavit-p">
+        "I hereby attest on personal knowledge and engineering record that all proprietary designs, software routines, and branding under the Alumungandr master umbrella were originated, developed, and verified through dedicated software engineering, untainted by unauthorized commercial misappropriation."
+      </p>
+      <div class="affidavit-signature">
+        <div>
+          <div class="sig-name">David Anthony Jones</div>
+          <div class="sig-title">FOUNDER, LEAD ARCHITECT & SOLE PROPRIETOR // "ALU"</div>
+        </div>
+        <div style="text-align: right; font-family: var(--mono); font-size: 0.75rem; color: var(--gold-dark);">
+          SEAL AFFIXED // CHARTER ACTIVE<br>
+          OMNIHOST VERIFIED 2026
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-links">
+        <a href="/">Apps & Ecosystem</a>
+        <a href="/speedtest">Speed Test</a>
+        <a href="/invoice">Invoice Studio</a>
+        <a href="/resizer">Social Resizer</a>
+        <a href="/subscriptions">Reality Check</a>
+        <a href="/ip">What Is My IP</a>
+        <a href="/timezone">Meeting Matcher</a>
+        <a href="/about">About & Journey</a>
+        <a href="/faq">FAQ Matrix</a>
+        <a href="/contact">Contact Uplink</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms" class="active">Terms</a>
+      </div>
+    <p>© 2026 Alumungandr™. Founded and architected by David Anthony Jones ("Alu"). All Rights Reserved.</p>
+  </footer>
+
+  <!-- Ferm Pipe 3D Gold Seal Interactive Canvas Script -->
+  <script>
+    const canvas = document.getElementById('sealCanvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+
+    let rotX = 0.2;
+    let rotY = 0.3;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+
+    canvas.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      canvas.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - lastMouseX;
+      const dy = e.clientY - lastMouseY;
+      rotY += dx * 0.015;
+      rotX += dy * 0.015;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      canvas.style.cursor = 'grab';
+    });
+
+    // Touch support
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) {
+        isDragging = true;
+        lastMouseX = e.touches[0].clientX;
+        lastMouseY = e.touches[0].clientY;
+      }
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!isDragging || e.touches.length === 0) return;
+      const dx = e.touches[0].clientX - lastMouseX;
+      const dy = e.touches[0].clientY - lastMouseY;
+      rotY += dx * 0.015;
+      rotX += dy * 0.015;
+      lastMouseX = e.touches[0].clientX;
+      lastMouseY = e.touches[0].clientY;
+    });
+
+    window.addEventListener('touchend', () => {
+      isDragging = false;
+    });
+
+    function drawSeal() {
+      ctx.clearRect(0, 0, w, h);
+
+      if (!isDragging) {
+        rotY += 0.008;
+      }
+
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      // Compute pseudo-3D perspective tilt
+      const cosX = Math.cos(rotX);
+      const sinX = Math.sin(rotX);
+      const cosY = Math.cos(rotY);
+      const sinY = Math.sin(rotY);
+
+      // Outer gold cog / notched ring
+      const COG_TEETH = 28;
+      const radiusOuter = 88;
+      const radiusInner = 76;
+
+      ctx.beginPath();
+      for (let i = 0; i < COG_TEETH; i++) {
+        const a1 = (i / COG_TEETH) * Math.PI * 2 + rotY;
+        const a2 = ((i + 0.5) / COG_TEETH) * Math.PI * 2 + rotY;
+        
+        // 3D projection of outer point
+        let x1 = Math.cos(a1) * radiusOuter;
+        let y1 = Math.sin(a1) * radiusOuter * cosX;
+        let x2 = Math.cos(a2) * radiusInner;
+        let y2 = Math.sin(a2) * radiusInner * cosX;
+
+        if (i === 0) ctx.moveTo(x1, y1);
+        else ctx.lineTo(x1, y1);
+        ctx.lineTo(x2, y2);
+      }
+      ctx.closePath();
+
+      // Dynamic metallic gold gradient based on light angle
+      const lightX = Math.sin(rotY) * 60;
+      const lightY = Math.cos(rotX) * 60;
+      const goldGrad = ctx.createRadialGradient(lightX, lightY, 10, 0, 0, 95);
+      goldGrad.addColorStop(0, '#fff3b0');
+      goldGrad.addColorStop(0.35, '#d4af37');
+      goldGrad.addColorStop(0.7, '#aa820a');
+      goldGrad.addColorStop(1, '#574205');
+
+      ctx.fillStyle = goldGrad;
+      ctx.shadowColor = 'rgba(212, 175, 55, 0.4)';
+      ctx.shadowBlur = 15;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      ctx.strokeStyle = '#fff3b0';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Inner medallic disc
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 64, 64 * Math.abs(cosX), 0, 0, Math.PI * 2);
+      const innerGrad = ctx.createLinearGradient(-40, -40, 40, 40);
+      innerGrad.addColorStop(0, '#1a1805');
+      innerGrad.addColorStop(0.5, '#2e260a');
+      innerGrad.addColorStop(1, '#0e0e04');
+      ctx.fillStyle = innerGrad;
+      ctx.fill();
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Center Monogram "A"
+      ctx.font = `bold ${Math.floor(44 * Math.abs(cosX))}px Cinzel, Georgia, serif`;
+      ctx.fillStyle = '#fff3b0';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('A', 0, 2);
+
+      // Star of authenticity
+      ctx.font = `${Math.floor(12 * Math.abs(cosX))}px sans-serif`;
+      ctx.fillStyle = '#d4af37';
+      ctx.fillText('★ ★ ★', 0, 32 * cosX);
+
+      ctx.restore();
+      requestAnimationFrame(drawSeal);
+    }
+    drawSeal();
+
+    // Table of contents active spy
+    const sections = document.querySelectorAll('.legal-article');
+    const links = document.querySelectorAll('.article-link');
+
+    window.addEventListener('scroll', () => {
+      let cur = '';
+      sections.forEach(s => {
+        if (pageYOffset >= s.offsetTop - 120) {
+          cur = s.getAttribute('id');
+        }
+      });
+      links.forEach(l => {
+        l.classList.remove('active');
+        if (l.getAttribute('href') === `#${cur}`) {
+          l.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+﻿User-agent: *
+Allow: /
+Allow: /speedtest
+Allow: /downloads/
+
+Sitemap: https://cornell-beverage-relations-borders.trycloudflare.com/sitemap.xml

@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knowledge Engine & FAQ - Alumungandr Enterprise</title>
+  <meta name="description" content="Explore the Alumungandr technical knowledge engine. Answers on beta APK architectures, loaded latency diagnostics, zero-knowledge privacy, and commercial rights.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #040711;
+      --bg-surface: rgba(10, 16, 32, 0.9);
+      --bg-border: rgba(13, 242, 199, 0.25);
+      
+      --teal: #0df2c7;
+      --teal-glow: rgba(13, 242, 199, 0.35);
+      --purple: #8b5cf6;
+      --purple-glow: rgba(139, 92, 246, 0.4);
+      --lime: #84cc16;
+      
+      --text-main: #ffffff;
+      --text-muted: #cbd5e1;
+      --text-subtle: #94a3b8;
+      
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.6;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Fixed Crystal Matrix Canvas */
+    #crystalCanvas {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Navigation */
+    header.site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(13, 242, 199, 0.15);
+      background: rgba(4, 7, 17, 0.85);
+      backdrop-filter: blur(16px);
+      padding: 0.85rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--teal), var(--purple));
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px var(--teal-glow);
+    }
+
+    .brand-icon svg { width: 22px; height: 22px; fill: #040711; }
+    .brand-text {
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #ffffff, var(--teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover, .nav-links a.active { color: var(--teal); }
+
+    .nav-btn-action {
+      padding: 0.5rem 1.1rem;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      transition: all 0.2s;
+    }
+
+    .nav-btn-action:hover {
+      background: rgba(13, 242, 199, 0.15);
+      border-color: var(--teal);
+      box-shadow: 0 0 12px var(--teal-glow);
+    }
+
+    /* Defont Era Hero (Data as Art) */
+    .faq-hero {
+      position: relative;
+      z-index: 10;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 4rem 1.5rem 2rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .era-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(13, 242, 199, 0.1);
+      border: 1px solid rgba(13, 242, 199, 0.35);
+      padding: 0.35rem 1rem;
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--teal);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .faq-hero h1 {
+      font-size: 3.4rem;
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #ffffff 40%, var(--teal) 75%, var(--purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .faq-hero p {
+      max-width: 680px;
+      font-size: 1.12rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* Interactive Search Console */
+    .search-dock {
+      width: 100%;
+      max-width: 720px;
+      position: relative;
+      margin-top: 0.75rem;
+    }
+
+    .search-dock-input {
+      width: 100%;
+      background: rgba(10, 18, 36, 0.85);
+      border: 2px solid var(--bg-border);
+      border-radius: 16px;
+      padding: 1.1rem 1.25rem 1.1rem 3.4rem;
+      color: #ffffff;
+      font-size: 1.05rem;
+      font-family: inherit;
+      outline: none;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      transition: all 0.25s;
+    }
+
+    .search-dock-input:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 25px var(--teal-glow);
+    }
+
+    .search-dock-icon {
+      position: absolute;
+      left: 1.25rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      fill: var(--teal);
+      pointer-events: none;
+    }
+
+    /* Category Pill Matrix */
+    .category-matrix {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-top: 1rem;
+    }
+
+    .matrix-pill {
+      background: rgba(13, 242, 199, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      padding: 0.45rem 1.1rem;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .matrix-pill:hover, .matrix-pill.active {
+      background: var(--teal);
+      color: #040711;
+      border-color: var(--teal);
+      box-shadow: 0 0 15px var(--teal-glow);
+      font-weight: 800;
+    }
+
+    /* Tactile Micro-Interactions & Button Depression */
+    .matrix-pill:active,
+    .card-trigger:active,
+    .nav-btn-action:active,
+    .site-footer a:active {
+      transform: scale(0.97) !important;
+      transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    /* Crystal Accordion Deck */
+    .accordion-deck {
+      position: relative;
+      z-index: 10;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 1.5rem 1.5rem 6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .crystal-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-border);
+      border-radius: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .crystal-card:hover {
+      border-color: var(--teal);
+      transform: translateY(-2px);
+    }
+
+    .crystal-card.active {
+      border-color: var(--teal);
+      box-shadow: 0 0 25px rgba(13, 242, 199, 0.2);
+    }
+
+    .card-trigger {
+      padding: 1.4rem 1.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      gap: 1.5rem;
+    }
+
+    .card-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .card-category-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--teal);
+    }
+
+    .card-q-text {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.3px;
+    }
+
+    .card-arrow-icon {
+      width: 22px;
+      height: 22px;
+      fill: var(--teal);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      flex-shrink: 0;
+    }
+
+    .crystal-card.active .card-arrow-icon {
+      transform: rotate(180deg);
+    }
+
+    .card-drawer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), padding 0.35s;
+      background: rgba(0, 0, 0, 0.35);
+      border-top: 1px solid transparent;
+      color: var(--text-muted);
+      font-size: 1.02rem;
+      line-height: 1.75;
+    }
+
+    .crystal-card.active .card-drawer {
+      max-height: 500px;
+      padding: 1.25rem 1.75rem 1.5rem;
+      border-top-color: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Footer */
+    footer.site-footer {
+      position: relative;
+      z-index: 10;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background: #03050c;
+      padding: 3rem 2rem;
+      margin-top: auto;
+    }
+
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .footer-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+    .footer-links a:hover { color: var(--teal); }
+  </style>
+</head>
+<body>
+
+  <!-- Crystal Matrix Canvas Background -->
+  <canvas id="crystalCanvas"></canvas>
+
+  <!-- Navigation -->
+  <header class="site-nav">
+    <a href="/" class="brand-wrap">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+      </div>
+      <div class="brand-text">ALUMUNGANDR™</div>
+    </a>
+    <nav class="nav-links">
+      <a href="/">Apps</a>
+      <a href="/speedtest">Speed Test</a>
+      <a href="/invoice">Invoice Maker</a>
+      <a href="/resizer">Social Resizer</a>
+        <a href="/subscriptions">Reality Check</a>
+      <a href="/ip">What Is My IP</a>
+      <a href="/subscriptions">Reality Check</a>
+      <a href="/ip">What Is My IP</a>
+      <a href="/about">About</a>
+      <a href="/faq" class="active">FAQ</a>
+      <a href="/contact">Contact</a>
+      <a href="/" class="nav-btn-action">&larr; Download Hub</a>
+    </nav>
+  </header>
+
+  <!-- Defont Era Hero Header -->
+  <section class="faq-hero">
+    <div class="era-badge">Defont Strategic Matrix &bull; Knowledge Base</div>
+    <h1>Data as Art: Strategic Answers</h1>
+    <p>Explore technical architectures, SMT verification proofs, loaded latency diagnostics, and commercial licensing.</p>
+    
+    <div class="search-dock">
+      <svg class="search-dock-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="text" class="search-dock-input" id="crystalSearch" placeholder="Query knowledge engine (e.g., 'bufferbloat', 'apk install', 'licensing')..." oninput="filterFaqs()">
+    </div>
+
+    <div class="category-matrix">
+      <button class="matrix-pill active" onclick="setFaqCategory('all', this)">All Nodes</button>
+      <button class="matrix-pill" onclick="setFaqCategory('apps', this)">Binary Builds</button>
+      <button class="matrix-pill" onclick="setFaqCategory('speedtest', this)">OmniSpeed Diagnostics</button>
+      <button class="matrix-pill" onclick="setFaqCategory('security', this)">Zero-Knowledge Privacy</button>
+      <button class="matrix-pill" onclick="setFaqCategory('legal', this)">Master Charter Rights</button>
+    </div>
+  </section>
+
+  <!-- Crystal Accordion Deck -->
+  <main class="accordion-deck" id="faqDeck">
+
+    <article class="crystal-card" data-category="apps">
+      <div class="card-trigger" onclick="toggleCrystal(this)">
+        <div class="card-title-group">
+          <span class="card-category-tag">Binary Builds // 01</span>
+          <span class="card-q-text">Why are Galaxsee, SueChef, and OmniHost 100% free?</span>
+        </div>
+        <svg class="card-arrow-icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+      </div>
+      <div class="card-drawer">
+        All applications are currently in public beta testing. Our primary objective is to collect real-world telemetry, stress-test performance across diverse Android and Windows hardware configurations, and validate the SMT bounds proving engine under heavy user workloads. You receive full uncompressed functionality with zero paywalls.
+      </div>
+    </article>
+
+    <article class="crystal-card" data-category="apps">
+      <div class="card-trigger" onclick="toggleCrystal(this)">
+        <div class="card-title-group">
+          <span class="card-category-tag">Binary Builds // 02</span>
+          <span class="card-q-text">How do I install these APK binaries on Android without Play Store?</span>
+        </div>
+        <svg class="card-arrow-icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+      </div>
+      <div class="card-drawer">
+        Download the verified APK directly from our home portal. Tap the downloaded file in your browser notification drawer or file manager. When prompted with "Install unknown apps," grant permission to your browser in Android Settings. Tap "Install" to complete. Each build includes its cryptographic SHA-256 hash on our homepage for independent security verification.
+      </div>
+    </article>
+
+    <article class="crystal-card" data-category="speedtest">
+      <div class="card-trigger" onclick="toggleCrystal(this)">
+        <div class="card-title-group">
+          <span class="card-category-tag">OmniSpeed Diagnostics // 03</span>
+          <span class="card-q-text">What is Bufferbloat and Loaded Latency on the OmniSpeed Benchmark?</span>
+        </div>
+        <svg class="card-arrow-icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+      </div>
+      <div class="card-drawer">
+        Bufferbloat occurs when home routers or ISP hardware queue excessive packets instead of transmitting them immediately. While an idle ping might report 6ms, heavy video streaming or downloads can cause loaded latency to spike into hundreds of milliseconds, leading to sudden gaming disconnects and stuttering voice calls. OmniSpeed measures loaded latency specifically to hold ISPs accountable.
+      </div>
+    </article>
+
+    <article class="crystal-card" data-category="speedtest">
+      <div class="card-trigger" onclick="toggleCrystal(this)">
+        <div class="card-title-group">
+          <span class="card-category-tag">OmniSpeed Diagnostics // 04</span>
+          <span class="card-q-text">Why does OmniSpeed default to Multi-stream connection mode?</span>
+        </div>
+        <svg class="card-arrow-icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+      </div>
+      <div class="card-drawer">
+        Multi-stream mode utilizes multiple concurrent TCP sockets to completely saturate high-bandwidth fiber and broadband pipes. Single-socket transfers are artificially throttled by TCP window scaling across long-distance transit tunnels. Multi mode reflects actual real-world conditions like multiple smart TVs, game downloads, and background syncs running together.
+      </div>
+    </article>
+
+    <article class="crystal-card" data-category="security">
+      <div class="card-trigger" onclick="toggleCrystal(this)">
+        <div class="card-title-group">
+          <span class="card-category-tag">Zero-Knowledge Privacy // 05</span>
+          <span class="card-q-text">Does any application or web utility upload private files to the cloud?</span>
+        </div>
+        <svg class="card-arrow-icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+      </div>
+      <div class="card-drawer">
+        Alumungandr applications and browser utilities operate strictly under a local-first, zero-telemetry architecture. All media processing, calculation engines, image resizing, and file operations run exclusively inside local device memory. We maintain zero cloud telemetry, zero remote tracking databases, and zero server-side storage of client files.
+      </div>
+    </article>
+
+    <article class="crystal-card" data-category="legal">
+      <div class="card-trigger" onclick="toggleCrystal(this)">
+        <div class="card-title-group">
+          <span class="card-category-tag">Master Charter Rights // 06</span>
+          <span class="card-q-text">Who owns the intellectual property and commercial exploitation rights?</span>
+        </div>
+        <svg class="card-arrow-icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+      </div>
+      <div class="card-drawer">
+        All trademarks, brands, source code, compiler designs, and application platforms (including Alumungandr™, Alu™, Galaxsee™, SueChef, OmniHost, and OmniSpeed) are the exclusive intellectual property of David Anthony Jones ("Alu") under the Alumungandr Master Charter, protected internationally by the Berne Convention and WIPO. Commercial licensing inquiries can be submitted via our contact terminal.
+      </div>
+    </article>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong style="color:#fff; font-size:1.1rem;">Alumungandr Enterprise &copy; 2026</strong>
+        <p style="color:var(--text-subtle); font-size:0.85rem;">David Anthony Jones ("Alu") &bull; All Rights Strictly Reserved</p>
+      </div>
+      <div class="footer-links">
+        <a href="/">Apps & Ecosystem</a>
+        <a href="/speedtest">Speed Test</a>
+        <a href="/invoice">Invoice Studio</a>
+        <a href="/resizer">Social Resizer</a>
+        <a href="/subscriptions">Reality Check</a>
+        <a href="/ip">What Is My IP</a>
+        <a href="/timezone">Meeting Matcher</a>
+        <a href="/about">About & Journey</a>
+        <a href="/faq" class="active">FAQ Matrix</a>
+        <a href="/contact">Contact Uplink</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Crystal Matrix Canvas Physics (Defont Era Style) -->
+  <script>
+    // 1. Crystal Canvas Physics Engine
+    const canvas = document.getElementById('crystalCanvas');
+    const ctx = canvas.getContext('2d');
+    let nodes = [];
+    let mouse = { x: -1000, y: -1000 };
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      nodes = [];
+      const count = Math.floor((canvas.width * canvas.height) / 18000);
+      for (let i = 0; i < count; i++) {
+        nodes.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.8,
+          vy: (Math.random() - 0.5) * 0.8,
+          radius: Math.random() * 2 + 1.5,
+          color: Math.random() > 0.4 ? '#0df2c7' : '#8b5cf6'
+        });
+      }
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    function drawCrystalMatrix() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < nodes.length; i++) {
+        const p = nodes[i];
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > canvas.width) p.vx = -p.vx;
+        if (p.y < 0 || p.y > canvas.height) p.vy = -p.vy;
+
+        // Draw node
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+
+        // Connect nearby nodes
+        for (let j = i + 1; j < nodes.length; j++) {
+          const p2 = nodes[j];
+          const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+          if (dist < 110) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(13, 242, 199, ${0.25 * (1 - dist / 110)})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+
+        // Connect to mouse pointer
+        const mouseDist = Math.hypot(p.x - mouse.x, p.y - mouse.y);
+        if (mouseDist < 160) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(mouse.x, mouse.y);
+          ctx.strokeStyle = `rgba(139, 92, 246, ${0.45 * (1 - mouseDist / 160)})`;
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        }
+      }
+
+      requestAnimationFrame(drawCrystalMatrix);
+    }
+    drawCrystalMatrix();
+
+    // 2. Interactive Accordion & Filter Logic
+    let activeCategory = 'all';
+
+    function toggleCrystal(el) {
+      const card = el.parentElement;
+      card.classList.toggle('active');
+    }
+
+    function setFaqCategory(cat, btn) {
+      activeCategory = cat;
+      document.querySelectorAll('.matrix-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterFaqs();
+    }
+
+    function filterFaqs() {
+      const query = document.getElementById('crystalSearch').value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.crystal-card');
+
+      cards.forEach(card => {
+        const cat = card.getAttribute('data-category');
+        const text = card.textContent.toLowerCase();
+
+        const matchCat = (activeCategory === 'all' || cat === activeCategory);
+        const matchQuery = (!query || text.includes(query));
+
+        if (matchCat && matchQuery) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

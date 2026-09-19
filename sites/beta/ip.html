@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What Is My IP? // Arctic Network Intelligence & Telemetry - Alumungandr</title>
+  <meta name="description" content="Discover your real public IP address, verified worldwide geolocation, ISP, reverse DNS, and sysadmin firewall rules with Arctic Glacial 3D telemetry.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/assets/three.min.js"></script>
+
+  <style>
+    :root {
+      --bg-deep: #050811;
+      --bg-card: rgba(13, 22, 38, 0.68);
+      --border-frost: rgba(168, 230, 255, 0.16);
+      --border-glow: rgba(112, 214, 255, 0.45);
+      --text-main: #f0f7ff;
+      --text-muted: #8ba2be;
+      --text-subtle: #4d6582;
+      --ice-cyan: #70d6ff;
+      --ice-bright: #e0f7ff;
+      --ice-glow: #00f0ff;
+      --arctic-white: #ffffff;
+      --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-deep);
+      color: var(--text-main);
+      font-family: var(--font-display);
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 3D WebGL Glacial Mist Background */
+    #glacialCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Volumetric Fog Gradient */
+    .arctic-fog-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 30%, rgba(168, 230, 255, 0.06) 0%, rgba(5, 8, 17, 0.72) 60%, var(--bg-deep) 100%);
+    }
+
+    /* Top Arctic Header & Navigation */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      background: rgba(5, 8, 17, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-frost);
+      padding: 0.85rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .brand-pill {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #ffffff 0%, var(--ice-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .brand-pill-badge {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      background: rgba(112, 214, 255, 0.12);
+      border: 1px solid rgba(112, 214, 255, 0.3);
+      border-radius: 999px;
+      color: var(--ice-cyan);
+      -webkit-text-fill-color: var(--ice-cyan);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--arctic-white);
+      text-shadow: 0 0 12px rgba(112, 214, 255, 0.7);
+    }
+
+    .header-edge-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--ice-cyan);
+      background: rgba(112, 214, 255, 0.08);
+      border: 1px solid rgba(112, 214, 255, 0.25);
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #00ff88;
+      box-shadow: 0 0 8px #00ff88;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+
+    /* Page Container */
+    main {
+      position: relative;
+      z-index: 10;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 7rem 1.5rem 5rem;
+    }
+
+    /* Hero Section (Igloo.inc Overpass Aesthetic with Corner Crosshairs) */
+    .hero-chamber {
+      text-align: center;
+      padding: 3rem 1rem 3.5rem;
+      position: relative;
+    }
+
+    .hero-meta-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 960px;
+      margin: 0 auto 2rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-subtle);
+      letter-spacing: 0.05em;
+    }
+
+    .hero-label {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--ice-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.8rem;
+      display: inline-block;
+      padding: 0.35rem 1.1rem;
+      background: rgba(112, 214, 255, 0.08);
+      border: 1px solid rgba(112, 214, 255, 0.25);
+      border-radius: 999px;
+    }
+
+    /* Massive Glacial IP Display with Scramble Cypher Animation */
+    .ip-display-wrap {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      margin: 1.5rem 0;
+    }
+
+    .ip-address-huge {
+      font-size: clamp(3.2rem, 8vw, 6.8rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      color: var(--arctic-white);
+      text-shadow: 0 0 50px rgba(112, 214, 255, 0.4), 0 0 20px rgba(255, 255, 255, 0.5);
+      user-select: all;
+      cursor: pointer;
+      transition: transform 0.2s, text-shadow 0.2s;
+      font-family: var(--font-mono);
+    }
+
+    .ip-address-huge:hover {
+      transform: scale(1.02);
+      text-shadow: 0 0 65px rgba(112, 214, 255, 0.7), 0 0 35px rgba(255, 255, 255, 0.7);
+    }
+
+    /* Action Suite directly under IP */
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-copy-ip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: linear-gradient(135deg, rgba(112, 214, 255, 0.95) 0%, rgba(0, 180, 216, 0.95) 100%);
+      color: #030813;
+      border: none;
+      padding: 0.9rem 2rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0, 240, 255, 0.35);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-copy-ip:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 45px rgba(0, 240, 255, 0.6);
+      background: #ffffff;
+    }
+
+    .btn-copy-it {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(13, 22, 38, 0.85);
+      border: 1px solid var(--border-glow);
+      color: var(--ice-cyan);
+      padding: 0.9rem 1.6rem;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 0 15px rgba(112, 214, 255, 0.15);
+    }
+
+    .btn-copy-it:hover {
+      background: rgba(112, 214, 255, 0.2);
+      border-color: #fff;
+      color: #fff;
+      box-shadow: 0 0 25px rgba(112, 214, 255, 0.4);
+    }
+
+    .btn-copy-it:active, .btn-copy-ip:active, .btn-audio-toggle:active, .btn-snippet-copy:active, .btn-passport:active {
+      transform: scale(0.97);
+    }
+
+    .ip-jargon-hint {
+      cursor: help;
+      display: inline-block;
+      margin-left: 4px;
+      color: var(--ice-cyan);
+      opacity: 0.8;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .btn-audio-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(13, 22, 38, 0.85);
+      border: 1px solid var(--border-frost);
+      color: var(--text-muted);
+      padding: 0.9rem 1.5rem;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-audio-toggle:hover {
+      border-color: var(--ice-cyan);
+      color: var(--arctic-white);
+    }
+
+    .btn-audio-toggle.active {
+      border-color: var(--ice-cyan);
+      color: var(--ice-cyan);
+      background: rgba(112, 214, 255, 0.12);
+      box-shadow: 0 0 20px rgba(112, 214, 255, 0.3);
+    }
+
+    .hero-pills {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 1.75rem;
+      flex-wrap: wrap;
+    }
+
+    .pill-item {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 0.4rem 0.95rem;
+      border-radius: 8px;
+      background: rgba(16, 28, 48, 0.55);
+      border: 1px solid var(--border-frost);
+      color: var(--text-muted);
+    }
+
+    .pill-item strong {
+      color: var(--arctic-white);
+    }
+
+    /* Manifesto Box with igloo.inc Corner Crosshairs (media_1789709943491.png) */
+    .manifesto-box {
+      max-width: 920px;
+      margin: 3.5rem auto 0;
+      background: rgba(12, 20, 36, 0.55);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--border-frost);
+      border-radius: 16px;
+      padding: 2.2rem 2.8rem;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Technical Corner Crosshairs (igloo.inc style) */
+    .corner-crosshair {
+      position: absolute;
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      color: var(--ice-cyan);
+      opacity: 0.7;
+      line-height: 1;
+      user-select: none;
+    }
+    .corner-tl { top: 10px; left: 10px; }
+    .corner-tr { top: 10px; right: 10px; }
+    .corner-bl { bottom: 10px; left: 10px; }
+    .corner-br { bottom: 10px; right: 10px; }
+
+    .manifesto-header {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--ice-cyan);
+      letter-spacing: 0.15em;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .manifesto-quote {
+      font-size: 1.15rem;
+      font-weight: 400;
+      line-height: 1.75;
+      color: var(--ice-bright);
+    }
+
+    .manifesto-quote strong {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    /* Cryptographic Cypher Scramble Classes */
+    .scramble-active {
+      color: var(--ice-cyan) !important;
+      font-family: var(--font-mono) !important;
+      text-shadow: 0 0 10px var(--ice-cyan);
+    }
+
+    /* 4-Card Telemetry Dossier Grid */
+    .dossier-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin: 3.5rem 0;
+    }
+
+    .dossier-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-frost);
+      border-radius: 14px;
+      padding: 1.5rem;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dossier-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-glow);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45), 0 0 20px rgba(112, 214, 255, 0.15);
+    }
+
+    .dossier-tag {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      color: var(--ice-cyan);
+      margin-bottom: 0.6rem;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dossier-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .dossier-data-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+
+    .dossier-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+      padding-bottom: 0.35rem;
+    }
+
+    .dossier-row .lbl {
+      color: var(--text-subtle);
+    }
+
+    .dossier-row .val {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--ice-bright);
+      text-align: right;
+    }
+
+    /* Lifeline Toolkits Tabs / Split Sections */
+    .lifeline-section {
+      margin: 4.5rem 0;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .section-header h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #fff;
+    }
+
+    .section-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+
+    .lifeline-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .lifeline-panel {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-frost);
+      border-radius: 16px;
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .panel-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(112, 214, 255, 0.1);
+      border: 1px solid rgba(112, 214, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 1.25rem;
+      color: var(--ice-cyan);
+    }
+
+    .panel-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .panel-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+      line-height: 1.6;
+    }
+
+    /* Snippet Box with Copy Button */
+    .code-snippet-box {
+      background: #03060c;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .code-text {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--ice-cyan);
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .btn-snippet-copy {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      border-radius: 6px;
+      padding: 0.25rem 0.55rem;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-snippet-copy:hover {
+      background: var(--ice-cyan);
+      color: #030813;
+    }
+
+    /* Terminal & Passport Export Section */
+    .export-section {
+      background: rgba(10, 17, 30, 0.65);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-frost);
+      border-radius: 18px;
+      padding: 2.5rem;
+      margin: 4.5rem 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+      align-items: center;
+    }
+
+    .terminal-box {
+      background: #020408;
+      border: 1px solid rgba(112, 214, 255, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .terminal-topbar {
+      background: #090e18;
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .term-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .term-dot.r { background: #ff5f56; }
+    .term-dot.y { background: #ffbd2e; }
+    .term-dot.g { background: #27c93f; }
+
+    .terminal-title {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-subtle);
+      margin-left: 0.5rem;
+    }
+
+    .terminal-body {
+      padding: 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: #a0aec0;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .terminal-prompt {
+      color: #00ff88;
+    }
+
+    .terminal-cmd {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .terminal-res {
+      color: var(--ice-cyan);
+    }
+
+    .passport-info h3 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .passport-info p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-download-passport {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: transparent;
+      border: 1px solid var(--ice-cyan);
+      color: var(--ice-cyan);
+      padding: 0.85rem 1.8rem;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-download-passport:hover {
+      background: var(--ice-cyan);
+      color: #030813;
+      box-shadow: 0 0 25px rgba(112, 214, 255, 0.4);
+    }
+
+    /* Toast Notification */
+    .toast-popup {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: rgba(5, 12, 24, 0.95);
+      border: 1px solid var(--ice-cyan);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(112, 214, 255, 0.3);
+      backdrop-filter: blur(12px);
+      padding: 0.85rem 1.4rem;
+      border-radius: 999px;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast-popup.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-frost);
+      padding: 3rem 1.5rem 4rem;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+      background: rgba(5, 8, 17, 0.88);
+    }
+
+    .footer-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-subtle);
+      text-decoration: none;
+      font-size: 0.82rem;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--ice-cyan);
+    }
+
+    @media (max-width: 1024px) {
+      .dossier-grid { grid-template-columns: repeat(2, 1fr); }
+      .lifeline-grid { grid-template-columns: 1fr; }
+      .export-section { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      header { padding: 0.75rem 1rem; }
+      .nav-links { display: none; }
+      .dossier-grid { grid-template-columns: 1fr; }
+      .hero-meta-top { flex-direction: column; gap: 0.5rem; text-align: center; }
+      .footer-inner { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- WebGL Glacial Mist Background Canvas -->
+  <canvas id="glacialCanvas"></canvas>
+  <div class="arctic-fog-overlay"></div>
+
+  <!-- Header -->
+  <header>
+    <a href="/" class="brand-group">
+      <div class="brand-pill">ALUMUNGANDR</div>
+      <div class="brand-pill-badge">NETWORK CORE</div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Apps & Ecosystem</a></li>
+      <li><a href="/speedtest">Speed Test</a></li>
+      <li><a href="/invoice">Invoice Studio</a></li>
+      <li><a href="/resizer">Social Resizer</a></li>
+      <li><a href="/subscriptions">Reality Check</a></li>
+      <li><a href="/ip" class="active">What Is My IP</a></li>
+      <li><a href="/timezone">Meeting Matcher</a></li>
+      <li><a href="/about">About & Journey</a></li>
+      <li><a href="/faq">FAQ Matrix</a></li>
+      <li><a href="/contact">Contact Uplink</a></li>
+      <li><a href="/privacy">Privacy</a></li>
+      <li><a href="/terms">Terms</a></li>
+    </ul>
+    <div class="header-edge-pill">
+      <span class="pulse-dot"></span>
+      <span id="edgeLatency">EDGE: 12ms</span>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main>
+
+    <!-- Hero Chamber (Igloo.inc Style) -->
+    <section class="hero-chamber">
+      <div class="hero-meta-top">
+        <span>// Copyright &copy; 2026 Alumungandr Network Labs</span>
+        <span>////// PROTOCOL: RFC 791 IPv4 &bull; RFC 8200 IPv6</span>
+      </div>
+
+      <div class="hero-label">YOUR ACTIVE NETWORK IDENTIFIER</div>
+
+      <div class="ip-display-wrap">
+        <div class="ip-address-huge cypher-decode" id="displayIp" title="Click to copy IP">72.27.211.125</div>
+      </div>
+
+      <div class="hero-actions">
+        <button class="btn-copy-ip" id="btnCopyIp">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span id="btnCopyText">COPY IP TO CLIPBOARD</span>
+        </button>
+
+        <button class="btn-copy-it" id="btnCopyItSummary" title="Copy clean, formatted IP & network specs ready to paste into Slack, Teams, or an IT ticket">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+          <span id="btnItSummaryText">📋 COPY IT HELPDESK SUMMARY</span>
+        </button>
+
+        <button class="btn-audio-toggle" id="btnAudioToggle">
+          <span id="audioIcon">🔇</span>
+          <span id="audioLabel">Sound: Off</span>
+        </button>
+      </div>
+
+      <div class="hero-pills">
+        <div class="pill-item">PROTOCOL: <strong id="pillProtocol" class="cypher-decode">IPv4 (Public WAN)</strong></div>
+        <div class="pill-item">ISP: <strong id="pillIsp" class="cypher-decode">FLOW Jamaica</strong></div>
+        <div class="pill-item">LOCATION: <strong id="pillLocation" class="cypher-decode">Montego Bay, JM</strong></div>
+        <div class="pill-item">ROUTING: <strong id="pillEncapsulation" class="cypher-decode">Direct Anycast Edge</strong></div>
+      </div>
+
+      <!-- The Manifesto Box with igloo.inc Corner Crosshairs (media_1789709943491.png) -->
+      <div class="manifesto-box">
+        <div class="corner-crosshair corner-tl">&lceil;</div>
+        <div class="corner-crosshair corner-tr">&rceil;</div>
+        <div class="corner-crosshair corner-bl">&lfloor;</div>
+        <div class="corner-crosshair corner-br">&rfloor;</div>
+
+        <div class="manifesto-header">
+          <span>////// MANIFESTO</span>
+          <span>DISCOVER [X] &nearr;</span>
+        </div>
+
+        <div class="manifesto-quote cypher-decode" id="manifestoText">
+          <strong>The illusion of simplicity:</strong> It's just a sequence of numbers associated with your device.<br>
+          <strong>Why it’s essential:</strong> While it sounds like a trivial piece of tech data, this query is a daily lifeline for <strong>remote workers</strong> configuring VPN tunnels, <strong>system administrators</strong> troubleshooting network firewalls, and <strong>gamers</strong> setting up secure local servers.
+        </div>
+      </div>
+    </section>
+
+    <!-- 4-Card Telemetry Dossier Grid -->
+    <section class="dossier-grid">
+      <!-- Card 1: Geolocation -->
+      <div class="dossier-card">
+        <div class="dossier-tag"><span>GEO_DOSSIER_01</span><span>&bull; LIVE</span></div>
+        <div class="dossier-title">Geolocation</div>
+        <div class="dossier-data-list">
+          <div class="dossier-row"><span class="lbl">City</span><span class="val cypher-decode" id="valCity">Montego Bay</span></div>
+          <div class="dossier-row"><span class="lbl">Region</span><span class="val cypher-decode" id="valRegion">Saint James</span></div>
+          <div class="dossier-row"><span class="lbl">Country</span><span class="val cypher-decode" id="valCountry">Jamaica (JM)</span></div>
+          <div class="dossier-row"><span class="lbl">Postal Code</span><span class="val cypher-decode" id="valPostal">JMDNC01</span></div>
+          <div class="dossier-row"><span class="lbl">Coordinates</span><span class="val cypher-decode" id="valCoords">18.4712° N, -77.9188° W</span></div>
+          <div class="dossier-row"><span class="lbl">Timezone</span><span class="val cypher-decode" id="valTz">America/Jamaica</span></div>
+        </div>
+      </div>
+
+      <!-- Card 2: Autonomous System & ISP -->
+      <div class="dossier-card">
+        <div class="dossier-tag"><span>NET_CARRIER_02</span><span>&bull; VERIFIED</span></div>
+        <div class="dossier-title">Carrier &amp; ASN</div>
+        <div class="dossier-data-list">
+          <div class="dossier-row"><span class="lbl">ISP Name</span><span class="val cypher-decode" id="valIsp">FLOW Jamaica</span></div>
+          <div class="dossier-row"><span class="lbl">ASN Code <span class="ip-jargon-hint" title="Autonomous System Number: Global routing identifier of your internet carrier's network.">(?)</span></span><span class="val cypher-decode" id="valAsn">AS23520</span></div>
+          <div class="dossier-row"><span class="lbl">Organization</span><span class="val cypher-decode" id="valOrg">Cable &amp; Wireless Jamaica</span></div>
+          <div class="dossier-row"><span class="lbl">Reverse DNS (PTR) <span class="ip-jargon-hint" title="Pointer Record: Resolves an IP back to its official carrier domain name.">(?)</span></span><span class="val cypher-decode" id="valPtr" style="font-size:0.7rem;">cwjamaica.com</span></div>
+          <div class="dossier-row"><span class="lbl">IP Range Class</span><span class="val">Class A (/8 Public)</span></div>
+        </div>
+      </div>
+
+      <!-- Card 3: Gateway & Routing -->
+      <div class="dossier-card">
+        <div class="dossier-tag"><span>ROUTING_HOP_03</span><span>&bull; ANYCAST</span></div>
+        <div class="dossier-title">Gateway &amp; CDN</div>
+        <div class="dossier-data-list">
+          <div class="dossier-row"><span class="lbl">Public WAN IP</span><span class="val cypher-decode" id="valWan">72.27.211.125</span></div>
+          <div class="dossier-row"><span class="lbl">Local LAN Gateway</span><span class="val cypher-decode" id="valLan">192.168.50.179</span></div>
+          <div class="dossier-row"><span class="lbl">Edge Node</span><span class="val">Cloudflare Global Anycast</span></div>
+          <div class="dossier-row"><span class="lbl">Ray ID</span><span class="val" id="valRay" style="font-size:0.7rem;">Direct-Local-Loop</span></div>
+          <div class="dossier-row"><span class="lbl">MTU Buffer <span class="ip-jargon-hint" title="Maximum Transmission Unit: Largest packet size (in bytes) before network fragmentation.">(?)</span></span><span class="val">1500 Standard</span></div>
+        </div>
+      </div>
+
+      <!-- Card 4: Security & Integrity -->
+      <div class="dossier-card">
+        <div class="dossier-tag"><span>SEC_AUDIT_04</span><span>&bull; SHIELD</span></div>
+        <div class="dossier-title">Integrity Check</div>
+        <div class="dossier-data-list">
+          <div class="dossier-row"><span class="lbl">Proxy / VPN</span><span class="val cypher-decode" id="valVpn">Not Detected (Direct)</span></div>
+          <div class="dossier-row"><span class="lbl">Datacenter / Cloud</span><span class="val cypher-decode" id="valDc">Residential / DSL</span></div>
+          <div class="dossier-row"><span class="lbl">Tor Exit Node</span><span class="val" style="color:#00ff88;">Clean (No)</span></div>
+          <div class="dossier-row"><span class="lbl">Bogon Check <span class="ip-jargon-hint" title="Verifies your IP is a legitimate routable address and not an unallocated bogon block.">(?)</span></span><span class="val" style="color:#00ff88;">Valid Public</span></div>
+          <div class="dossier-row"><span class="lbl">Threat Reputation</span><span class="val" style="color:#00ff88;">Low Risk (Score 0)</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- The 3 Lifeline Toolkits -->
+    <section class="lifeline-section">
+      <div class="section-header">
+        <h2>Three Daily Lifeline Toolkits</h2>
+        <p>Pre-compiled firewall directives, game server strings, and connection probes compiled specifically for your active IP.</p>
+      </div>
+
+      <div class="lifeline-grid">
+        <!-- 1. Gamers & Local Server Hosts -->
+        <div class="lifeline-panel">
+          <div class="panel-icon">🎮</div>
+          <div class="panel-title">Gamer & Host Lifeline</div>
+          <div class="panel-desc">
+            Hosting a Minecraft, Palworld, or Counter-Strike server? Share your <strong>Public WAN IP</strong> with internet friends, but use your <strong>Local LAN IP</strong> for local co-op on your home Wi-Fi.
+          </div>
+
+          <div style="font-size:0.75rem; color:var(--text-subtle); margin-bottom:0.4rem; font-family:var(--font-mono);">SOURCE ENGINE / CS2:</div>
+          <div class="code-snippet-box">
+            <span class="code-text" id="snipSource">connect 72.27.211.125:27015</span>
+            <button class="btn-snippet-copy" onclick="copySnippet('snipSource')">COPY</button>
+          </div>
+
+          <div style="font-size:0.75rem; color:var(--text-subtle); margin-bottom:0.4rem; font-family:var(--font-mono);">MINECRAFT JAVA:</div>
+          <div class="code-snippet-box">
+            <span class="code-text" id="snipMc">72.27.211.125:25565</span>
+            <button class="btn-snippet-copy" onclick="copySnippet('snipMc')">COPY</button>
+          </div>
+
+          <div style="font-size:0.75rem; color:var(--text-subtle); margin-bottom:0.4rem; font-family:var(--font-mono);">LOCAL LAN (SAME WI-FI):</div>
+          <div class="code-snippet-box">
+            <span class="code-text" id="snipLan">192.168.50.179:25565</span>
+            <button class="btn-snippet-copy" onclick="copySnippet('snipLan')">COPY</button>
+          </div>
+        </div>
+
+        <!-- 2. System Administrators & DevOps -->
+        <div class="lifeline-panel">
+          <div class="panel-icon">🛡️</div>
+          <div class="panel-title">SysAdmin Firewall Rules</div>
+          <div class="panel-desc">
+            Quickly whitelist your current home or office workstation in Linux firewalls, cloud security groups, and web servers.
+          </div>
+
+          <div style="font-size:0.75rem; color:var(--text-subtle); margin-bottom:0.4rem; font-family:var(--font-mono);">UFW (UBUNTU / DEBIAN):</div>
+          <div class="code-snippet-box">
+            <span class="code-text" id="snipUfw">sudo ufw allow from 72.27.211.125</span>
+            <button class="btn-snippet-copy" onclick="copySnippet('snipUfw')">COPY</button>
+          </div>
+
+          <div style="font-size:0.75rem; color:var(--text-subtle); margin-bottom:0.4rem; font-family:var(--font-mono);">IPTABLES:</div>
+          <div class="code-snippet-box">
+            <span class="code-text" id="snipIptables">iptables -A INPUT -s 72.27.211.125 -j ACCEPT</span>
+            <button class="btn-snippet-copy" onclick="copySnippet('snipIptables')">COPY</button>
+          </div>
+
+          <div style="font-size:0.75rem; color:var(--text-subtle); margin-bottom:0.4rem; font-family:var(--font-mono);">NGINX ALLOWLIST:</div>
+          <div class="code-snippet-box">
+            <span class="code-text" id="snipNginx">allow 72.27.211.125; deny all;</span>
+            <button class="btn-snippet-copy" onclick="copySnippet('snipNginx')">COPY</button>
+          </div>
+
+          <div style="font-size:0.75rem; color:var(--text-subtle); margin-bottom:0.4rem; font-family:var(--font-mono);">CIDR NOTATION:</div>
+          <div class="code-snippet-box">
+            <span class="code-text" id="snipCidr">72.27.211.125/32</span>
+            <button class="btn-snippet-copy" onclick="copySnippet('snipCidr')">COPY</button>
+          </div>
+        </div>
+
+        <!-- 3. Remote Workers & Privacy Probe -->
+        <div class="lifeline-panel">
+          <div class="panel-icon">🔒</div>
+          <div class="panel-title">Remote Worker Audit</div>
+          <div class="panel-desc">
+            Verify whether your company VPN tunnel is actually encapsulating your traffic, or if your physical ISP is leaking onto the web.
+          </div>
+
+          <div style="font-size:0.75rem; color:var(--text-subtle); margin-bottom:0.4rem; font-family:var(--font-mono);">BROADCASTED HEADERS:</div>
+          <div class="code-snippet-box" style="align-items: flex-start;">
+            <span class="code-text" id="snipUa" style="font-size:0.7rem; white-space: normal; word-break: break-all;">Mozilla/5.0 (Windows NT 10.0; Win64; x64)</span>
+            <button class="btn-snippet-copy" onclick="copySnippet('snipUa')">COPY</button>
+          </div>
+
+          <div style="font-size:0.75rem; color:var(--text-subtle); margin-bottom:0.4rem; font-family:var(--font-mono);">ACCEPT LANGUAGE:</div>
+          <div class="code-snippet-box">
+            <span class="code-text" id="snipLang">en-US,en;q=0.9</span>
+            <button class="btn-snippet-copy" onclick="copySnippet('snipLang')">COPY</button>
+          </div>
+
+          <div style="font-size:0.75rem; color:var(--text-subtle); margin-bottom:0.4rem; font-family:var(--font-mono);">SECURITY STATUS:</div>
+          <div class="code-snippet-box">
+            <span class="code-text" style="color:#00ff88;">✓ Encrypted TLS 1.3 Transmission</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Developer CLI & Diagnostic Passport Section -->
+    <section class="export-section">
+      <div class="terminal-box">
+        <div class="terminal-topbar">
+          <span class="term-dot r"></span>
+          <span class="term-dot y"></span>
+          <span class="term-dot g"></span>
+          <span class="terminal-title">bash &bull; curl ip inspection</span>
+        </div>
+        <div class="terminal-body" id="termBody">
+          <div><span class="terminal-prompt">$</span> <span class="terminal-cmd">curl -s https://alumungandr.com/api/ip</span></div>
+          <div class="terminal-res cypher-decode" id="termRawIp">72.27.211.125</div>
+          <div style="margin-top:0.8rem;"><span class="terminal-prompt">$</span> <span class="terminal-cmd">curl -s https://alumungandr.com/api/ip?format=json | jq .isp</span></div>
+          <div class="terminal-res cypher-decode" id="termRawIsp">"FLOW Jamaica (Cable & Wireless)"</div>
+          <div style="margin-top:0.8rem;"><span class="terminal-prompt">$</span> <span class="terminal-cmd">ping -c 3 edge.alumungandr.com</span></div>
+          <div style="color:var(--text-subtle);">64 bytes from anycast: icmp_seq=1 ttl=58 time=12.4 ms</div>
+          <div style="color:var(--text-subtle);">--- 0% packet loss, min/avg/max = 11.2/12.4/13.8 ms ---</div>
+        </div>
+      </div>
+
+      <div class="passport-info">
+        <h3>Network Diagnostic Passport</h3>
+        <p>Need to submit your network telemetry to an IT helpdesk, game administrator, or security engineer? Download a standardized, timestamped diagnostic file containing your WAN IP, LAN subnet, reverse DNS, and routing diagnostics.</p>
+        <button class="btn-download-passport" id="btnDownloadPassport">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          DOWNLOAD NETWORK PASSPORT (.TXT)
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Confirmation Popup -->
+  <div class="toast-popup" id="toast">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ice-cyan)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="toastMsg">Copied to clipboard</span>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <strong style="color:#fff; font-size:1.1rem;">Alumungandr Network Labs &copy; 2026</strong>
+        <p style="color:var(--text-subtle); font-size:0.85rem; margin-top:0.25rem;">David Anthony Jones ("Alu") &bull; All Rights Strictly Reserved</p>
+      </div>
+      <div class="footer-links">
+        <a href="/">Apps & Ecosystem</a>
+        <a href="/speedtest">Speed Test</a>
+        <a href="/invoice">Invoice Studio</a>
+        <a href="/resizer">Social Resizer</a>
+        <a href="/subscriptions">Reality Check</a>
+        <a href="/ip" class="active">What Is My IP</a>
+        <a href="/timezone">Meeting Matcher</a>
+        <a href="/about">About & Journey</a>
+        <a href="/faq">FAQ Matrix</a>
+        <a href="/contact">Contact Uplink</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script: Cryptographic Scramble Ripple Engine, 3D Monolith, and Live API -->
+  <script>
+    // --- 1. Cryptographic Cypher Scramble Decode Ripple Effect (media_1789709943491.png) ---
+    const CYPHER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~|}{[]:;?><";
+
+    function scrambleDecode(element, targetText, duration = 800) {
+      if (!element) return;
+      const length = targetText.length;
+      const startTime = performance.now();
+
+      function update(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        const revealedCount = Math.floor(progress * length);
+
+        let output = "";
+        for (let i = 0; i < length; i++) {
+          if (targetText[i] === " " || targetText[i] === "\n") {
+            output += targetText[i];
+          } else if (i < revealedCount) {
+            output += targetText[i];
+          } else {
+            output += CYPHER_CHARS[Math.floor(Math.random() * CYPHER_CHARS.length)];
+          }
+        }
+
+        element.innerText = output;
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else {
+          element.innerText = targetText;
+          element.classList.remove('scramble-active');
+        }
+      }
+
+      element.classList.add('scramble-active');
+      requestAnimationFrame(update);
+    }
+
+    function triggerScrambleOnTargets() {
+      document.querySelectorAll('.cypher-decode').forEach(el => {
+        const orig = el.innerText;
+        el.addEventListener('mouseenter', () => {
+          scrambleDecode(el, orig, 600);
+          playCrystallineChime();
+        });
+      });
+    }
+
+    // --- 2. WebGL Three.js Glacial Monolith & Snow Particles ---
+    let scene, camera, renderer, crystalGroup, particles;
+    let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
+
+    function init3D() {
+      const canvas = document.getElementById('glacialCanvas');
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 20;
+
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0xd0f0fd, 0.7);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      directionalLight.position.set(10, 20, 15);
+      scene.add(directionalLight);
+
+      const cyanPointLight = new THREE.PointLight(0x70d6ff, 2.5, 30);
+      cyanPointLight.position.set(0, 0, 2);
+      scene.add(cyanPointLight);
+
+      // Create Glacial Crystalline Monolith
+      crystalGroup = new THREE.Group();
+
+      const geom = new THREE.IcosahedronGeometry(4.5, 0);
+      
+      const iceMaterial = new THREE.MeshPhongMaterial({
+        color: 0x142842,
+        emissive: 0x0a1c30,
+        specular: 0xa8e6ff,
+        shininess: 90,
+        transparent: true,
+        opacity: 0.65,
+        flatShading: true
+      });
+      const iceMesh = new THREE.Mesh(geom, iceMaterial);
+      crystalGroup.add(iceMesh);
+
+      const wireGeom = new THREE.WireframeGeometry(geom);
+      const wireMaterial = new THREE.LineBasicMaterial({
+        color: 0x70d6ff,
+        transparent: true,
+        opacity: 0.45,
+        linewidth: 1.5
+      });
+      const wireMesh = new THREE.LineSegments(wireGeom, wireMaterial);
+      crystalGroup.add(wireMesh);
+
+      const coreGeom = new THREE.IcosahedronGeometry(2.5, 1);
+      const coreMat = new THREE.MeshBasicMaterial({
+        color: 0xe0f7ff,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.25
+      });
+      const coreMesh = new THREE.Mesh(coreGeom, coreMat);
+      crystalGroup.add(coreMesh);
+
+      crystalGroup.position.set(0, 1, 0);
+      scene.add(crystalGroup);
+
+      // Drifting Snow & Ice Crystal Particles
+      const particleCount = 450;
+      const partGeom = new THREE.BufferGeometry();
+      const posArray = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount * 3; i += 3) {
+        posArray[i] = (Math.random() - 0.5) * 50;
+        posArray[i + 1] = (Math.random() - 0.5) * 40;
+        posArray[i + 2] = (Math.random() - 0.5) * 30;
+      }
+      partGeom.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+      const partMat = new THREE.PointsMaterial({
+        size: 0.15,
+        color: 0xd0f0fd,
+        transparent: true,
+        opacity: 0.65,
+        blending: THREE.AdditiveBlending
+      });
+      particles = new THREE.Points(partGeom, partMat);
+      scene.add(particles);
+
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('mousemove', onMouseMove);
+
+      animate3D();
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function onMouseMove(e) {
+      mouseX = (e.clientX - window.innerWidth / 2) * 0.001;
+      mouseY = (e.clientY - window.innerHeight / 2) * 0.001;
+    }
+
+    function animate3D() {
+      requestAnimationFrame(animate3D);
+
+      targetX += (mouseX - targetX) * 0.05;
+      targetY += (mouseY - targetY) * 0.05;
+
+      if (crystalGroup) {
+        crystalGroup.rotation.y += 0.003;
+        crystalGroup.rotation.x = targetY * 0.8;
+        crystalGroup.rotation.z = -targetX * 0.5;
+      }
+
+      if (particles) {
+        particles.rotation.y += 0.0006;
+        const positions = particles.geometry.attributes.position.array;
+        for (let i = 1; i < positions.length; i += 3) {
+          positions[i] -= 0.02;
+          if (positions[i] < -20) positions[i] = 20;
+        }
+        particles.geometry.attributes.position.needsUpdate = true;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    // --- 3. Web Audio API Synthesizer (Arctic Wind & Resonant Chimes) ---
+    let audioCtx = null;
+    let windGain = null;
+    let isAudioPlaying = false;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+    }
+
+    function toggleAudio() {
+      initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const btn = document.getElementById('btnAudioToggle');
+      const label = document.getElementById('audioLabel');
+      const icon = document.getElementById('audioIcon');
+
+      if (!isAudioPlaying) {
+        startArcticWind();
+        isAudioPlaying = true;
+        btn.classList.add('active');
+        label.textContent = 'Sound: On';
+        icon.textContent = '🔊';
+        showToast('Arctic ambient atmosphere enabled');
+      } else {
+        stopArcticWind();
+        isAudioPlaying = false;
+        btn.classList.remove('active');
+        label.textContent = 'Sound: Off';
+        icon.textContent = '🔇';
+      }
+    }
+
+    function startArcticWind() {
+      const bufferSize = audioCtx.sampleRate * 2;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        b3 = 0.86650 * b3 + white * 0.3104856;
+        b4 = 0.55000 * b4 + white * 0.5329522;
+        b5 = -0.7616 * b5 - white * 0.0168980;
+        output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04;
+        b6 = white * 0.115926;
+      }
+
+      const whiteNoise = audioCtx.createBufferSource();
+      whiteNoise.buffer = noiseBuffer;
+      whiteNoise.loop = true;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(320, audioCtx.currentTime);
+
+      windGain = audioCtx.createGain();
+      windGain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+      windGain.gain.exponentialRampToValueAtTime(0.12, audioCtx.currentTime + 2);
+
+      whiteNoise.connect(filter);
+      filter.connect(windGain);
+      windGain.connect(audioCtx.destination);
+      whiteNoise.start();
+      window._windSource = whiteNoise;
+    }
+
+    function stopArcticWind() {
+      if (windGain && window._windSource) {
+        windGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1);
+        setTimeout(() => {
+          try { window._windSource.stop(); } catch(e){}
+        }, 1000);
+      }
+    }
+
+    function playCrystallineChime() {
+      if (!audioCtx || !isAudioPlaying) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1480, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1960, audioCtx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.8);
+    }
+
+    // --- 4. 100% Legitimate Live Global Telemetry Fetching from Backend /api/ip ---
+    let currentData = null;
+
+    async function fetchNetworkIntelligence() {
+      const t0 = performance.now();
+      try {
+        const res = await fetch('/api/ip');
+        const data = await res.json();
+        currentData = data;
+        const rtt = Math.round(performance.now() - t0);
+        document.getElementById('edgeLatency').textContent = `EDGE: ${rtt}ms`;
+
+        // Update Hero with Cypher Scramble
+        scrambleDecode(document.getElementById('displayIp'), data.ip, 700);
+        scrambleDecode(document.getElementById('pillProtocol'), `${data.ip_version} (Public WAN)`, 500);
+        scrambleDecode(document.getElementById('pillIsp'), data.isp, 600);
+        scrambleDecode(document.getElementById('pillLocation'), `${data.city}, ${data.country_code}`, 600);
+        scrambleDecode(document.getElementById('pillEncapsulation'), data.is_cloudflare ? 'Cloudflare Edge Proxy' : 'Direct Anycast Edge', 700);
+
+        // Update Dossier Cards
+        scrambleDecode(document.getElementById('valCity'), data.city, 500);
+        scrambleDecode(document.getElementById('valRegion'), data.region, 500);
+        scrambleDecode(document.getElementById('valCountry'), `${data.country} (${data.country_code})`, 600);
+        scrambleDecode(document.getElementById('valPostal'), data.postal_code || 'N/A', 500);
+        scrambleDecode(document.getElementById('valCoords'), `${data.latitude}° N, ${data.longitude}° W`, 600);
+        scrambleDecode(document.getElementById('valTz'), data.timezone, 600);
+
+        scrambleDecode(document.getElementById('valIsp'), data.isp, 600);
+        scrambleDecode(document.getElementById('valAsn'), data.asn, 500);
+        scrambleDecode(document.getElementById('valOrg'), data.isp, 600);
+        scrambleDecode(document.getElementById('valPtr'), data.hostname, 700);
+
+        scrambleDecode(document.getElementById('valWan'), data.ip, 500);
+        scrambleDecode(document.getElementById('valLan'), data.local_ip || '192.168.50.179', 500);
+        document.getElementById('valRay').textContent = data.cf_ray || 'Edge-Direct';
+        scrambleDecode(document.getElementById('valDc'), data.is_datacenter ? 'Datacenter / Hosting' : 'Residential / Broadband', 600);
+
+        // Update Lifeline Toolkits
+        if (data.gaming_connect) {
+          document.getElementById('snipSource').textContent = data.gaming_connect.source_engine;
+          document.getElementById('snipMc').textContent = data.gaming_connect.minecraft_server;
+          document.getElementById('snipLan').textContent = data.gaming_connect.lan_minecraft;
+        }
+
+        if (data.firewall_rules) {
+          document.getElementById('snipUfw').textContent = data.firewall_rules.ufw;
+          document.getElementById('snipIptables').textContent = data.firewall_rules.iptables;
+          document.getElementById('snipNginx').textContent = data.firewall_rules.nginx;
+          document.getElementById('snipCidr').textContent = data.firewall_rules.cidr;
+        }
+
+        if (data.headers_inspection) {
+          if (data.headers_inspection['User-Agent']) {
+            document.getElementById('snipUa').textContent = data.headers_inspection['User-Agent'];
+          }
+          if (data.headers_inspection['Accept-Language']) {
+            document.getElementById('snipLang').textContent = data.headers_inspection['Accept-Language'];
+          }
+        }
+
+        // Terminal mockup
+        document.getElementById('termRawIp').textContent = data.ip;
+        document.getElementById('termRawIsp').textContent = `"${data.isp}"`;
+
+        triggerScrambleOnTargets();
+      } catch (e) {
+        console.warn('Fallback to local intelligence:', e);
+      }
+    }
+
+    // --- 5. Copy & Export Actions ---
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      toastMsg.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    function copyIp() {
+      const ip = document.getElementById('displayIp').textContent.trim();
+      navigator.clipboard.writeText(ip).then(() => {
+        showToast(`Copied ${ip} to clipboard`);
+        playCrystallineChime();
+        const btnText = document.getElementById('btnCopyText');
+        btnText.textContent = '✓ COPIED!';
+        setTimeout(() => btnText.textContent = 'COPY IP TO CLIPBOARD', 2000);
+      });
+    }
+
+    function copyItSummary() {
+      const d = currentData || {
+        ip: document.getElementById('displayIp').textContent.trim(),
+        local_ip: '192.168.50.179',
+        isp: 'FLOW Jamaica',
+        asn: 'AS23520',
+        city: 'Montego Bay',
+        country: 'Jamaica (JM)'
+      };
+      const summary = `--- IT HELPDESK & VPN DIAGNOSTIC SUMMARY ---
+Public WAN IP : ${d.ip}
+Local LAN IP  : ${d.local_ip || '192.168.50.179'}
+ISP Carrier   : ${d.isp} (${d.asn})
+Location      : ${d.city}, ${d.country}
+Time Verified : ${new Date().toUTCString()}
+Diagnostic Hub: Alumungandr Network Intelligence`;
+
+      navigator.clipboard.writeText(summary).then(() => {
+        showToast('✓ Copied IT Helpdesk diagnostic summary!');
+        playCrystallineChime();
+        const text = document.getElementById('btnItSummaryText');
+        text.textContent = '✓ COPIED FOR IT HELPDESK!';
+        setTimeout(() => text.textContent = '📋 COPY IT HELPDESK SUMMARY', 2500);
+      });
+    }
+
+    function copySnippet(elemId) {
+      const text = document.getElementById(elemId).textContent.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(`Copied rule: ${text}`);
+        playCrystallineChime();
+      });
+    }
+
+    function downloadPassport() {
+      const d = currentData || {
+        ip: document.getElementById('displayIp').textContent.trim(),
+        local_ip: '192.168.50.179',
+        isp: 'FLOW Jamaica',
+        asn: 'AS23520',
+        city: 'Montego Bay',
+        country: 'Jamaica (JM)',
+        hostname: 'cwjamaica.com',
+        timestamp: new Date().toISOString()
+      };
+
+      const passportContent = `================================================================================
+ALUMUNGANDR NETWORK LABS // NETWORK DIAGNOSTIC PASSPORT
+Generated: ${new Date().toUTCString()}
+Protocol: RFC 791 / RFC 8200 Verified
+================================================================================
+
+[CLIENT PUBLIC IDENTITY]
+Public WAN IP        : ${d.ip}
+IP Version           : ${d.ip_version || 'IPv4'}
+Local LAN Gateway    : ${d.local_ip || '192.168.50.179'}
+Reverse DNS (PTR)    : ${d.hostname || 'cwjamaica.com'}
+
+[GEOLOCATION & CARRIER]
+ISP Carrier          : ${d.isp}
+Autonomous System    : ${d.asn}
+City / Region        : ${d.city}, ${d.region || 'Saint James'}
+Country              : ${d.country} (${d.country_code || 'JM'})
+Coordinates          : ${d.latitude || '18.4712'} N, ${d.longitude || '-77.9188'} W
+Timezone             : ${d.timezone || 'America/Jamaica'}
+
+[SYSADMIN FIREWALL DIRECTIVES]
+CIDR /32 Range       : ${d.ip}/32
+UFW Rule             : sudo ufw allow from ${d.ip}
+IPTables Rule        : iptables -A INPUT -s ${d.ip} -j ACCEPT
+Nginx Whitelist      : allow ${d.ip}; deny all;
+
+[GAMER MULTIPLAYER STRINGS]
+Source Engine (CS2)  : connect ${d.ip}:27015
+Minecraft Server     : ${d.ip}:25565
+LAN Party Connect    : ${d.local_ip || '192.168.50.179'}:25565
+
+================================================================================
+Certified by Alumungandr Edge Engine • David Anthony Jones ("Alu")
+================================================================================
+`;
+
+      const blob = new Blob([passportContent], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Alumungandr-Network-Passport-${d.ip.replace(/\./g, '-')}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Downloaded Network Diagnostic Passport (.txt)');
+      playCrystallineChime();
+    }
+
+    // --- 6. Initialization ---
+    document.addEventListener('DOMContentLoaded', () => {
+      init3D();
+      fetchNetworkIntelligence();
+
+      document.getElementById('btnCopyIp').addEventListener('click', copyIp);
+      document.getElementById('btnCopyItSummary').addEventListener('click', copyItSummary);
+      document.getElementById('displayIp').addEventListener('click', copyIp);
+      document.getElementById('btnAudioToggle').addEventListener('click', toggleAudio);
+      document.getElementById('btnDownloadPassport').addEventListener('click', downloadPassport);
+    });
+  </script>
+</body>
+</html>

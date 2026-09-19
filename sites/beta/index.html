@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OmniHost Beta Portal // Verified Android Binaries</title>
+  <meta name="description" content="Public open beta repository for Galaxsee, Galaxsee Pro, SueChef, and OmniHost. High-performance, zero-telemetry Android applications." />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Local Three.js with CDN fallback for 3D Glass Sovereign Core -->
+  <script src="/assets/three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
+
+  <style>
+    :root {
+      --bg-dark: #07080a;
+      --bg-surface: #0e1016;
+      --bg-surface-elevated: #141720;
+      --bg-studio: #0d0f15;
+      --border-dashed: 1px dashed rgba(255, 255, 255, 0.14);
+      --border-solid: 1px solid rgba(255, 255, 255, 0.08);
+      --text-primary: #f4f5f8;
+      --text-secondary: #9aa0b0;
+      --text-muted: #5f6575;
+      --accent-coral: #de5849;
+      --accent-coral-bright: #ff4838;
+      --accent-coral-glow: rgba(222, 88, 73, 0.28);
+      --accent-cyan: #38bdf8;
+      --accent-green: #10b981;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Subtle background grid */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ==========================================================================
+       1. WEBISOFT-STYLE FLOATING TICKET BADGE & HEADER
+       ========================================================================== */
+    .header-nav-wrap {
+      position: fixed;
+      top: 20px;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .header-nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Floating Capsule Ticket Badge (Screenshot 1) */
+    .ticket-badge {
+      pointer-events: auto;
+      background: #ffffff;
+      color: #000000;
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 16px;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      position: relative;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .ticket-badge:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.7);
+    }
+
+    .ticket-mark {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-right: 12px;
+      border-right: 1px dashed rgba(0, 0, 0, 0.3);
+    }
+
+    .ticket-logo-glyph {
+      width: 18px;
+      height: 18px;
+      background: #000000;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      border-radius: 2px;
+    }
+
+    .ticket-brand {
+      color: #000000;
+    }
+
+    .ticket-center {
+      padding: 0 12px;
+      border-right: 1px dashed rgba(0, 0, 0, 0.3);
+      color: #333333;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .ticket-burger {
+      padding-left: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      cursor: pointer;
+    }
+
+    .burger-line {
+      width: 14px;
+      height: 2px;
+      background: #000000;
+      transition: transform 0.2s ease;
+    }
+
+    /* Right Header Action */
+    .header-right-action {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-tagline {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ffffff;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      padding: 6px 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      display: none;
+    }
+
+    @media (min-width: 860px) {
+      .header-tagline {
+        display: block;
+      }
+    }
+
+    .btn-ticket-action {
+      background: #000000;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 10px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-ticket-action:hover {
+      background: var(--accent-coral);
+      border-color: var(--accent-coral);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px var(--accent-coral-glow);
+    }
+
+    /* Drawer Menu Overlay */
+    .drawer-menu {
+      position: fixed;
+      top: 75px;
+      left: 24px;
+      width: 320px;
+      background: #0d0f15;
+      border: var(--border-dashed);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+      z-index: 1001;
+      padding: 24px;
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      animation: menuSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .drawer-menu.active {
+      display: flex;
+    }
+
+    @keyframes menuSlide {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .drawer-link {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-primary);
+      text-decoration: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      transition: color 0.2s ease;
+    }
+
+    .drawer-link:hover {
+      color: var(--accent-coral);
+    }
+
+    .drawer-link span {
+      color: var(--accent-coral);
+    }
+
+    /* ==========================================================================
+       2. FULL-BLEED UNDULATING WAVE HERO (Screenshot 1)
+       ========================================================================== */
+    .hero-wave-section {
+      position: relative;
+      min-height: 100vh;
+      background: #de5849;
+      color: #000000;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 100px 32px 40px;
+    }
+
+    /* Interactive HTML5 Canvas Wave Background */
+    #heroWaveCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: auto;
+    }
+
+    /* Monospace perimeter coordinates */
+    .hero-coords {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #000000;
+      pointer-events: none;
+    }
+
+    .hero-bottom-wrap {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 24px;
+      pointer-events: none;
+    }
+
+    .hero-massive-title {
+      font-size: clamp(48px, 11vw, 150px);
+      font-weight: 900;
+      line-height: 0.85;
+      letter-spacing: -0.05em;
+      color: #000000;
+      user-select: none;
+    }
+
+    .hero-explore-btn {
+      pointer-events: auto;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: #000000;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: 1px solid rgba(0, 0, 0, 0.4);
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(6px);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .hero-explore-btn:hover {
+      background: #000000;
+      color: #ffffff;
+      transform: translateY(2px);
+    }
+
+    /* ==========================================================================
+       3. 3D STUDIO EMBLEM & PARALLAX REVEAL (Screenshots 2, 4, 5)
+       ========================================================================== */
+    .studio-reveal-section {
+      position: relative;
+      background: #090b10;
+      border-bottom: var(--border-dashed);
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 80px 24px;
+    }
+
+    #threeStudioCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: auto;
+    }
+
+    .studio-overlay-content {
+      position: relative;
+      z-index: 2;
+      max-width: 1100px;
+      width: 100%;
+      pointer-events: none;
+    }
+
+    .studio-coords {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      margin-bottom: 40px;
+    }
+
+    .studio-category-list {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.9;
+      letter-spacing: 0.08em;
+      margin-bottom: 120px;
+      max-width: 320px;
+    }
+
+    .studio-category-list div {
+      transition: color 0.2s ease;
+    }
+
+    .studio-headline-reveal {
+      font-size: clamp(28px, 4.5vw, 54px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      max-width: 820px;
+      color: var(--text-primary);
+    }
+
+    .studio-headline-reveal span {
+      color: var(--accent-coral);
+    }
+
+    /* ==========================================================================
+       4. MARQUEE TICKER TAPE
+       ========================================================================== */
+    .ticker-wrap {
+      width: 100%;
+      overflow: hidden;
+      background: #0b0d13;
+      border-top: var(--border-dashed);
+      border-bottom: var(--border-dashed);
+      padding: 12px 0;
+      white-space: nowrap;
+      position: relative;
+      z-index: 10;
+    }
+
+    .ticker-content {
+      display: inline-block;
+      animation: tickerLoop 35s linear infinite;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    .ticker-item {
+      display: inline-block;
+      margin: 0 20px;
+    }
+
+    .ticker-item span {
+      color: var(--accent-coral);
+      margin: 0 8px;
+    }
+
+    @keyframes tickerLoop {
+      0% { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(-50%, 0, 0); }
+    }
+
+    /* ==========================================================================
+       5. APPLICATIONS SHOWCASE WITH MORPHING GEOMETRIC ICONS
+       ========================================================================== */
+    .section-header-modern {
+      padding: 64px 0 32px;
+      border-bottom: var(--border-dashed);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .section-tag {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent-coral);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .section-heading-huge {
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .apps-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      padding: 48px 0 80px;
+    }
+
+    /* 3D Interactive Tilt Card */
+    .app-card-3d {
+      background: var(--bg-surface);
+      border: var(--border-dashed);
+      padding: 40px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      will-change: transform;
+    }
+
+    .app-card-3d:hover {
+      border-color: rgba(222, 88, 73, 0.7);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+
+    .app-card-glare {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .app-card-3d:hover .app-card-glare {
+      opacity: 1;
+    }
+
+    .app-card-layout {
+      display: grid;
+      grid-template-columns: 1.8fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    @media (max-width: 920px) {
+      .app-card-layout {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+    }
+
+    .app-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .app-index-tag {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent-coral);
+      letter-spacing: 0.1em;
+    }
+
+    .app-category-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-secondary);
+    }
+
+    .app-badge-free {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 8px;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .app-title-huge {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 14px;
+    }
+
+    .app-description-text {
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .app-features-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .app-features-list li {
+      font-size: 14px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .app-features-list li::before {
+      content: '+';
+      color: var(--accent-coral);
+      font-family: var(--font-mono);
+      font-weight: bold;
+    }
+
+    .app-actions-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* Precision Buttons */
+    .btn-action-primary {
+      background: var(--accent-coral);
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 14px 26px;
+      border: 1px solid var(--accent-coral);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .btn-action-primary:hover {
+      background: var(--accent-coral-bright);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px var(--accent-coral-glow);
+    }
+
+    .btn-action-primary .btn-arrow {
+      transition: transform 0.25s ease;
+    }
+
+    .btn-action-primary:hover .btn-arrow {
+      transform: translateX(4px);
+    }
+
+    .btn-action-checksum {
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 13px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action-checksum:hover {
+      border-color: var(--accent-coral);
+      color: var(--accent-coral);
+    }
+
+    /* Tactile Micro-Interactions & Button Depression */
+    .ticket-badge:active,
+    .btn-ticket-action:active,
+    .btn-action-primary:active,
+    .btn-action-checksum:active,
+    .drawer-link:active,
+    .filter-btn:active,
+    .footer-nav a:active {
+      transform: scale(0.97) !important;
+      transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    /* Interactive Geometric Glyph Visualizer (Screenshot 3 Reference) */
+    .glyph-display-box {
+      background: #08090e;
+      border: var(--border-dashed);
+      height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glyph-svg {
+      width: 140px;
+      height: 140px;
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .app-card-3d:hover .glyph-svg {
+      transform: scale(1.08) rotate(15deg);
+    }
+
+    /* Spec Footnotes inside Card */
+    .card-spec-strip {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .checksum-drawer {
+      margin-top: 16px;
+      background: #050608;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 14px 18px;
+      display: none;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      word-break: break-all;
+    }
+
+    .checksum-drawer.open {
+      display: block;
+    }
+
+    .checksum-drawer-top {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+
+    .copy-hash-btn {
+      background: transparent;
+      border: none;
+      color: var(--accent-coral);
+      font-family: var(--font-mono);
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .copy-hash-btn:hover {
+      text-decoration: underline;
+    }
+
+    /* ==========================================================================
+       6. RUNBOOK / HOW TO SIDELOAD SECTION
+       ========================================================================== */
+    .runbook-section {
+      border: var(--border-dashed);
+      background: var(--bg-surface);
+      padding: 48px;
+      margin-bottom: 64px;
+    }
+
+    .runbook-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 28px;
+      margin-top: 28px;
+    }
+
+    .runbook-card {
+      border-left: 2px solid var(--accent-coral);
+      padding-left: 20px;
+    }
+
+    .runbook-step-idx {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent-coral);
+      margin-bottom: 6px;
+    }
+
+    .runbook-step-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .runbook-step-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ==========================================================================
+       7. SINGLE-INPUT FEEDBACK CONSOLE & TERMINAL
+       ========================================================================== */
+    .feedback-console {
+      border: var(--border-dashed);
+      background: var(--bg-surface);
+      padding: 48px;
+      margin-bottom: 80px;
+      position: relative;
+    }
+
+    .feedback-textarea {
+      width: 100%;
+      min-height: 130px;
+      background: #07080c;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      padding: 18px 20px;
+      resize: vertical;
+      outline: none;
+      margin: 20px 0;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .feedback-textarea:focus {
+      border-color: var(--accent-coral);
+      box-shadow: 0 0 20px var(--accent-coral-glow);
+    }
+
+    .feedback-console-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .feedback-privacy-note {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feedback-toast-box {
+      padding: 16px 20px;
+      border: 1px solid var(--accent-coral);
+      background: rgba(222, 88, 73, 0.1);
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      display: none;
+      margin-top: 20px;
+    }
+
+    /* ==========================================================================
+       8. DEVELOPER CONSOLE MODAL
+       ========================================================================== */
+    .dev-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .dev-modal-overlay.open {
+      display: flex;
+    }
+
+    .dev-modal-box {
+      background: #0b0d13;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      width: 100%;
+      max-width: 860px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
+    }
+
+    .dev-modal-header {
+      padding: 16px 24px;
+      border-bottom: var(--border-dashed);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    .dev-modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .dev-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .dev-close-btn:hover {
+      color: #ffffff;
+    }
+
+    /* Footer */
+    footer {
+      border-top: var(--border-dashed);
+      padding: 48px 0;
+      background: #040507;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .footer-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .footer-nav {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+
+    .footer-nav a:hover {
+      color: var(--accent-coral);
+    }
+
+    /* ==========================================================================
+       9. MODERN WEB SCROLL-DRIVEN & REVEAL ANIMATIONS
+       ========================================================================== */
+    .reveal-on-scroll {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal-on-scroll.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal-on-scroll {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+      .ticker-content {
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <!-- FLOATING TICKET BADGE HEADER (Screenshot 1) -->
+  <header class="header-nav-wrap">
+    <div class="header-nav-inner">
+      <div class="ticket-badge" onclick="toggleDrawerMenu()">
+        <div class="ticket-mark">
+          <div class="ticket-logo-glyph">&#937;</div>
+          <span class="ticket-brand">ALU LABS&reg;</span>
+        </div>
+        <div class="ticket-center">DEVELOPMENT LABS</div>
+        <div class="ticket-burger">
+          <div class="burger-line"></div>
+          <div class="burger-line"></div>
+          <div class="burger-line"></div>
+        </div>
+      </div>
+
+      <div class="header-right-action">
+        <div class="header-tagline">SUITE // WEB (6) &bull; APKS (4)</div>
+        <a href="#web-apps" class="btn-ticket-action">
+          WEB UTILITIES <span style="color: var(--accent-coral);">&darr;</span>
+        </a>
+        <a href="#apps" class="btn-ticket-action">
+          APK BUILDS <span style="color: var(--accent-coral);">&darr;</span>
+        </a>
+        <button class="btn-ticket-action" onclick="toggleDrawerMenu()" style="cursor: pointer; background: #000000; color: #ffffff;">
+          DIRECTORY <span style="color: var(--accent-coral);">&rarr;</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- DRAWER QUICK NAVIGATION -->
+  <div id="drawerMenu" class="drawer-menu">
+    <div style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-coral); letter-spacing: 0.1em; padding-bottom: 4px; border-bottom: 1px dashed rgba(255,255,255,0.15);">
+      // WEB UTILITIES &bull; /006
+    </div>
+    <a href="/speedtest" class="drawer-link" onclick="toggleDrawerMenu()"><span style="color: #00f0ff;">⚡</span> Internet Speed Test</a>
+    <a href="/invoice" class="drawer-link" onclick="toggleDrawerMenu()"><span style="color: #ffffff;">📄</span> No-BS Invoice Maker</a>
+    <a href="/resizer" class="drawer-link" onclick="toggleDrawerMenu()"><span style="color: #ff3860;">🖼️</span> Batch Image Resizer</a>
+    <a href="/subscriptions" class="drawer-link" onclick="toggleDrawerMenu()"><span style="color: #ffff00;">☢️</span> Reality Check Calculator</a>
+    <a href="/ip" class="drawer-link" onclick="toggleDrawerMenu()"><span style="color: #70d6ff;">❄️</span> What Is My IP?</a>
+    <a href="/timezone" class="drawer-link" onclick="toggleDrawerMenu()"><span style="color: #06d6a0;">🌐</span> Timezone Matcher</a>
+
+    <div style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-coral); letter-spacing: 0.1em; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.15);">
+      // ANDROID APKS &bull; /004
+    </div>
+    <a href="#apps" class="drawer-link" onclick="toggleDrawerMenu()"><span>01</span> Galaxsee (Physics)</a>
+    <a href="#apps" class="drawer-link" onclick="toggleDrawerMenu()"><span>02</span> Galaxsee Pro (Astrodynamics)</a>
+    <a href="#apps" class="drawer-link" onclick="toggleDrawerMenu()"><span>03</span> SueChef (Culinary Engine)</a>
+    <a href="#apps" class="drawer-link" onclick="toggleDrawerMenu()"><span>04</span> OmniHost (Edge Server)</a>
+
+    <div style="border-top: 1px dashed rgba(255,255,255,0.15); padding-top: 10px;">
+      <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 6px;">// PLATFORM &amp; GOVERNANCE</div>
+      <a href="/about" class="drawer-link" onclick="toggleDrawerMenu()"><span>ℹ️</span> About Alumungandr</a>
+      <a href="/faq" class="drawer-link" onclick="toggleDrawerMenu()"><span>❓</span> FAQ &amp; Knowledge Base</a>
+      <a href="/contact" class="drawer-link" onclick="toggleDrawerMenu()"><span>✉️</span> Contact &amp; Terminal</a>
+      <a href="/privacy" class="drawer-link" onclick="toggleDrawerMenu()"><span>🛡️</span> Privacy Policy</a>
+      <a href="/terms" class="drawer-link" onclick="toggleDrawerMenu()"><span>⚖️</span> Terms &amp; Master Charter</a>
+    </div>
+    <div style="border-top: 1px dashed rgba(255,255,255,0.15); padding-top: 10px;">
+      <a href="javascript:void(0)" onclick="openDevModal(); toggleDrawerMenu();" class="drawer-link" style="color: var(--accent-coral);">
+        [🔑 Developer Terminal]
+      </a>
+    </div>
+  </div>
+
+  <!-- 1. FULL-BLEED UNDULATING WAVE HERO (Screenshot 1) -->
+  <section id="hero" class="hero-wave-section">
+    <canvas id="heroWaveCanvas"></canvas>
+
+    <div class="hero-coords">
+      <div>ALU_LABS*</div>
+      <div>BETA // (LIVE)</div>
+      <div>/0026</div>
+      <div>ENGINEERING_</div>
+    </div>
+
+    <div class="hero-bottom-wrap">
+      <h1 class="hero-massive-title">OMNIHOST&reg;</h1>
+      <a href="#studio" class="hero-explore-btn">
+        / EXPLORE 3D CORE &darr;
+      </a>
+    </div>
+  </section>
+
+  <!-- 2. 3D STUDIO EMBLEM & PARALLAX REVEAL (Screenshots 2, 4, 5) -->
+  <section id="studio" class="studio-reveal-section">
+    <canvas id="threeStudioCanvas"></canvas>
+
+    <div class="studio-overlay-content">
+      <div class="studio-coords">
+        <div>ALU_LABS*</div>
+        <div>/0026</div>
+        <div>SOVEREIGN_ENGINEERING_</div>
+      </div>
+
+      <div class="studio-category-list">
+        <div>&bull; ASTROPHYSICS SIMULATION</div>
+        <div>&bull; STEGANOGRAPHIC ENCRYPTION</div>
+        <div>&bull; OFFLINE CULINARY WORKFLOW</div>
+        <div>&bull; DISTRIBUTED EDGE HOSTING</div>
+        <div>&bull; ZERO-TELEMETRY SOVEREIGNTY</div>
+      </div>
+
+      <h2 class="studio-headline-reveal">
+        A sovereign suite of Android binaries engineered with <span>uncompromising technical rigor.</span>
+      </h2>
+    </div>
+  </section>
+
+  <!-- 3. MARQUEE TICKER TAPE -->
+  <div class="ticker-wrap">
+    <div class="ticker-content">
+      <div class="ticker-item"><span>///</span> OPEN BETA ACTIVE</div>
+      <div class="ticker-item"><span>///</span> GALAXSEE V1.0.0 (5.3 MB)</div>
+      <div class="ticker-item"><span>///</span> GALAXSEE PRO V1.0.0 (5.3 MB)</div>
+      <div class="ticker-item"><span>///</span> SUECHEF V1.0.0 (967 KB)</div>
+      <div class="ticker-item"><span>///</span> OMNIHOST V1.0.0 (522 KB)</div>
+      <div class="ticker-item"><span>///</span> 6 WEB APPS ONLINE</div>
+      <div class="ticker-item"><span>///</span> 100% FREE UTILITIES</div>
+      <div class="ticker-item"><span>///</span> ZERO TRACKERS</div>
+      <div class="ticker-item"><span>///</span> LOCAL-FIRST INTEGRITY</div>
+      <!-- Loop -->
+      <div class="ticker-item"><span>///</span> OPEN BETA ACTIVE</div>
+      <div class="ticker-item"><span>///</span> GALAXSEE V1.0.0 (5.3 MB)</div>
+      <div class="ticker-item"><span>///</span> GALAXSEE PRO V1.0.0 (5.3 MB)</div>
+      <div class="ticker-item"><span>///</span> SUECHEF V1.0.0 (967 KB)</div>
+      <div class="ticker-item"><span>///</span> OMNIHOST V1.0.0 (522 KB)</div>
+      <div class="ticker-item"><span>///</span> 6 WEB APPS ONLINE</div>
+      <div class="ticker-item"><span>///</span> 100% FREE UTILITIES</div>
+      <div class="ticker-item"><span>///</span> ZERO TRACKERS</div>
+      <div class="ticker-item"><span>///</span> LOCAL-FIRST INTEGRITY</div>
+    </div>
+  </div>
+
+  <main class="container">
+    <!-- 4. WEB UTILITIES SECTION -->
+    <section id="web-apps" style="margin-bottom: 72px;">
+      <div class="section-header-modern reveal-on-scroll">
+        <div>
+          <div class="section-tag">// WEB UTILITIES &bull; /006</div>
+          <h2 class="section-heading-huge">Zero-Fakery Browser Applications for Instant Daily Workflows:</h2>
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">
+          100% CLIENT-SIDE EXECUTION &bull; ZERO TELEMETRY &bull; NO SIGNUP REQUIRED
+        </div>
+      </div>
+
+      <div class="apps-stack">
+        <!-- 01 Internet Speed Test -->
+        <article class="app-card-3d reveal-on-scroll" data-tilt>
+          <div class="app-card-glare"></div>
+          <div class="app-card-layout">
+            <div>
+              <div class="app-card-meta">
+                <span class="app-index-tag">[ // WEB 001 EDGE TELEMETRY ]</span>
+                <span class="app-category-badge">Network Benchmarking</span>
+                <span class="app-badge-free">100% Free Tool</span>
+              </div>
+              <h3 class="app-title-huge">Internet Speed Test</h3>
+              <p class="app-description-text">
+                100% authentic, multi-stream broadband benchmarking engine. Measures download speed, upload bandwidth, 
+                real-time jitter, and ping latency across Cloudflare global edge datacenters without artificial ISP smoothing.
+              </p>
+              <ul class="app-features-list">
+                <li>Real-time download &amp; upload bandwidth analysis via streaming HTTP/2 chunk verification</li>
+                <li>Zero flash, zero tracking cookies, zero sponsored ads, and instant shareable telemetry receipt</li>
+                <li>Automated local LAN mode detection for benchmarking WiFi router line-speed</li>
+              </ul>
+              <div class="app-actions-row">
+                <a href="/speedtest" class="btn-action-primary">
+                  LAUNCH SPEED TEST <span class="btn-arrow">&rarr;</span>
+                </a>
+                <a href="/speedtest" class="btn-action-checksum" style="text-decoration:none;">
+                  DIRECT ROUTE &#9889;
+                </a>
+              </div>
+            </div>
+
+            <div class="glyph-display-box">
+              <svg class="glyph-svg" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#00f0ff" stroke-width="1.5" stroke-dasharray="6 3">
+                  <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="6s" repeatCount="indefinite"/>
+                </circle>
+                <path d="M 20 65 A 35 35 0 1 1 80 65" fill="none" stroke="#de5849" stroke-width="3" stroke-linecap="round"/>
+                <line x1="50" y1="50" x2="72" y2="30" stroke="#f4f5f8" stroke-width="2.5" stroke-linecap="round">
+                  <animateTransform attributeName="transform" type="rotate" values="-45 50 50; 65 50 50; 20 50 50; -45 50 50" dur="3s" repeatCount="indefinite"/>
+                </line>
+                <circle cx="50" cy="50" r="6" fill="#de5849"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="card-spec-strip">
+            <span>ROUTE: /speedtest</span>
+            <span>ENGINE: Edge Web Streams</span>
+            <span>ACCURACY: Direct Byte-Count</span>
+            <span>STATUS: Verified Clean</span>
+          </div>
+        </article>
+
+        <!-- 02 No-BS Invoice Maker -->
+        <article class="app-card-3d reveal-on-scroll" data-tilt>
+          <div class="app-card-glare"></div>
+          <div class="app-card-layout">
+            <div>
+              <div class="app-card-meta">
+                <span class="app-index-tag">[ // WEB 002 COMMERCE ENGINE ]</span>
+                <span class="app-category-badge">Billing &amp; Invoicing</span>
+                <span class="app-badge-free">100% Free Tool</span>
+              </div>
+              <h3 class="app-title-huge">No-BS Invoice Maker</h3>
+              <p class="app-description-text">
+                Frictionless client invoicing suite designed for freelancers, contractors, and agencies. 
+                Auto-calculates line items, customizable tax brackets, and renders print-perfect vector PDFs instantly.
+              </p>
+              <ul class="app-features-list">
+                <li>Automatic line item multiplication, flexible tax presets, and multi-currency formatting</li>
+                <li>100% client-side memory storage — zero data or client information ever touches an external server</li>
+                <li>Clean Letter and A4 print stylesheet formatting with 1-click vector PDF generation</li>
+              </ul>
+              <div class="app-actions-row">
+                <a href="/invoice" class="btn-action-primary">
+                  CREATE INVOICE <span class="btn-arrow">&rarr;</span>
+                </a>
+                <a href="/invoice" class="btn-action-checksum" style="text-decoration:none;">
+                  DIRECT ROUTE &#128196;
+                </a>
+              </div>
+            </div>
+
+            <div class="glyph-display-box">
+              <svg class="glyph-svg" viewBox="0 0 100 100">
+                <rect x="22" y="16" width="56" height="68" rx="4" fill="none" stroke="#f4f5f8" stroke-width="1.5"/>
+                <line x1="32" y1="32" x2="68" y2="32" stroke="#de5849" stroke-width="2"/>
+                <line x1="32" y1="44" x2="68" y2="44" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-dasharray="2 2"/>
+                <line x1="32" y1="54" x2="56" y2="54" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+                <line x1="32" y1="68" x2="68" y2="68" stroke="#00f0ff" stroke-width="2"/>
+                <circle cx="62" cy="54" r="5" fill="#de5849">
+                  <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
+                </circle>
+              </svg>
+            </div>
+          </div>
+
+          <div class="card-spec-strip">
+            <span>ROUTE: /invoice</span>
+            <span>ENGINE: Client-Side Vector PDF</span>
+            <span>PRIVACY: Sandboxed Memory</span>
+            <span>STATUS: Verified Clean</span>
+          </div>
+        </article>
+
+        <!-- 03 Social Media Batch Resizer -->
+        <article class="app-card-3d reveal-on-scroll" data-tilt>
+          <div class="app-card-glare"></div>
+          <div class="app-card-layout">
+            <div>
+              <div class="app-card-meta">
+                <span class="app-index-tag">[ // WEB 003 CREATOR WORKFLOW ]</span>
+                <span class="app-category-badge">Asset Resampling</span>
+                <span class="app-badge-free">100% Free Tool</span>
+              </div>
+              <h3 class="app-title-huge">Social Media Batch Resizer</h3>
+              <p class="app-description-text">
+                Single drag-and-drop workflow powerhouse. Upload one high-resolution master asset and instantly generate 
+                pixel-perfect banners, profile avatars, and story crops for X, LinkedIn, Instagram, and YouTube in a single ZIP.
+              </p>
+              <ul class="app-features-list">
+                <li>High-order bicubic image resampling directly in hardware-accelerated Canvas memory</li>
+                <li>Pre-calibrated dimensions for LinkedIn, X (Twitter), Instagram (Feed/Story), and YouTube</li>
+                <li>Client-side ZIP packaging via JSZip with instant download and zero cloud upload lag</li>
+              </ul>
+              <div class="app-actions-row">
+                <a href="/resizer" class="btn-action-primary">
+                  RESIZE ASSETS <span class="btn-arrow">&rarr;</span>
+                </a>
+                <a href="/resizer" class="btn-action-checksum" style="text-decoration:none;">
+                  DIRECT ROUTE &#128444;&#65039;
+                </a>
+              </div>
+            </div>
+
+            <div class="glyph-display-box">
+              <svg class="glyph-svg" viewBox="0 0 100 100">
+                <rect x="20" y="20" width="60" height="60" fill="none" stroke="#ff3860" stroke-width="1.5" stroke-dasharray="4 2">
+                  <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="20s" repeatCount="indefinite"/>
+                </rect>
+                <rect x="32" y="32" width="36" height="36" fill="none" stroke="#f4f5f8" stroke-width="1.5"/>
+                <circle cx="50" cy="50" r="8" fill="#ff3860">
+                  <animate attributeName="r" values="6;10;6" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                <!-- Corner Crosshairs -->
+                <line x1="16" y1="20" x2="24" y2="20" stroke="#f4f5f8" stroke-width="1.5"/>
+                <line x1="20" y1="16" x2="20" y2="24" stroke="#f4f5f8" stroke-width="1.5"/>
+                <line x1="76" y1="80" x2="84" y2="80" stroke="#f4f5f8" stroke-width="1.5"/>
+                <line x1="80" y1="76" x2="80" y2="84" stroke="#f4f5f8" stroke-width="1.5"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="card-spec-strip">
+            <span>ROUTE: /resizer</span>
+            <span>RESAMPLER: GPU HTML5 Canvas</span>
+            <span>EXPORT: Multi-Asset ZIP</span>
+            <span>STATUS: Verified Clean</span>
+          </div>
+        </article>
+
+        <!-- 04 Subscription Reality Check -->
+        <article class="app-card-3d reveal-on-scroll" data-tilt>
+          <div class="app-card-glare"></div>
+          <div class="app-card-layout">
+            <div>
+              <div class="app-card-meta">
+                <span class="app-index-tag">[ // WEB 004 FINANCIAL ROAST ]</span>
+                <span class="app-category-badge">Spending Audit</span>
+                <span class="app-badge-free">100% Free Tool</span>
+              </div>
+              <h3 class="app-title-huge">Subscription Reality Check</h3>
+              <p class="app-description-text">
+                Interactive recurring subscription audit grid. Select your active memberships (Netflix, Spotify, Adobe, ChatGPT, gym) 
+                to compute the true 10-year compounded wealth opportunity cost and generate a spicy, shareable roast receipt.
+              </p>
+              <ul class="app-features-list">
+                <li>Interactive visual selection grid covering popular streaming, productivity, AI, and fitness platforms</li>
+                <li>Compound wealth projection model factoring a 7% annual index fund growth opportunity cost</li>
+                <li>Instant thermal-receipt image generation with share-to-social and clipboard export</li>
+              </ul>
+              <div class="app-actions-row">
+                <a href="/subscriptions" class="btn-action-primary">
+                  CHECK REALITY <span class="btn-arrow">&rarr;</span>
+                </a>
+                <a href="/subscriptions" class="btn-action-checksum" style="text-decoration:none;">
+                  DIRECT ROUTE &#9762;&#65039;
+                </a>
+              </div>
+            </div>
+
+            <div class="glyph-display-box">
+              <svg class="glyph-svg" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#ffff00" stroke-width="1.5" stroke-dasharray="8 4">
+                  <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="10s" repeatCount="indefinite"/>
+                </circle>
+                <polygon points="50,22 75,70 25,70" fill="none" stroke="#de5849" stroke-width="2"/>
+                <text x="50" y="62" font-family="monospace" font-size="22" font-weight="bold" fill="#ffff00" text-anchor="middle">$</text>
+              </svg>
+            </div>
+          </div>
+
+          <div class="card-spec-strip">
+            <span>ROUTE: /subscriptions</span>
+            <span>MODEL: 10-Year Opportunity Cost</span>
+            <span>SHARING: Thermal Receipt Export</span>
+            <span>STATUS: Verified Clean</span>
+          </div>
+        </article>
+
+        <!-- 05 Arctic Network Intelligence -->
+        <article class="app-card-3d reveal-on-scroll" data-tilt>
+          <div class="app-card-glare"></div>
+          <div class="app-card-layout">
+            <div>
+              <div class="app-card-meta">
+                <span class="app-index-tag">[ // WEB 005 NETWORK RECON ]</span>
+                <span class="app-category-badge">IP Telemetry</span>
+                <span class="app-badge-free">100% Free Tool</span>
+              </div>
+              <h3 class="app-title-huge">What Is My IP? (Arctic)</h3>
+              <p class="app-description-text">
+                Crystalline IP reconnaissance and firewall configuration dossier. Instantly inspects your public IPv4/IPv6 address, 
+                autonomous system number (ASN), ISP backbone, and generates 1-click whitelist snippets for iptables, UFW, and Nginx.
+              </p>
+              <ul class="app-features-list">
+                <li>Authoritative IP, ASN, reverse DNS PTR, and datacenter proxy detection</li>
+                <li>One-click copyable firewall rules (iptables, UFW, Nginx, Apache, Windows Firewall, AWS SG)</li>
+                <li>Direct gamer server connection templates (Minecraft, Palworld, Valheim, Source Engine)</li>
+              </ul>
+              <div class="app-actions-row">
+                <a href="/ip" class="btn-action-primary">
+                  CHECK MY IP <span class="btn-arrow">&rarr;</span>
+                </a>
+                <a href="/ip" class="btn-action-checksum" style="text-decoration:none;">
+                  DIRECT ROUTE &#10052;&#65039;
+                </a>
+              </div>
+            </div>
+
+            <div class="glyph-display-box">
+              <svg class="glyph-svg" viewBox="0 0 100 100">
+                <polygon points="50,15 80,32 80,68 50,85 20,68 20,32" fill="none" stroke="#70d6ff" stroke-width="1.5">
+                  <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="15s" repeatCount="indefinite"/>
+                </polygon>
+                <circle cx="50" cy="50" r="18" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="2 2"/>
+                <circle cx="50" cy="50" r="5" fill="#70d6ff">
+                  <animate attributeName="r" values="4;7;4" dur="2s" repeatCount="indefinite"/>
+                </circle>
+              </svg>
+            </div>
+          </div>
+
+          <div class="card-spec-strip">
+            <span>ROUTE: /ip</span>
+            <span>PROTOCOL: Dual-Stack IPv4 / IPv6</span>
+            <span>DOSSIER: ASN &bull; Reverse PTR &bull; Geo</span>
+            <span>STATUS: Verified Clean</span>
+          </div>
+        </article>
+
+        <!-- 06 Global Timezone Meeting Matcher -->
+        <article class="app-card-3d reveal-on-scroll" data-tilt>
+          <div class="app-card-glare"></div>
+          <div class="app-card-layout">
+            <div>
+              <div class="app-card-meta">
+                <span class="app-index-tag">[ // WEB 006 REMOTE WORKFLOW ]</span>
+                <span class="app-category-badge">Timezone Matcher</span>
+                <span class="app-badge-free">100% Free Tool</span>
+              </div>
+              <h3 class="app-title-huge">Global Timezone Matcher</h3>
+              <p class="app-description-text">
+                Minimalist visual daylight and golden hour slider for distributed remote teams. Pick up to 4 global cities 
+                to instantly highlight the golden overlap window where everyone is awake during standard business hours.
+              </p>
+              <ul class="app-features-list">
+                <li>Interactive 24-hour synchronized time slider with daylight and business hour visual bands</li>
+                <li>Automatic golden overlap detection highlighting reasonable waking hours across all selected cities</li>
+                <li>1-click Google Calendar and Outlook meeting invite generator with instant link sharing</li>
+              </ul>
+              <div class="app-actions-row">
+                <a href="/timezone" class="btn-action-primary">
+                  MATCH TIMEZONES <span class="btn-arrow">&rarr;</span>
+                </a>
+                <a href="/timezone" class="btn-action-checksum" style="text-decoration:none;">
+                  DIRECT ROUTE &#127760;
+                </a>
+              </div>
+            </div>
+
+            <div class="glyph-display-box">
+              <svg class="glyph-svg" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#06d6a0" stroke-width="1.5"/>
+                <ellipse cx="50" cy="50" rx="40" ry="16" fill="none" stroke="#f4f5f8" stroke-width="1.2">
+                  <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="12s" repeatCount="indefinite"/>
+                </ellipse>
+                <ellipse cx="50" cy="50" rx="16" ry="40" fill="none" stroke="#de5849" stroke-width="1.2">
+                  <animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="12s" repeatCount="indefinite"/>
+                </ellipse>
+                <circle cx="50" cy="50" r="6" fill="#06d6a0"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="card-spec-strip">
+            <span>ROUTE: /timezone</span>
+            <span>DATABASE: IANA Time Zone V2</span>
+            <span>CALENDAR: RFC 5545 iCal Direct</span>
+            <span>STATUS: Verified Clean</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 5. APKS SECTION HEADER -->
+    <section id="apps">
+      <div class="section-header-modern reveal-on-scroll">
+        <div>
+          <div class="section-tag">// APKS &bull; /004</div>
+          <h2 class="section-heading-huge">Direct Binaries for an Uncompromised Mobile Web:</h2>
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">
+          ALL FOUR BUILDS CRYPTOGRAPHICALLY VERIFIED
+        </div>
+      </div>
+
+      <!-- 4 APPLICATION CARDS WITH 3D TILT & MORPHING GLYPHS -->
+      <div class="apps-stack">
+        
+        <!-- 01 Galaxsee -->
+        <article class="app-card-3d reveal-on-scroll" data-tilt>
+          <div class="app-card-glare"></div>
+          <div class="app-card-layout">
+            <div>
+              <div class="app-card-meta">
+                <span class="app-index-tag">[ // 001 PHYSICS ENGINE ]</span>
+                <span class="app-category-badge">Astrophysics Simulator</span>
+                <span class="app-badge-free">100% Free Beta</span>
+              </div>
+              <h3 class="app-title-huge">Galaxsee</h3>
+              <p class="app-description-text">
+                Real-time N-Body gravitational simulator for Android. Models celestial mechanics, 
+                planetary orbits, and chaotic galactic interactions using high-order numerical physics solvers directly on your mobile GPU.
+              </p>
+              <ul class="app-features-list">
+                <li>Real-time multi-particle gravitational force calculation (Barnes-Hut algorithm)</li>
+                <li>Interactive mass insertion, orbital vector dragging, and dynamic collision physics</li>
+                <li>100% local execution with zero network requirements or battery drain telemetry</li>
+              </ul>
+              <div class="app-actions-row">
+                <a href="/downloads/galaxsee.apk" download class="btn-action-primary">
+                  DOWNLOAD APK (5.3 MB) <span class="btn-arrow">&rarr;</span>
+                </a>
+                <button class="btn-action-checksum" onclick="toggleChecksumDrawer('galaxsee')">
+                  SHA-256 INTEGRITY &#128269;
+                </button>
+              </div>
+            </div>
+
+            <!-- Morphing Geometric Glyph: Orbiting Celestial Rings -->
+            <div class="glyph-display-box">
+              <svg class="glyph-svg" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#de5849" stroke-width="1.5" stroke-dasharray="4 4">
+                  <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="12s" repeatCount="indefinite"/>
+                </circle>
+                <ellipse cx="50" cy="50" rx="35" ry="18" fill="none" stroke="#f4f5f8" stroke-width="1.2">
+                  <animateTransform attributeName="transform" type="rotate" from="45 50 50" to="405 50 50" dur="8s" repeatCount="indefinite"/>
+                </ellipse>
+                <ellipse cx="50" cy="50" rx="35" ry="18" fill="none" stroke="#de5849" stroke-width="1.2">
+                  <animateTransform attributeName="transform" type="rotate" from="135 50 50" to="495 50 50" dur="8s" repeatCount="indefinite"/>
+                </ellipse>
+                <circle cx="50" cy="50" r="8" fill="#de5849">
+                  <animate attributeName="r" values="7;10;7" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="85" cy="50" r="4" fill="#ffffff">
+                  <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="4s" repeatCount="indefinite"/>
+                </circle>
+              </svg>
+            </div>
+          </div>
+
+          <div class="card-spec-strip">
+            <span>PACKAGE: galaxsee.apk</span>
+            <span>SIZE: 5.3 MB</span>
+            <span>TARGET: Android 8.0+</span>
+            <span>STATUS: Verified Clean</span>
+          </div>
+
+          <div id="drawer-galaxsee" class="checksum-drawer">
+            <div class="checksum-drawer-top">
+              <span>SHA-256 HASH VERIFICATION</span>
+              <button class="copy-hash-btn" onclick="copyChecksum('02ac88bce098aa0c14cc4433c4968488baecec01d4cc670b9044bdc749aa0c9a', this)">[ COPY HASH ]</button>
+            </div>
+            <code>02ac88bce098aa0c14cc4433c4968488baecec01d4cc670b9044bdc749aa0c9a</code>
+          </div>
+        </article>
+
+        <!-- 02 Galaxsee Pro -->
+        <article class="app-card-3d reveal-on-scroll" data-tilt>
+          <div class="app-card-glare"></div>
+          <div class="app-card-layout">
+            <div>
+              <div class="app-card-meta">
+                <span class="app-index-tag">[ // 002 ASTRODYNAMICS PRO ]</span>
+                <span class="app-category-badge">Astrophysics Laboratory</span>
+                <span class="app-badge-free">100% Free Beta</span>
+              </div>
+              <h3 class="app-title-huge">Galaxsee Pro</h3>
+              <p class="app-description-text">
+                Advanced astrophysical research suite with high-precision orbital integrators, relativistic mechanics parameters, 
+                extended celestial trajectory tracers, and complete state-vector export.
+              </p>
+              <ul class="app-features-list">
+                <li>Higher-order Runge-Kutta 4th Order numerical integration for orbital stability</li>
+                <li>Relativistic precession simulations and multi-galaxy collision benchmarking</li>
+                <li>Customizable initial condition matrices with full astronomical unit scaling</li>
+              </ul>
+              <div class="app-actions-row">
+                <a href="/downloads/galaxsee_pro.apk" download class="btn-action-primary">
+                  DOWNLOAD APK (5.3 MB) <span class="btn-arrow">&rarr;</span>
+                </a>
+                <button class="btn-action-checksum" onclick="toggleChecksumDrawer('galaxsee-pro')">
+                  SHA-256 INTEGRITY &#128269;
+                </button>
+              </div>
+            </div>
+
+            <!-- Morphing Geometric Glyph: Complex Multi-Body Tensor -->
+            <div class="glyph-display-box">
+              <svg class="glyph-svg" viewBox="0 0 100 100">
+                <polygon points="50,10 90,80 10,80" fill="none" stroke="#de5849" stroke-width="1.5">
+                  <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="14s" repeatCount="indefinite"/>
+                </polygon>
+                <polygon points="50,90 90,20 10,20" fill="none" stroke="#f4f5f8" stroke-width="1.2">
+                  <animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="14s" repeatCount="indefinite"/>
+                </polygon>
+                <circle cx="50" cy="50" r="16" fill="none" stroke="#de5849" stroke-width="1.2" stroke-dasharray="3 3"/>
+                <circle cx="50" cy="50" r="6" fill="#ff4838"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="card-spec-strip">
+            <span>PACKAGE: galaxsee_pro.apk</span>
+            <span>SIZE: 5.3 MB</span>
+            <span>TARGET: Android 8.0+</span>
+            <span>STATUS: Verified Clean</span>
+          </div>
+
+          <div id="drawer-galaxsee-pro" class="checksum-drawer">
+            <div class="checksum-drawer-top">
+              <span>SHA-256 HASH VERIFICATION</span>
+              <button class="copy-hash-btn" onclick="copyChecksum('dda821313103838793f449495a53c86322b0718bf45cbd110e92b017ff0fd4f7', this)">[ COPY HASH ]</button>
+            </div>
+            <code>dda821313103838793f449495a53c86322b0718bf45cbd110e92b017ff0fd4f7</code>
+          </div>
+        </article>
+
+        <!-- 03 SueChef -->
+        <article class="app-card-3d reveal-on-scroll" data-tilt>
+          <div class="app-card-glare"></div>
+          <div class="app-card-layout">
+            <div>
+              <div class="app-card-meta">
+                <span class="app-index-tag">[ // 003 CULINARY ENGINE ]</span>
+                <span class="app-category-badge">Culinary Workflow Suite</span>
+                <span class="app-badge-free">100% Free Beta</span>
+              </div>
+              <h3 class="app-title-huge">SueChef</h3>
+              <p class="app-description-text">
+                Ultra-lightweight culinary companion and recipe management system. Built for distraction-free kitchen execution, 
+                dynamic ingredient mathematical scaling, multi-dish timing, and 100% offline recipe preservation.
+              </p>
+              <ul class="app-features-list">
+                <li>Dynamic portion and ingredient ratio scaling with metric / imperial instant conversions</li>
+                <li>Concurrent step-by-step multi-timers with background notifications</li>
+                <li>Featherweight footprint under 1 MB with zero account creation or cloud tethering</li>
+              </ul>
+              <div class="app-actions-row">
+                <a href="/downloads/suechef.apk" download class="btn-action-primary">
+                  DOWNLOAD APK (967 KB) <span class="btn-arrow">&rarr;</span>
+                </a>
+                <button class="btn-action-checksum" onclick="toggleChecksumDrawer('suechef')">
+                  SHA-256 INTEGRITY &#128269;
+                </button>
+              </div>
+            </div>
+
+            <!-- Morphing Geometric Glyph: Webisoft 4-Petaled Dynamic Clover (Screenshot 3 Reference) -->
+            <div class="glyph-display-box">
+              <svg class="glyph-svg" viewBox="0 0 100 100">
+                <g>
+                  <circle cx="36" cy="36" r="18" fill="#f4f5f8" fill-opacity="0.9"/>
+                  <circle cx="64" cy="36" r="18" fill="#de5849" fill-opacity="0.9"/>
+                  <circle cx="36" cy="64" r="18" fill="#de5849" fill-opacity="0.9"/>
+                  <circle cx="64" cy="64" r="18" fill="#f4f5f8" fill-opacity="0.9"/>
+                  <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="10s" repeatCount="indefinite"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <div class="card-spec-strip">
+            <span>PACKAGE: suechef.apk</span>
+            <span>SIZE: 967 KB</span>
+            <span>TARGET: Android 7.0+</span>
+            <span>STATUS: Verified Clean</span>
+          </div>
+
+          <div id="drawer-suechef" class="checksum-drawer">
+            <div class="checksum-drawer-top">
+              <span>SHA-256 HASH VERIFICATION</span>
+              <button class="copy-hash-btn" onclick="copyChecksum('d94fd96259a268fd9ae4939ea4572efbc5dee66f473282b4cb01449ca5accb4f', this)">[ COPY HASH ]</button>
+            </div>
+            <code>d94fd96259a268fd9ae4939ea4572efbc5dee66f473282b4cb01449ca5accb4f</code>
+          </div>
+        </article>
+
+        <!-- 04 OmniHost -->
+        <article class="app-card-3d reveal-on-scroll" data-tilt>
+          <div class="app-card-glare"></div>
+          <div class="app-card-layout">
+            <div>
+              <div class="app-card-meta">
+                <span class="app-index-tag">[ // 004 EDGE HOSTING ]</span>
+                <span class="app-category-badge">Distributed Web Engine</span>
+                <span class="app-badge-free">100% Free Beta</span>
+              </div>
+              <h3 class="app-title-huge">OmniHost</h3>
+              <p class="app-description-text">
+                Sovereign edge hosting micro-server for Android. Transforms mobile devices into independent HTTP application servers, 
+                enabling local file sharing, live documentation hosting, and zero-cloud distributed edge web services.
+              </p>
+              <ul class="app-features-list">
+                <li>Embedded multi-threaded HTTP server daemon with full static asset and API dispatch</li>
+                <li>Zero cloud dependency, zero external licensing, and ultra-compact binary size (522 KB)</li>
+                <li>The foundational engine powering this very beta distribution portal</li>
+              </ul>
+              <div class="app-actions-row">
+                <a href="/downloads/omnihost.apk" download class="btn-action-primary">
+                  DOWNLOAD APK (522 KB) <span class="btn-arrow">&rarr;</span>
+                </a>
+                <button class="btn-action-checksum" onclick="toggleChecksumDrawer('omnihost')">
+                  SHA-256 INTEGRITY &#128269;
+                </button>
+              </div>
+            </div>
+
+            <!-- Morphing Geometric Glyph: Distributed Node Mesh -->
+            <div class="glyph-display-box">
+              <svg class="glyph-svg" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="10" fill="#de5849">
+                  <animate attributeName="r" values="8;12;8" dur="2.5s" repeatCount="indefinite"/>
+                </circle>
+                <!-- Outer orbital nodes -->
+                <circle cx="50" cy="18" r="5" fill="#f4f5f8"/>
+                <circle cx="78" cy="34" r="5" fill="#f4f5f8"/>
+                <circle cx="78" cy="66" r="5" fill="#f4f5f8"/>
+                <circle cx="50" cy="82" r="5" fill="#f4f5f8"/>
+                <circle cx="22" cy="66" r="5" fill="#f4f5f8"/>
+                <circle cx="22" cy="34" r="5" fill="#f4f5f8"/>
+                <!-- Pulse rings -->
+                <circle cx="50" cy="50" r="32" fill="none" stroke="#de5849" stroke-width="1" stroke-dasharray="4 4">
+                  <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="18s" repeatCount="indefinite"/>
+                </circle>
+              </svg>
+            </div>
+          </div>
+
+          <div class="card-spec-strip">
+            <span>PACKAGE: omnihost.apk</span>
+            <span>SIZE: 522 KB</span>
+            <span>TARGET: Android 7.0+</span>
+            <span>STATUS: Verified Clean</span>
+          </div>
+
+          <div id="drawer-omnihost" class="checksum-drawer">
+            <div class="checksum-drawer-top">
+              <span>SHA-256 HASH VERIFICATION</span>
+              <button class="copy-hash-btn" onclick="copyChecksum('24673a7c21339cb8f1146990b68b51232c83a28d6b5c777307107385e4389c38', this)">[ COPY HASH ]</button>
+            </div>
+            <code>24673a7c21339cb8f1146990b68b51232c83a28d6b5c777307107385e4389c38</code>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- 5. HOW TO SIDELOAD RUNBOOK -->
+    <section id="guide" class="runbook-section reveal-on-scroll">
+      <div class="section-tag">// OPERATIONAL RUNBOOK</div>
+      <h3 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">How to Sideload Beta Binaries</h3>
+      <p style="color: var(--text-secondary); font-size: 14px;">Android requires a one-time permission to allow installing applications directly from browser downloads.</p>
+      
+      <div class="runbook-grid">
+        <div class="runbook-card">
+          <div class="runbook-step-idx">STEP 01</div>
+          <div class="runbook-step-title">Download APK</div>
+          <div class="runbook-step-desc">Tap the download button on any application above to download the verified package directly to your device.</div>
+        </div>
+        <div class="runbook-card">
+          <div class="runbook-step-idx">STEP 02</div>
+          <div class="runbook-step-title">Allow Unknown Apps</div>
+          <div class="runbook-step-desc">When prompted, select <strong>Settings</strong> and enable <em>"Allow from this source"</em> for your browser or file manager.</div>
+        </div>
+        <div class="runbook-card">
+          <div class="runbook-step-idx">STEP 03</div>
+          <div class="runbook-step-title">Install & Stress Test</div>
+          <div class="runbook-step-desc">Tap <strong>Install</strong>. Launch the app and test core features. Return here to transmit feedback observations.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. SINGLE-INPUT PRIVACY FEEDBACK CONSOLE -->
+    <section id="feedback" class="feedback-console reveal-on-scroll">
+      <div class="section-tag">// TELEMETRY &amp; FEEDBACK TERMINAL</div>
+      <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 12px;">Beta Tester Dispatch</h2>
+      <p style="color: var(--text-secondary); font-size: 15px; max-width: 680px;">
+        We respect your privacy. No names, accounts, or tracking cookies required. 
+        Input your observations, bug findings, or feature requests below. 
+        Submissions are stored securely on the OmniHost backend with IP masking.
+      </p>
+
+      <form id="feedbackForm" onsubmit="handleFeedbackSubmit(event)">
+        <textarea 
+          id="feedbackInput" 
+          class="feedback-textarea" 
+          placeholder="Describe your testing experience, device model, bugs observed, or feature suggestions..." 
+          required></textarea>
+        
+        <div class="feedback-console-footer">
+          <div class="feedback-privacy-note">
+            <span>&#128274;</span> Direct sovereign dispatch &bull; Zero tracking cookies &bull; Automated categorization
+          </div>
+          <button type="submit" id="feedbackBtn" class="btn-action-primary">
+            TRANSMIT FEEDBACK <span class="btn-arrow">&rarr;</span>
+          </button>
+        </div>
+      </form>
+
+      <div id="feedbackToast" class="feedback-toast-box">
+        <div style="font-weight: 700; margin-bottom: 4px;">&#10003; FEEDBACK RECEIVED &amp; PROCESSED</div>
+        <div id="feedbackToastMsg" style="font-size: 12px; color: var(--text-secondary);">
+          Your entry has been cryptographically cataloged in the OmniHost developer queue.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- DEVELOPER TERMINAL MODAL -->
+  <div id="devModal" class="dev-modal-overlay">
+    <div class="dev-modal-box">
+      <div class="dev-modal-header">
+        <div>// OMNIHOST BACKEND FEEDBACK CONSOLE</div>
+        <button class="dev-close-btn" onclick="closeDevModal()">&times;</button>
+      </div>
+      <div class="dev-modal-body">
+        <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <span id="feedbackCountLabel">LOADING LOGS...</span>
+          <button class="copy-hash-btn" onclick="fetchBackendFeedback()">[ REFRESH ]</button>
+        </div>
+        <div id="feedbackLogContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container footer-flex">
+      <div>
+        <span style="color: var(--accent-coral); font-weight: bold;">ALU LABS</span> &copy; 2026. 
+        SOVEREIGN BETA REPOSITORY.
+      </div>
+      <nav class="footer-nav" style="display: flex; gap: 14px; flex-wrap: wrap;">
+        <a href="#apps">Apps</a>
+        <a href="/speedtest" style="color: #00f0ff;">⚡ Speed Test</a>
+        <a href="/invoice" style="color: #00f0ff;">📄 Invoice Maker</a>
+        <a href="/resizer" style="color: #00f0ff;">🖼️ Social Resizer</a>
+        <a href="/subscriptions" style="color: #ffff00;">☢️ Reality Check</a>
+        <a href="/ip" style="color: #70d6ff;">❄️ What Is My IP</a>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="javascript:void(0)" onclick="openDevModal()" style="color: var(--text-muted);">Terminal</a>
+      </nav>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       10. SCRIPTS & ANIMATION CONTROLLERS
+       ========================================================================== -->
+  <script>
+    /* ==========================================================================
+       A. INTERACTIVE UNDULATING WAVE CANVAS (Screenshot 1 Reference)
+       ========================================================================== */
+    const waveCanvas = document.getElementById('heroWaveCanvas');
+    const waveCtx = waveCanvas.getContext('2d');
+
+    let waveWidth = (waveCanvas.width = waveCanvas.offsetWidth);
+    let waveHeight = (waveCanvas.height = waveCanvas.offsetHeight);
+
+    let mouseX = waveWidth * 0.3;
+    let mouseY = waveHeight * 0.5;
+    let targetMouseX = mouseX;
+    let targetMouseY = mouseY;
+
+    window.addEventListener('resize', () => {
+      waveWidth = waveCanvas.width = waveCanvas.offsetWidth;
+      waveHeight = waveCanvas.height = waveCanvas.offsetHeight;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      const rect = waveCanvas.getBoundingClientRect();
+      if (e.clientY <= rect.bottom) {
+        targetMouseX = e.clientX - rect.left;
+        targetMouseY = e.clientY - rect.top;
+      }
+    });
+
+    let waveTime = 0;
+    const TOTAL_BANDS = 18;
+
+    function renderWaves() {
+      waveTime += 0.015;
+      mouseX += (targetMouseX - mouseX) * 0.08;
+      mouseY += (targetMouseY - mouseY) * 0.08;
+
+      // Fill vermilion coral base
+      waveCtx.fillStyle = '#de5849';
+      waveCtx.fillRect(0, 0, waveWidth, waveHeight);
+
+      // Render horizontal undulating bands
+      const startY = waveHeight * 0.16;
+      const bandHeight = (waveHeight * 0.72) / TOTAL_BANDS;
+
+      for (let i = 0; i < TOTAL_BANDS; i++) {
+        const baseY = startY + i * bandHeight;
+        const progress = i / TOTAL_BANDS;
+
+        waveCtx.beginPath();
+        waveCtx.moveTo(0, baseY);
+
+        const step = 20;
+        for (let x = 0; x <= waveWidth; x += step) {
+          // Harmonic wave math
+          const wave1 = Math.sin(x * 0.0035 + waveTime * 1.6 + progress * 2.0) * (18 + progress * 14);
+          const wave2 = Math.cos(x * 0.007 - waveTime * 1.1) * (10 + progress * 8);
+
+          // Cursor ripple deformation
+          const dx = x - mouseX;
+          const dy = baseY - mouseY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const mouseDeform = Math.exp(-(dist * dist) / 25000) * 35;
+
+          // Tapering factor: thick on left, tapering thin on right
+          const taper = Math.pow(1 - (x / waveWidth) * 0.65, 1.4);
+
+          const y = baseY + (wave1 + wave2 + mouseDeform) * taper;
+          waveCtx.lineTo(x, y);
+        }
+
+        // Complete ribbon profile
+        const ribbonThickness = (bandHeight * 0.62) * (1 - (i / TOTAL_BANDS) * 0.3);
+        waveCtx.lineTo(waveWidth, baseY + ribbonThickness * 0.2);
+        for (let x = waveWidth; x >= 0; x -= step) {
+          const taper = Math.pow(1 - (x / waveWidth) * 0.65, 1.4);
+          const wave1 = Math.sin(x * 0.0035 + waveTime * 1.6 + progress * 2.0) * (18 + progress * 14);
+          const yBottom = baseY + ribbonThickness * taper + wave1 * taper;
+          waveCtx.lineTo(x, yBottom);
+        }
+
+        waveCtx.closePath();
+        waveCtx.fillStyle = '#07080a';
+        waveCtx.fill();
+      }
+
+      requestAnimationFrame(renderWaves);
+    }
+    renderWaves();
+
+    /* ==========================================================================
+       B. THREE.JS 3D GLASS SOVEREIGN CORE (Screenshots 2 & 5 Reference)
+       ========================================================================== */
+    const studioCanvas = document.getElementById('threeStudioCanvas');
+    if (typeof THREE !== 'undefined' && studioCanvas) {
+      const renderer = new THREE.WebGLRenderer({ canvas: studioCanvas, alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(studioCanvas.offsetWidth, studioCanvas.offsetHeight);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, studioCanvas.offsetWidth / studioCanvas.offsetHeight, 0.1, 100);
+      camera.position.z = 7;
+
+      // Polyhedral Faceted Gemstone Prism (Sovereign Core)
+      const geometry = new THREE.IcosahedronGeometry(2.1, 0);
+      
+      // Wireframe cage
+      const wireGeometry = new THREE.IcosahedronGeometry(2.15, 0);
+      const wireMaterial = new THREE.MeshBasicMaterial({ color: 0xde5849, wireframe: true, transparent: true, opacity: 0.35 });
+      const wireMesh = new THREE.Mesh(wireGeometry, wireMaterial);
+      scene.add(wireMesh);
+
+      // Glass / Chrome material
+      const material = new THREE.MeshPhysicalMaterial({
+        color: 0x1a202c,
+        emissive: 0x07090e,
+        roughness: 0.12,
+        metalness: 0.85,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.1,
+        reflectivity: 0.9,
+        transparent: true,
+        opacity: 0.88,
+        flatShading: true
+      });
+
+      const coreMesh = new THREE.Mesh(geometry, material);
+      scene.add(coreMesh);
+
+      // Inner glowing nucleus
+      const nucleusGeo = new THREE.OctahedronGeometry(0.85, 0);
+      const nucleusMat = new THREE.MeshBasicMaterial({ color: 0xff4838, wireframe: true });
+      const nucleusMesh = new THREE.Mesh(nucleusGeo, nucleusMat);
+      scene.add(nucleusMesh);
+
+      // Studio Lighting
+      const lightKey = new THREE.DirectionalLight(0xffffff, 2.5);
+      lightKey.position.set(5, 5, 5);
+      scene.add(lightKey);
+
+      const lightCoral = new THREE.PointLight(0xde5849, 4, 20);
+      lightCoral.position.set(-5, 2, 4);
+      scene.add(lightCoral);
+
+      const lightCyan = new THREE.PointLight(0x38bdf8, 2, 20);
+      lightCyan.position.set(4, -4, -3);
+      scene.add(lightCyan);
+
+      const ambient = new THREE.AmbientLight(0x222222);
+      scene.add(ambient);
+
+      let targetRotX = 0;
+      let targetRotY = 0;
+
+      window.addEventListener('mousemove', (e) => {
+        const nx = (e.clientX / window.innerWidth) * 2 - 1;
+        const ny = (e.clientY / window.innerHeight) * 2 - 1;
+        targetRotY = nx * 0.8;
+        targetRotX = ny * 0.6;
+      });
+
+      window.addEventListener('resize', () => {
+        if (!studioCanvas) return;
+        camera.aspect = studioCanvas.offsetWidth / studioCanvas.offsetHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(studioCanvas.offsetWidth, studioCanvas.offsetHeight);
+      });
+
+      function animateThree() {
+        requestAnimationFrame(animateThree);
+
+        coreMesh.rotation.y += 0.005;
+        coreMesh.rotation.x += 0.003;
+
+        wireMesh.rotation.y -= 0.003;
+        wireMesh.rotation.x -= 0.002;
+
+        nucleusMesh.rotation.y += 0.012;
+        nucleusMesh.rotation.z += 0.008;
+
+        // Smooth mouse lerp
+        coreMesh.rotation.y += (targetRotY - coreMesh.rotation.y) * 0.05;
+        coreMesh.rotation.x += (targetRotX - coreMesh.rotation.x) * 0.05;
+
+        renderer.render(scene, camera);
+      }
+      animateThree();
+    }
+
+    /* ==========================================================================
+       C. 3D CARD TILT & SPECULAR GLARE CONTROLLER
+       ========================================================================== */
+    const tiltCards = document.querySelectorAll('[data-tilt]');
+    tiltCards.forEach(card => {
+      const glare = card.querySelector('.app-card-glare');
+
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        const rotateX = ((y - centerY) / centerY) * -6; // max 6 deg
+        const rotateY = ((x - centerX) / centerX) * 6;
+
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
+
+        if (glare) {
+          glare.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255, 255, 255, 0.08), transparent 60%)`;
+        }
+      });
+
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0)';
+      });
+    });
+
+    /* ==========================================================================
+       D. SCROLL-DRIVEN STAGGERED ENTRANCE OBSERVER
+       ========================================================================== */
+    const revealElements = document.querySelectorAll('.reveal-on-scroll');
+    const scrollObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          scrollObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    revealElements.forEach(el => scrollObserver.observe(el));
+
+    /* ==========================================================================
+       E. UI UTILITIES & CHECKSUMS
+       ========================================================================== */
+    function toggleDrawerMenu() {
+      const drawer = document.getElementById('drawerMenu');
+      if (drawer) drawer.classList.toggle('active');
+    }
+
+    function toggleChecksumDrawer(id) {
+      const drawer = document.getElementById('drawer-' + id);
+      if (drawer) drawer.classList.toggle('open');
+    }
+
+    function copyChecksum(hash, btn) {
+      navigator.clipboard.writeText(hash).then(() => {
+        const oldText = btn.innerText;
+        btn.innerText = '[ COPIED! ]';
+        btn.style.color = '#10b981';
+        setTimeout(() => {
+          btn.innerText = oldText;
+          btn.style.color = '';
+        }, 2000);
+      });
+    }
+
+    /* ==========================================================================
+       F. PRIVACY-PRESERVED FEEDBACK PIPELINE
+       ========================================================================== */
+    async function handleFeedbackSubmit(event) {
+      event.preventDefault();
+      const input = document.getElementById('feedbackInput');
+      const btn = document.getElementById('feedbackBtn');
+      const toast = document.getElementById('feedbackToast');
+      const toastMsg = document.getElementById('feedbackToastMsg');
+
+      const message = input.value.trim();
+      if (!message) return;
+
+      btn.disabled = true;
+      btn.innerHTML = 'TRANSMITTING...';
+
+      try {
+        const res = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ feedback: message })
+        });
+
+        const data = await res.json();
+        if (data.status === 'ok' || data.status === 'success') {
+          toast.style.display = 'block';
+          toastMsg.innerText = data.message || data.confirmation_message || 'Feedback logged securely to OmniHost developer inbox.';
+          input.value = '';
+          toast.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+          alert('Submission error: ' + (data.message || 'Unknown error'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Network communication error with OmniHost server.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'TRANSMIT FEEDBACK <span class="btn-arrow">&rarr;</span>';
+      }
+    }
+
+    /* ==========================================================================
+       G. DEVELOPER CONSOLE MODAL
+       ========================================================================== */
+    function openDevModal() {
+      const pass = prompt('Enter Developer Security Passkey:');
+      if (pass === 'alu') {
+        document.getElementById('devModal').classList.add('open');
+        fetchBackendFeedback();
+      } else if (pass !== null) {
+        alert('Access denied: Invalid developer passkey.');
+      }
+    }
+
+    function closeDevModal() {
+      document.getElementById('devModal').classList.remove('open');
+    }
+
+    async function fetchBackendFeedback() {
+      const container = document.getElementById('feedbackLogContainer');
+      const countLabel = document.getElementById('feedbackCountLabel');
+      container.innerHTML = '<div style="color: var(--text-muted);">Querying sovereign storage...</div>';
+
+      try {
+        const res = await fetch('/api/feedback');
+        const data = await res.json();
+        countLabel.innerText = `TOTAL FEEDBACK ENTRIES: ${data.total_feedback || 0}`;
+
+        if (!data.feedback || data.feedback.length === 0) {
+          container.innerHTML = '<div style="color: var(--text-muted);">No feedback entries logged yet.</div>';
+          return;
+        }
+
+        container.innerHTML = data.feedback.map(item => `
+          <div style="border: 1px solid rgba(255,255,255,0.1); padding: 12px; background: rgba(255,255,255,0.02);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: var(--accent-coral);">
+              <span>[${item.detected_app || item.app || 'GENERAL'}] // ${item.category || 'NOTE'}</span>
+              <span style="color: var(--text-muted);">${item.timestamp}</span>
+            </div>
+            <div style="color: #fff; margin-bottom: 6px; font-size: 13px;">${escapeHtml(item.message || item.feedback)}</div>
+            <div style="color: var(--text-muted); font-size: 10px;">CLIENT MASK: ${item.ip_masked} &bull; ID: ${item.id}</div>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = '<div style="color: #ef4444;">Failed to retrieve feedback logs from server.</div>';
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.innerText = text || '';
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

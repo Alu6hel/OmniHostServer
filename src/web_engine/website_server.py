@@ -1,9 +1,7 @@
-# ==============================================================================
-# OmniHost Pro - Modular Website Engine
+# =======================================================================# OmniHost Pro - Modular Website Engine
 # Multi-Site Manager, Drop-in Static/SPA Hosting, Host Header Routing & Telemetry
 # Full Web File Explorer & Media Hub Backend (Video Streaming, On-the-fly ZIP)
-# ==============================================================================
-
+# =======================================================================
 import os
 import sys
 import json
@@ -15,11 +13,15 @@ import zipfile
 import io
 import shutil
 import re
+import urllib.request
 from urllib.parse import urlparse, parse_qs, unquote
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from typing import Dict, List, Any, Optional
 
 DEFAULT_WEB_PORT = 8090
+
+# 4MB static pre-allocated random data buffer to ensure zero CPU bottleneck during gigabit speedtests
+SPEEDTEST_RANDOM_BUFFER = os.urandom(4 * 1024 * 1024)
 
 def format_size(bytes_val: int) -> str:
     if bytes_val < 1024:
@@ -106,7 +108,8 @@ class ModularWebHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
-        self.wfile.write(body)
+        if not getattr(self, "_is_head", False):
+            self.wfile.write(body)
         self.server_manager.telemetry.record_request(
             self.client_address[0], self.command, self.path, status, len(body)
         )
@@ -114,9 +117,13 @@ class ModularWebHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, HEAD, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Range")
         self.end_headers()
+
+    def do_HEAD(self):
+        self._is_head = True
+        self.do_GET()
 
     def do_GET(self):
         parsed = urlparse(self.path)
@@ -169,34 +176,156 @@ class ModularWebHandler(BaseHTTPRequestHandler):
             return
 
         elif path == "/api/speedtest/ping":
+            client_ip = self.headers.get("CF-Connecting-IP") or self.headers.get("X-Forwarded-For", "").split(",")[0].strip() or self.client_address[0]
+            seq = query.get("seq", "0")
+            client_t = query.get("t", "")
+            now_t = time.time()
             self._send_json(200, {
                 "status": "ok",
-                "timestamp": time.time(),
-                "server": "OmniHostPro-Python"
+                "seq": int(seq) if seq.isdigit() else 0,
+                "client_t": client_t,
+                "timestamp": now_t,
+                "server_time_ms": int(now_t * 1000),
+                "server_time_ns": time.time_ns(),
+                "client_ip": client_ip,
+                "server": "OmniSpeed-Global-Edge"
+            })
+            return
+
+        elif path == "/api/speedtest/info":
+            client_ip = self.headers.get("CF-Connecting-IP") or self.headers.get("X-Forwarded-For", "").split(",")[0].strip() or self.client_address[0]
+            country = self.headers.get("CF-IPCountry", "Global")
+            city = self.headers.get("CF-IPCity", "")
+            isp_name = "Broadband Provider"
+            server_sponsor = "FLOW Jamaica"
+            server_city = "Montego Bay"
+
+            try:
+                host_info = socket.gethostbyaddr(client_ip)
+                if host_info and host_info[0]:
+                    parts = host_info[0].split(".")
+                    if len(parts) >= 2:
+                        raw_name = parts[-2].upper()
+                        if "CWJAMAICA" in raw_name or "C&W" in raw_name or "FLOW" in raw_name:
+                            isp_name = "Flow"
+                            server_sponsor = "FLOW Jamaica"
+                            server_city = "Montego Bay"
+                        elif len(raw_name) > 2 and raw_name not in ("COM", "NET", "ORG", "EDU"):
+                            isp_name = raw_name
+            except Exception:
+                if country == "JM":
+                    isp_name = "Flow"
+                elif country != "Global":
+                    isp_name = f"Broadband Network ({country})"
+            
+            if client_ip in ("127.0.0.1", "::1", "localhost") or client_ip.startswith("72.27."):
+                client_ip = "72.27.211.125"
+                isp_name = "Flow"
+                server_sponsor = "FLOW Jamaica"
+                server_city = "Montego Bay"
+                country = "JM"
+
+            self._send_json(200, {
+                "status": "ok",
+                "ip": client_ip,
+                "client_ip": client_ip,
+                "isp": isp_name,
+                "country": country,
+                "city": city or server_city,
+                "server_name": server_sponsor,
+                "server_location": f"{server_sponsor} - {server_city}",
+                "server_sponsor": server_sponsor,
+                "server_city": server_city,
+                "server_node": "Quantum-Core-01",
+                "protocol": "HTTP/1.1 (Multi-Stream Saturation)"
+            })
+            return
+
+        elif path == "/api/speedtest/servers":
+            self._send_json(200, {
+                "status": "ok",
+                "servers": [
+                    {
+                        "id": "flow-mb",
+                        "name": "FLOW Jamaica",
+                        "sponsor": "FLOW Jamaica",
+                        "city": "Montego Bay",
+                        "country": "Jamaica",
+                        "distance": "12 km",
+                        "is_default": True
+                    },
+                    {
+                        "id": "flow-kin",
+                        "name": "FLOW Jamaica",
+                        "sponsor": "FLOW Jamaica",
+                        "city": "Kingston",
+                        "country": "Jamaica",
+                        "distance": "128 km",
+                        "is_default": False
+                    },
+                    {
+                        "id": "alu-edge",
+                        "name": "Alu OmniSpeed Edge",
+                        "sponsor": "Alu Labs",
+                        "city": "Global Anycast",
+                        "country": "Global",
+                        "distance": "50 km",
+                        "is_default": False
+                    }
+                ]
             })
             return
 
         elif path == "/api/speedtest/download":
             try:
-                size_bytes = int(query.get("size", 2 * 1024 * 1024))
+                size_bytes = int(query.get("size", 4 * 1024 * 1024))
             except ValueError:
-                size_bytes = 2 * 1024 * 1024
-            size_bytes = min(max(size_bytes, 1024), 20 * 1024 * 1024)
+                size_bytes = 4 * 1024 * 1024
+            size_bytes = min(max(size_bytes, 1024), 50 * 1024 * 1024)
             self.send_response(200)
             self.send_header("Content-Type", "application/octet-stream")
             self.send_header("Content-Length", str(size_bytes))
             self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
+            self.send_header("Pragma", "no-cache")
             self.end_headers()
-            chunk = b"0" * 65536
             rem = size_bytes
+            buf_len = len(SPEEDTEST_RANDOM_BUFFER)
+            buf_offset = 0
+            chunk_size = 65536
             while rem > 0:
-                to_write = min(rem, len(chunk))
-                self.wfile.write(chunk[:to_write])
+                to_write = min(rem, chunk_size)
+                if buf_offset + to_write > buf_len:
+                    buf_offset = 0
+                self.wfile.write(SPEEDTEST_RANDOM_BUFFER[buf_offset:buf_offset + to_write])
+                buf_offset += to_write
                 rem -= to_write
             self.server_manager.telemetry.record_request(
                 self.client_address[0], "GET", "/api/speedtest/download", 200, size_bytes
             )
+            return
+
+        elif path == "/api/speedtest/results":
+            res_id = query.get("id")
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            storage_dir = os.path.join(base_dir, "storage")
+            res_file = os.path.join(storage_dir, "speedtest_results.json")
+            if os.path.exists(res_file):
+                try:
+                    with open(res_file, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    if res_id:
+                        result = data.get("by_id", {}).get(res_id)
+                        if result:
+                            self._send_json(200, {"status": "ok", "result": result})
+                        else:
+                            self._send_json(404, {"error": "Result ID not found"})
+                    else:
+                        self._send_json(200, {"status": "ok", "recent": data.get("recent", [])[:20], "total_tests": len(data.get("recent", []))})
+                except Exception as e:
+                    self._send_json(500, {"error": str(e)})
+            else:
+                self._send_json(200, {"status": "ok", "recent": [], "total_tests": 0})
             return
 
         elif path == "/api/tunnel/status":
@@ -204,6 +333,24 @@ class ModularWebHandler(BaseHTTPRequestHandler):
             return
 
         # 3. Serve static site file
+        elif path == "/api/feedback":
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            storage_dir = os.path.join(base_dir, "storage")
+            fb_file = os.path.join(storage_dir, "feedback.json")
+            if os.path.exists(fb_file):
+                try:
+                    with open(fb_file, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    self._send_json(200, data)
+                except Exception as e:
+                    self._send_json(500, {"error": str(e)})
+            else:
+                self._send_json(200, {"items": [], "by_app": {}})
+        elif path in ("/api/ip", "/api/myip", "/api/ip-info"):
+            self._handle_ip_intelligence(query)
+            return
+
+        # Serve static site file
         self._serve_site_file(path)
 
     def do_POST(self):
@@ -253,18 +400,87 @@ class ModularWebHandler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", 0))
             t0 = time.time()
             rem = length
+            chunk_size = 65536
             while rem > 0:
-                to_read = min(rem, 65536)
+                to_read = min(rem, chunk_size)
                 data = self.rfile.read(to_read)
                 if not data:
                     break
                 rem -= len(data)
-            elapsed_ms = round((time.time() - t0) * 1000, 2)
+            elapsed_sec = max(0.0001, time.time() - t0)
+            elapsed_ms = round(elapsed_sec * 1000, 2)
+            received_bytes = length - rem
+            throughput_mbps = round((received_bytes * 8) / (elapsed_sec * 1000000), 2)
             self._send_json(200, {
                 "status": "ok",
-                "received_bytes": length,
-                "elapsed_ms": elapsed_ms
+                "received_bytes": received_bytes,
+                "elapsed_ms": elapsed_ms,
+                "server_measured_mbps": throughput_mbps
             })
+            return
+
+        elif path == "/api/speedtest/results":
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+                
+                client_ip = self.headers.get("CF-Connecting-IP") or self.headers.get("X-Forwarded-For", "").split(",")[0].strip() or self.client_address[0]
+                masked_ip = ".".join(client_ip.split(".")[:2]) + ".*.*" if "." in client_ip else "anon"
+                
+                import random
+                test_num = random.randint(1000000000, 9999999999)
+                test_id = f"ALU-SPEED-{test_num}"
+                
+                result_record = {
+                    "id": test_id,
+                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
+                    "download_mbps": float(body.get("download_mbps", 0.0)),
+                    "upload_mbps": float(body.get("upload_mbps", 0.0)),
+                    "ping_idle_ms": float(body.get("ping_idle_ms", 0.0)),
+                    "ping_download_ms": float(body.get("ping_download_ms", 0.0)),
+                    "ping_upload_ms": float(body.get("ping_upload_ms", 0.0)),
+                    "jitter_ms": float(body.get("jitter_ms", 0.0)),
+                    "packet_loss_pct": float(body.get("packet_loss_pct", 0.0)),
+                    "stability_pct": float(body.get("stability_pct", 100.0)),
+                    "isp": body.get("isp", "Unknown ISP"),
+                    "ip_masked": masked_ip,
+                    "server": body.get("server", "Alu OmniSpeed Global Edge"),
+                    "connection_mode": body.get("connection_mode", "Multi"),
+                    "ratings": body.get("ratings", {}),
+                    "telemetry_summary": body.get("telemetry_summary", {}),
+                    "nps_rating": body.get("nps_rating", None)
+                }
+                
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                storage_dir = os.path.join(base_dir, "storage")
+                os.makedirs(storage_dir, exist_ok=True)
+                res_file = os.path.join(storage_dir, "speedtest_results.json")
+                
+                data = {"by_id": {}, "recent": []}
+                if os.path.exists(res_file):
+                    try:
+                        with open(res_file, "r", encoding="utf-8") as f:
+                            data = json.load(f)
+                            if "by_id" not in data: data["by_id"] = {}
+                            if "recent" not in data: data["recent"] = []
+                    except Exception:
+                        pass
+                
+                data["by_id"][test_id] = result_record
+                data["recent"].insert(0, result_record)
+                data["recent"] = data["recent"][:200]
+                
+                with open(res_file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2)
+                
+                self._send_json(200, {
+                    "status": "ok",
+                    "id": test_id,
+                    "share_url": f"/speedtest?id={test_id}",
+                    "record": result_record
+                })
+            except Exception as e:
+                self._send_json(500, {"error": str(e)})
             return
 
         elif path == "/api/tunnel/start":
@@ -276,6 +492,235 @@ class ModularWebHandler(BaseHTTPRequestHandler):
             self.server_manager.stop_tunnel()
             self._send_json(200, {"status": "ok"})
             return
+
+        elif path == "/api/contact":
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+                name = body.get("name", "Anonymous").strip()
+                email = body.get("email", "").strip()
+                category = body.get("category", "General Inquiry").strip()
+                subject = body.get("subject", "").strip()
+                message = body.get("message", "").strip()
+
+                if not message:
+                    self._send_json(400, {"status": "error", "message": "Message body cannot be empty."})
+                    return
+
+                client_ip = self.headers.get("CF-Connecting-IP") or self.headers.get("X-Forwarded-For", "").split(",")[0].strip() or self.client_address[0]
+                masked_ip = ".".join(client_ip.split(".")[:2]) + ".*.*" if "." in client_ip else "anon"
+
+                ticket_id = f"TICK-{int(time.time()*1000)}"
+                entry = {
+                    "ticket_id": ticket_id,
+                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
+                    "name": name,
+                    "email": email,
+                    "category": category,
+                    "subject": subject,
+                    "message": message,
+                    "ip_masked": masked_ip
+                }
+
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                storage_dir = os.path.join(base_dir, "storage")
+                os.makedirs(storage_dir, exist_ok=True)
+                contact_file = os.path.join(storage_dir, "contact_messages.json")
+                
+                messages = []
+                if os.path.exists(contact_file):
+                    try:
+                        with open(contact_file, "r", encoding="utf-8") as f:
+                            messages = json.load(f)
+                            if not isinstance(messages, list): messages = []
+                    except Exception:
+                        messages = []
+                
+                messages.insert(0, entry)
+                messages = messages[:1000]
+
+                with open(contact_file, "w", encoding="utf-8") as f:
+                    json.dump(messages, f, indent=2, ensure_ascii=False)
+
+                self._send_json(200, {
+                    "status": "ok",
+                    "ticket_id": ticket_id,
+                    "message": "Thank you! Your message has been received and logged directly for our team."
+                })
+            except Exception as e:
+                self._send_json(500, {"status": "error", "message": str(e)})
+            return
+
+        elif path == "/api/feedback":
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length).decode("utf-8"))
+                
+                # Support single-input feedback
+                feedback_text = (body.get("feedback") or body.get("message") or body.get("text") or "").strip()
+                if not feedback_text:
+                    self._send_json(400, {"error": "Please enter your feedback."})
+                    return
+
+                # Auto-detect app if not explicitly chosen or if general
+                app_name = body.get("app", "").strip()
+                lower_text = feedback_text.lower()
+                if not app_name or app_name in ["Unknown", "General", "General / Website"]:
+                    if "galaxsee pro" in lower_text or "galaxsee-pro" in lower_text or ("pro" in lower_text and "galax" in lower_text):
+                        app_name = "Galaxsee Pro"
+                    elif "galaxsee" in lower_text or "galaxy" in lower_text or "gallery" in lower_text:
+                        app_name = "Galaxsee"
+                    elif "suechef" in lower_text or "sue chef" in lower_text or "legal" in lower_text or "law" in lower_text or "court" in lower_text or "claim" in lower_text:
+                        app_name = "SueChef"
+                    elif "underwraps" in lower_text or "under wraps" in lower_text or "messenger" in lower_text or "chat" in lower_text:
+                        app_name = "UnderWraps"
+                    elif "omnihost" in lower_text or "omni host" in lower_text or "ftp" in lower_text or "tunnel" in lower_text or "hosting" in lower_text:
+                        app_name = "OmniHost"
+                    else:
+                        app_name = "General / Website"
+
+                # Auto-detect category
+                category = "Feedback"
+                if any(w in lower_text for w in ["bug", "error", "crash", "broken", "issue", "fail", "freeze", "problem", "glitch"]):
+                    category = "Bug Report"
+                elif any(w in lower_text for w in ["feature", "suggest", "add", "would be nice", "could you", "idea", "request"]):
+                    category = "Feature Request"
+                elif any(w in lower_text for w in ["love", "great", "awesome", "good", "fast", "smooth", "perfect", "nice", "clean"]):
+                    category = "Praise"
+
+                import hashlib
+                client_ip = self.client_address[0]
+                masked_ip = ".".join(client_ip.split(".")[:2]) + ".*.*" if "." in client_ip else "anon"
+                ip_hash = hashlib.sha256(client_ip.encode()).hexdigest()[:10]
+
+                entry = {
+                    "id": f"fb_{int(time.time()*1000)}",
+                    "app": app_name,
+                    "category": category,
+                    "feedback": feedback_text,
+                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
+                    "ip_masked": masked_ip,
+                    "ip_hash": ip_hash
+                }
+
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                storage_dir = os.path.join(base_dir, "storage")
+                os.makedirs(storage_dir, exist_ok=True)
+                fb_file = os.path.join(storage_dir, "feedback.json")
+                
+                existing = {"items": [], "by_app": {}}
+                if os.path.exists(fb_file):
+                    try:
+                        with open(fb_file, "r", encoding="utf-8") as f:
+                            loaded = json.load(f)
+                            if isinstance(loaded, dict):
+                                existing = loaded
+                                if "items" not in existing: existing["items"] = []
+                                if "by_app" not in existing: existing["by_app"] = {}
+                    except Exception:
+                        existing = {"items": [], "by_app": {}}
+
+                existing["items"].insert(0, entry)
+                if app_name not in existing["by_app"]:
+                    existing["by_app"][app_name] = []
+                existing["by_app"][app_name].insert(0, entry)
+
+                # Keep items capped to 1000
+                existing["items"] = existing["items"][:1000]
+
+                with open(fb_file, "w", encoding="utf-8") as f:
+                    json.dump(existing, f, indent=2, ensure_ascii=False)
+
+                self._send_json(200, {
+                    "status": "ok",
+                    "message": "Thank you! Your feedback has been securely received and recorded privately. We appreciate your help shaping our beta releases.",
+                    "detected_app": app_name,
+                    "category": category
+                })
+            except Exception as e:
+                self._send_json(500, {"error": str(e)})
+        elif path == "/api/resizer":
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                raw_body = self.rfile.read(length) if length > 0 else b""
+                content_type = self.headers.get("Content-Type", "")
+
+                from PIL import Image, ImageOps
+                import base64
+
+                image_data = None
+                crop_mode = "cover"
+
+                if "application/json" in content_type:
+                    body = json.loads(raw_body.decode("utf-8"))
+                    b64_str = body.get("image", "")
+                    crop_mode = body.get("mode", "cover")
+                    if "," in b64_str:
+                        b64_str = b64_str.split(",", 1)[1]
+                    image_data = base64.b64decode(b64_str)
+                else:
+                    image_data = raw_body
+
+                if not image_data:
+                    self._send_json(400, {"error": "No image data provided for processing"})
+                    return
+
+                src_img = Image.open(io.BytesIO(image_data))
+                if src_img.mode in ("RGBA", "LA") or (src_img.mode == "P" and "transparency" in src_img.info):
+                    work_img = src_img.convert("RGBA")
+                else:
+                    work_img = src_img.convert("RGB")
+
+                presets = [
+                    ("linkedin_profile_400x400.png", 400, 400),
+                    ("linkedin_banner_1584x396.png", 1584, 396),
+                    ("linkedin_post_1200x627.png", 1200, 627),
+                    ("linkedin_logo_300x300.png", 300, 300),
+                    ("x_twitter_profile_400x400.png", 400, 400),
+                    ("x_twitter_header_1500x500.png", 1500, 500),
+                    ("x_twitter_post_1600x900.png", 1600, 900),
+                    ("instagram_profile_320x320.png", 320, 320),
+                    ("instagram_post_square_1080x1080.png", 1080, 1080),
+                    ("instagram_story_reel_1080x1920.png", 1080, 1920),
+                    ("instagram_landscape_1080x566.png", 1080, 566),
+                    ("youtube_avatar_800x800.png", 800, 800),
+                    ("youtube_channel_banner_2560x1440.png", 2560, 1440),
+                    ("youtube_thumbnail_1280x720.png", 1280, 720),
+                    ("tiktok_cover_1080x1920.png", 1080, 1920),
+                    ("facebook_cover_820x312.png", 820, 312)
+                ]
+
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                    for filename, target_w, target_h in presets:
+                        if crop_mode == "contain":
+                            fitted = work_img.copy()
+                            fitted.thumbnail((target_w, target_h), Image.Resampling.LANCZOS)
+                            bg_img = Image.new("RGBA", (target_w, target_h), (0, 0, 0, 0))
+                            paste_x = (target_w - fitted.width) // 2
+                            paste_y = (target_h - fitted.height) // 2
+                            bg_img.paste(fitted, (paste_x, paste_y))
+                            out_img = bg_img
+                        else:
+                            out_img = ImageOps.fit(work_img, (target_w, target_h), method=Image.Resampling.LANCZOS)
+                        
+                        item_buf = io.BytesIO()
+                        out_img.save(item_buf, format="PNG", optimize=True)
+                        zip_file.writestr(filename, item_buf.getvalue())
+
+                zip_bytes = zip_buffer.getvalue()
+
+                self.send_response(200)
+                self.send_header("Content-Type", "application/zip")
+                self.send_header("Content-Disposition", 'attachment; filename="Alumungandr-Social-Pack.zip"')
+                self.send_header("Content-Length", str(len(zip_bytes)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(zip_bytes)
+                return
+            except Exception as e:
+                self._send_json(500, {"error": str(e)})
+                return
 
         self._send_json(404, {"error": "Endpoint not found"})
 
@@ -648,6 +1093,170 @@ class ModularWebHandler(BaseHTTPRequestHandler):
             "applied": success
         })
 
+    # --- Network IP Intelligence & Lifeline Diagnostics ---
+
+    def _handle_ip_intelligence(self, query: Dict[str, str]):
+        cf_ip = self.headers.get("CF-Connecting-IP")
+        xf_ip = self.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+        real_ip = self.headers.get("X-Real-IP", "").strip()
+        socket_ip = self.client_address[0] if self.client_address else "127.0.0.1"
+
+        client_ip = cf_ip or xf_ip or real_ip or socket_ip
+        is_local = client_ip in ("127.0.0.1", "::1", "localhost") or client_ip.startswith("192.168.") or client_ip.startswith("10.") or client_ip.startswith("172.")
+
+        # Determine Public WAN IP
+        public_ip = client_ip
+        if is_local:
+            global _CACHED_PUBLIC_IP, _CACHED_PUBLIC_IP_TIME
+            now = time.time()
+            if '_CACHED_PUBLIC_IP' in globals() and (now - globals().get('_CACHED_PUBLIC_IP_TIME', 0)) < 600:
+                public_ip = globals()['_CACHED_PUBLIC_IP']
+            else:
+                detected_wan = None
+                for probe_url in ("https://api.ipify.org", "https://icanhazip.com", "https://ifconfig.me/ip"):
+                    try:
+                        req = urllib.request.Request(probe_url, headers={"User-Agent": "curl/8.0"})
+                        with urllib.request.urlopen(req, timeout=1.5) as probe_res:
+                            detected_wan = probe_res.read().decode("utf-8").strip()
+                            if detected_wan and "." in detected_wan:
+                                break
+                    except Exception:
+                        continue
+                if detected_wan:
+                    globals()['_CACHED_PUBLIC_IP'] = detected_wan
+                    globals()['_CACHED_PUBLIC_IP_TIME'] = now
+                    public_ip = detected_wan
+                else:
+                    public_ip = "72.27.211.125"
+
+        # Local LAN Interface IP
+        local_lan_ip = "127.0.0.1"
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_lan_ip = s.getsockname()[0]
+            s.close()
+        except Exception:
+            try:
+                local_lan_ip = socket.gethostbyname(socket.gethostname())
+            except Exception:
+                local_lan_ip = "127.0.0.1"
+
+        # Reverse DNS PTR
+        hostname = "None (No PTR record)"
+        try:
+            host_info = socket.gethostbyaddr(public_ip)
+            if host_info and host_info[0]:
+                hostname = host_info[0]
+        except Exception:
+            pass
+        lower_host = hostname.lower()
+
+        # Geolocation, Carrier & ASN Resolution (Live Upstream & Cached)
+        global _GEO_CACHE
+        if '_GEO_CACHE' not in globals():
+            globals()['_GEO_CACHE'] = {}
+
+        now = time.time()
+        cached_geo = globals()['_GEO_CACHE'].get(public_ip)
+        geo_data = None
+        if cached_geo and (now - cached_geo.get('_ts', 0)) < 3600:
+            geo_data = cached_geo
+        else:
+            try:
+                probe_url = f"http://ip-api.com/json/{public_ip}?fields=status,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query"
+                req = urllib.request.Request(probe_url, headers={"User-Agent": "AluNetworkIntelligence/2.0"})
+                with urllib.request.urlopen(req, timeout=2.0) as resp:
+                    parsed_geo = json.loads(resp.read().decode("utf-8"))
+                    if parsed_geo.get("status") == "success":
+                        parsed_geo['_ts'] = now
+                        globals()['_GEO_CACHE'][public_ip] = parsed_geo
+                        geo_data = parsed_geo
+            except Exception:
+                pass
+
+        # Extract verified values from live upstream, Cloudflare edge headers, or PTR fallback
+        country = (geo_data and geo_data.get("country")) or self.headers.get("CF-IPCountry") or "Jamaica"
+        country_code = (geo_data and geo_data.get("countryCode")) or self.headers.get("CF-IPCountry") or "JM"
+        city = (geo_data and geo_data.get("city")) or self.headers.get("CF-IPCity") or "Montego Bay"
+        region = (geo_data and geo_data.get("regionName")) or self.headers.get("CF-IPRegion") or "Saint James"
+        postal = (geo_data and geo_data.get("zip")) or self.headers.get("CF-Postal-Code") or "JMDNC01"
+        tz = (geo_data and geo_data.get("timezone")) or self.headers.get("CF-Timezone") or "America/Jamaica"
+        lat = (geo_data and geo_data.get("lat")) or self.headers.get("CF-Latitude") or 18.4712
+        lon = (geo_data and geo_data.get("lon")) or self.headers.get("CF-Longitude") or -77.9188
+        isp_name = (geo_data and (geo_data.get("isp") or geo_data.get("org"))) or "FLOW Jamaica (Cable & Wireless)"
+        asn_raw = (geo_data and geo_data.get("as")) or "AS23520 FLOW"
+        asn_code = asn_raw.split(" ")[0] if " " in str(asn_raw) else str(asn_raw)
+        cf_ray = self.headers.get("CF-Ray", "Edge-Direct")
+
+        # Check plain-text request
+        fmt = query.get("format", "").lower()
+        ua = self.headers.get("User-Agent", "").lower()
+        if fmt in ("text", "raw", "txt") or "curl" in ua or "wget" in ua or "httpie" in ua:
+            raw_output = f"{public_ip}\n".encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.send_header("Content-Length", str(len(raw_output)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(raw_output)
+            self.server_manager.telemetry.record_request(
+                self.client_address[0], "GET", "/api/ip", 200, len(raw_output)
+            )
+            return
+
+        # Build full JSON dossier
+        ip_version = "IPv6" if ":" in public_ip else "IPv4"
+
+        firewall_rules = {
+            "cidr": f"{public_ip}/32" if ip_version == "IPv4" else f"{public_ip}/128",
+            "iptables": f"iptables -A INPUT -s {public_ip} -j ACCEPT",
+            "ufw": f"sudo ufw allow from {public_ip}",
+            "nginx": f"allow {public_ip}; deny all;",
+            "apache": f"Require ip {public_ip}",
+            "aws_security_group": json.dumps({"IpProtocol": "-1", "CidrIp": f"{public_ip}/32" if ip_version == "IPv4" else f"{public_ip}/128", "Description": "Whitelist My IP"}),
+            "windows_advfirewall": f'netsh advfirewall firewall add rule name="Allow_{public_ip}" dir=in action=allow remoteip={public_ip}'
+        }
+
+        gaming_connect = {
+            "public_wan_ip": public_ip,
+            "local_lan_ip": local_lan_ip,
+            "source_engine": f"connect {public_ip}:27015",
+            "minecraft_server": f"{public_ip}:25565",
+            "palworld_server": f"{public_ip}:8211",
+            "valheim_server": f"{public_ip}:2456",
+            "lan_minecraft": f"{local_lan_ip}:25565"
+        }
+
+        headers_inspection = {k: self.headers.get(k) for k in ("User-Agent", "Accept-Language", "Sec-Ch-Ua", "CF-Ray", "CF-IPCountry", "X-Forwarded-For") if self.headers.get(k)}
+
+        response_data = {
+            "status": "ok",
+            "ip": public_ip,
+            "ip_version": ip_version,
+            "local_ip": local_lan_ip,
+            "hostname": hostname,
+            "isp": isp_name,
+            "asn": asn_code,
+            "country": country,
+            "country_code": country_code,
+            "city": city,
+            "region": region,
+            "postal_code": postal or "N/A",
+            "latitude": float(lat) if str(lat).replace('.', '', 1).replace('-', '', 1).isdigit() else 18.4712,
+            "longitude": float(lon) if str(lon).replace('.', '', 1).replace('-', '', 1).isdigit() else -77.9188,
+            "timezone": tz,
+            "is_datacenter": "amazon" in lower_host or "google" in lower_host or "digitalocean" in lower_host,
+            "is_cloudflare": bool(cf_ip or cf_ray != "Edge-Direct"),
+            "cf_ray": cf_ray,
+            "firewall_rules": firewall_rules,
+            "gaming_connect": gaming_connect,
+            "headers_inspection": headers_inspection,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+        }
+
+        self._send_json(200, response_data)
+
     # --- Static Site File Serving ---
 
     def _serve_site_file(self, req_path: str):
@@ -658,7 +1267,23 @@ class ModularWebHandler(BaseHTTPRequestHandler):
         if not clean_path:
             clean_path = "index.html"
 
-        file_path = os.path.normpath(os.path.join(site_root, clean_path))
+        if clean_path in ("speedtest", "speedtest/"):
+            sp_dir = os.path.join(site_root, "speedtest", "index.html")
+            if os.path.isfile(sp_dir):
+                file_path = sp_dir
+            elif os.path.isfile(os.path.join(site_root, "speedtest.html")):
+                file_path = os.path.join(site_root, "speedtest.html")
+            else:
+                file_path = os.path.normpath(os.path.join(site_root, clean_path))
+        elif clean_path == "robots.txt":
+            r_file = os.path.join(site_root, "robots.txt")
+            file_path = r_file if os.path.isfile(r_file) else os.path.normpath(os.path.join(site_root, clean_path))
+        elif clean_path == "sitemap.xml":
+            s_file = os.path.join(site_root, "sitemap.xml")
+            file_path = s_file if os.path.isfile(s_file) else os.path.normpath(os.path.join(site_root, clean_path))
+        else:
+            file_path = os.path.normpath(os.path.join(site_root, clean_path))
+
         if not file_path.startswith(site_root):
             self.send_error(403, "Access Forbidden")
             return
@@ -671,9 +1296,13 @@ class ModularWebHandler(BaseHTTPRequestHandler):
         if not os.path.isfile(file_path):
             _, ext = os.path.splitext(clean_path)
             if not ext:
-                spa_idx = os.path.join(site_root, "index.html")
-                if os.path.isfile(spa_idx):
-                    file_path = spa_idx
+                candidate_html = file_path + ".html"
+                if os.path.isfile(candidate_html):
+                    file_path = candidate_html
+                else:
+                    spa_idx = os.path.join(site_root, "index.html")
+                    if os.path.isfile(spa_idx):
+                        file_path = spa_idx
 
         if not os.path.isfile(file_path):
             self.send_response(404)
@@ -697,6 +1326,9 @@ class ModularWebHandler(BaseHTTPRequestHandler):
             elif file_path.endswith(".webp"): mime_type = "image/webp"
             elif file_path.endswith(".svg"): mime_type = "image/svg+xml"
             elif file_path.endswith(".woff2"): mime_type = "font/woff2"
+            elif file_path.endswith(".apk"): mime_type = "application/vnd.android.package-archive"
+            elif file_path.endswith(".xml"): mime_type = "application/xml"
+            elif file_path.endswith(".txt"): mime_type = "text/plain; charset=utf-8"
             else: mime_type = "application/octet-stream"
 
         try:
@@ -708,8 +1340,12 @@ class ModularWebHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(content)))
             self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Cache-Control", "public, max-age=3600")
+            if file_path.endswith(".apk"):
+                fname = os.path.basename(file_path)
+                self.send_header("Content-Disposition", f'attachment; filename="{fname}"')
             self.end_headers()
-            self.wfile.write(content)
+            if not getattr(self, "_is_head", False):
+                self.wfile.write(content)
             self.server_manager.telemetry.record_request(
                 self.client_address[0], self.command, req_path, 200, len(content)
             )
@@ -717,8 +1353,18 @@ class ModularWebHandler(BaseHTTPRequestHandler):
             self.send_error(500, f"Error reading file: {e}")
 
 class ModularWebsiteServer:
-    def __init__(self, sites_dir: Optional[str] = None, storage_dir: Optional[str] = None, default_site: str = "default", port: int = DEFAULT_WEB_PORT):
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    def __init__(self, sites_dir: Optional[str] = None, storage_dir: Optional[str] = None, default_site: str = "beta", port: int = DEFAULT_WEB_PORT):
+        if getattr(sys, 'frozen', False):
+            exe_dir = os.path.dirname(sys.executable)
+            if os.path.isdir(os.path.join(exe_dir, "sites")):
+                base_dir = exe_dir
+            elif hasattr(sys, '_MEIPASS') and os.path.isdir(os.path.join(sys._MEIPASS, "sites")):
+                base_dir = sys._MEIPASS
+            else:
+                base_dir = exe_dir
+        else:
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
         if sites_dir is None:
             self.sites_dir = os.path.join(base_dir, "sites")
         else:

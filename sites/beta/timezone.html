@@ -1,0 +1,2462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Timezone Meeting Matcher | Alumungandr™</title>
+  <meta name="description" content="Minimalist visual slider to match up to six global cities, customize working hours per participant, and instantly discover the 1-to-2 hour sweet spot where your distributed team is awake during standard business hours.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&family=Playfair+Display:ital,wght@0,600;0,800;1,600;1,800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-editorial: #c9352c;
+      --bg-editorial-dark: #b0271f;
+      --bg-editorial-deep: #161226;
+      --card-navy: #13172b;
+      --card-navy-light: #1b213b;
+      --card-navy-border: rgba(255, 255, 255, 0.12);
+      --cream-text: #fdf5f0;
+      --cream-muted: #e8c7be;
+      --blush-accent: #f8a896;
+      --golden-awake: #ffd166;
+      --green-business: #06d6a0;
+      --green-glow: rgba(6, 214, 160, 0.45);
+      --coral-sleep: #ef476f;
+      --font-serif: 'Playfair Display', Georgia, serif;
+      --font-display: 'Cinzel', serif;
+      --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-editorial);
+      color: var(--cream-text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Editorial Radial Gradient Mesh */
+    .editorial-bg {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 15%, #de443b 0%, #ba2b23 55%, #181329 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Shockwave Canvas Layer for Golden Window Cosmic Explosions */
+    #shockwaveCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 15;
+      pointer-events: none;
+    }
+
+    /* Symmetrical Silhouette Framing (InsideTheHead.co Aesthetic) */
+    .silhouette-frame {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      overflow: hidden;
+      opacity: 0.18;
+    }
+
+    .silhouette-left {
+      position: absolute;
+      left: -120px;
+      top: 15%;
+      width: 480px;
+      height: 720px;
+      background: radial-gradient(ellipse at 30% 50%, var(--card-navy) 40%, transparent 70%);
+      border-radius: 50% 40% 60% 50% / 60% 50% 50% 40%;
+      transform: rotate(-15deg);
+      filter: blur(12px);
+      animation: floatSilhouette 16s ease-in-out infinite alternate;
+      transition: transform 0.3s ease;
+    }
+
+    .silhouette-right {
+      position: absolute;
+      right: -120px;
+      top: 15%;
+      width: 480px;
+      height: 720px;
+      background: radial-gradient(ellipse at 70% 50%, var(--card-navy) 40%, transparent 70%);
+      border-radius: 40% 50% 50% 60% / 50% 60% 40% 50%;
+      transform: rotate(15deg);
+      filter: blur(12px);
+      animation: floatSilhouette 16s ease-in-out infinite alternate-reverse;
+      transition: transform 0.3s ease;
+    }
+
+    @keyframes floatSilhouette {
+      0% { transform: translateY(0) rotate(-15deg) scale(1); }
+      100% { transform: translateY(40px) rotate(-10deg) scale(1.05); }
+    }
+
+    /* WORD & CHARACTER RIPPLE PHYSICS ENGINE */
+    .ripple-char {
+      display: inline-block;
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.25s, text-shadow 0.25s;
+      cursor: default;
+    }
+
+    .ripple-char:hover {
+      transform: translateY(-8px) scale(1.18);
+      color: #ffffff;
+      text-shadow: 0 0 16px var(--blush-accent), 0 0 25px rgba(248, 168, 150, 0.8);
+    }
+
+    @keyframes globalWordWave {
+      0% { transform: translateY(0); color: inherit; }
+      40% { transform: translateY(-10px) scale(1.12); color: #ffffff; text-shadow: 0 0 20px var(--blush-accent); }
+      100% { transform: translateY(0); color: inherit; }
+    }
+
+    .wave-ripple-active {
+      animation: globalWordWave 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    /* Navigation Bar */
+    nav {
+      position: relative;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 3rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(16px);
+      background: rgba(22, 18, 38, 0.45);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      text-decoration: none;
+    }
+
+    .brand-crest {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1.5px solid var(--cream-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 800;
+      color: var(--cream-text);
+      font-size: 1.15rem;
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.25);
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: 0.12em;
+      color: var(--cream-text);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.25rem;
+      list-style: none;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--cream-muted);
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      transition: all 0.2s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--cream-text);
+      border-bottom: 2px solid var(--cream-text);
+      padding-bottom: 4px;
+    }
+
+    /* Minimalist Dot Status Header */
+    .editorial-dots-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      color: var(--cream-muted);
+      background: rgba(19, 23, 43, 0.3);
+      position: relative;
+      z-index: 40;
+      flex-wrap: wrap;
+    }
+
+    .dot-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .dot-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green-business);
+      box-shadow: 0 0 8px var(--green-business);
+      animation: pulseDot 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 0.4; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* Main Container */
+    main {
+      position: relative;
+      z-index: 20;
+      max-width: 1340px;
+      margin: 0 auto;
+      padding: 3.5rem 2rem 6rem;
+    }
+
+    /* Hero Section with Large Editorial Serif */
+    .hero-editorial {
+      text-align: center;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1.2rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(255, 255, 255, 0.08);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      color: var(--cream-text);
+      margin-bottom: 1.25rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-title {
+      font-family: var(--font-serif);
+      font-size: 4.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--cream-text);
+      line-height: 1.08;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--blush-accent);
+      font-weight: 600;
+    }
+
+    .hero-tagline {
+      max-width: 740px;
+      margin: 0 auto;
+      font-size: 1.15rem;
+      color: var(--cream-muted);
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    /* CELESTIAL SKY SIMULATION ENGINE CANVAS */
+    .celestial-graphic-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 2rem 0;
+      position: relative;
+    }
+
+    #celestialCanvas {
+      width: 560px;
+      height: 120px;
+      max-width: 100%;
+      border-radius: 16px;
+      background: rgba(14, 17, 34, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Top Presets & Team Management Bar */
+    .presets-bar {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.25rem;
+    }
+
+    .btn-preset {
+      padding: 0.5rem 1.1rem;
+      background: rgba(19, 23, 43, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      color: var(--cream-text);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-preset:hover {
+      background: var(--cream-text);
+      color: var(--bg-editorial-deep);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .btn-team-save {
+      background: rgba(6, 214, 160, 0.15);
+      border-color: var(--green-business);
+      color: var(--green-business);
+    }
+
+    .btn-team-save:hover {
+      background: var(--green-business);
+      color: #0d1722;
+    }
+
+    /* Tactile Micro-Interactions & Depression */
+    .btn-preset:active,
+    .btn-snap-sweet:active,
+    .btn-audio-toggle:active,
+    .guide-toggle:active,
+    .btn-edit-hours:active,
+    .btn-remove-city:active,
+    .btn-export-action:active,
+    .btn-add-slot:active,
+    .btn-custom-city:active,
+    .preset-hours-btn:active,
+    .dialog-btn:active {
+      transform: scale(0.96) !important;
+      transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .tip-helper-badge {
+      display: inline-block;
+      cursor: help;
+      color: var(--golden-awake);
+      font-size: 0.72rem;
+      margin-left: 4px;
+      opacity: 0.85;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .tip-helper-badge:hover {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+
+    /* User Assistance & Guide Accordion */
+    .guide-banner {
+      background: rgba(19, 23, 43, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      margin-bottom: 2.5rem;
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+      transition: all 0.3s;
+    }
+
+    .guide-toggle {
+      width: 100%;
+      padding: 1.1rem 1.75rem;
+      background: transparent;
+      border: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      color: var(--cream-text);
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .guide-toggle:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .guide-content {
+      padding: 0 1.75rem 1.75rem;
+      display: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.9rem;
+      color: var(--cream-muted);
+      line-height: 1.7;
+    }
+
+    .guide-content.open {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.25rem;
+    }
+
+    .guide-step {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      padding: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .guide-step-num {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      color: var(--blush-accent);
+      font-size: 0.8rem;
+      margin-bottom: 0.4rem;
+    }
+
+    /* The Main Golden Window Banner */
+    .golden-spotlight-card {
+      background: linear-gradient(135deg, rgba(25, 20, 48, 0.95) 0%, rgba(15, 18, 38, 0.98) 100%);
+      border: 2px solid var(--green-business);
+      box-shadow: 0 20px 60px rgba(6, 214, 160, 0.25), 0 0 30px rgba(0, 0, 0, 0.6);
+      border-radius: 20px;
+      padding: 2.25rem;
+      margin-bottom: 3rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .golden-spotlight-card.pulse-aura {
+      animation: goldenAuraPulse 1.2s ease-out;
+    }
+
+    @keyframes goldenAuraPulse {
+      0% { box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.8); }
+      70% { box-shadow: 0 0 0 35px rgba(6, 214, 160, 0); }
+      100% { box-shadow: 0 20px 60px rgba(6, 214, 160, 0.25); }
+    }
+
+    .golden-spotlight-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 2rem;
+      position: relative;
+      z-index: 5;
+    }
+
+    .golden-info-left {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .golden-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      color: var(--green-business);
+      margin-bottom: 0.6rem;
+    }
+
+    .golden-headline {
+      font-family: var(--font-serif);
+      font-size: 2.4rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+      line-height: 1.2;
+    }
+
+    .golden-subtext {
+      color: var(--cream-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .golden-actions-right {
+      display: flex;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-snap-sweet {
+      padding: 0.95rem 1.75rem;
+      background: var(--green-business);
+      color: #0d1722;
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.88rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      box-shadow: 0 8px 24px rgba(6, 214, 160, 0.4);
+      transition: all 0.2s;
+    }
+
+    .btn-snap-sweet:hover {
+      background: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(6, 214, 160, 0.6);
+    }
+
+    .btn-audio-toggle {
+      padding: 0.95rem 1.2rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      color: var(--cream-text);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .btn-audio-toggle:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    /* Multi-Lane Timeline Board */
+    .timeline-board {
+      background: rgba(19, 23, 43, 0.85);
+      border: 1px solid var(--card-navy-border);
+      border-radius: 20px;
+      padding: 2.25rem;
+      backdrop-filter: blur(24px);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+      margin-bottom: 3.5rem;
+    }
+
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .timeline-title-area h2 {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      color: var(--cream-text);
+      margin-bottom: 0.25rem;
+    }
+
+    .timeline-legend {
+      display: flex;
+      gap: 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .legend-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--cream-muted);
+    }
+
+    .chip-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    /* Master 24-Hour Visual Slider */
+    .master-scrubber-area {
+      background: rgba(10, 12, 24, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 1.75rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .scrubber-labels-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .active-time-readout {
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--green-business);
+      text-shadow: 0 0 15px rgba(6, 214, 160, 0.4);
+    }
+
+    .slider-track-wrap {
+      position: relative;
+      margin: 1.5rem 0 1rem;
+    }
+
+    .timeline-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 12px;
+      border-radius: 6px;
+      background: linear-gradient(to right, 
+        rgba(239, 71, 111, 0.4) 0%, 
+        rgba(255, 209, 102, 0.6) 28%, 
+        rgba(6, 214, 160, 0.9) 45%, 
+        rgba(6, 214, 160, 0.9) 70%, 
+        rgba(255, 209, 102, 0.6) 85%, 
+        rgba(239, 71, 111, 0.4) 100%);
+      outline: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .timeline-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3px solid var(--green-business);
+      cursor: grab;
+      box-shadow: 0 0 25px rgba(6, 214, 160, 0.9), 0 4px 10px rgba(0, 0, 0, 0.5);
+      transition: transform 0.15s;
+    }
+
+    .timeline-slider::-webkit-slider-thumb:active {
+      cursor: grabbing;
+      transform: scale(1.25);
+    }
+
+    .hour-ticks-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--cream-muted);
+      margin-top: 0.75rem;
+      user-select: none;
+    }
+
+    /* City Lanes Stack */
+    .city-lanes-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .city-lane-card {
+      background: rgba(14, 17, 34, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 1.35rem 1.6rem;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .city-lane-card:hover {
+      border-color: rgba(255, 255, 255, 0.22);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .city-lane-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+    }
+
+    .city-identity {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .city-slot-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--cream-text);
+    }
+
+    .city-name-select {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #fff;
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .city-name-select option {
+      background: var(--card-navy);
+      color: #fff;
+    }
+
+    .participant-alias {
+      background: transparent;
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      color: var(--blush-accent);
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      outline: none;
+      width: 170px;
+    }
+
+    .participant-alias:focus {
+      border-style: solid;
+      border-color: var(--green-business);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .city-lane-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .btn-edit-hours {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--cream-muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-edit-hours:hover {
+      background: var(--cream-text);
+      color: #05070e;
+    }
+
+    .btn-delete-slot {
+      background: rgba(239, 71, 111, 0.1);
+      border: 1px solid rgba(239, 71, 111, 0.3);
+      color: var(--coral-sleep);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 0.4rem 0.65rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-delete-slot:hover {
+      background: var(--coral-sleep);
+      color: #fff;
+    }
+
+    .city-time-badge {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 800;
+      padding: 0.4rem 0.9rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .badge-business {
+      background: rgba(6, 214, 160, 0.15);
+      color: var(--green-business);
+      border: 1px solid var(--green-business);
+      text-shadow: 0 0 10px var(--green-glow);
+    }
+
+    .badge-awake {
+      background: rgba(255, 209, 102, 0.15);
+      color: var(--golden-awake);
+      border: 1px solid var(--golden-awake);
+    }
+
+    .badge-sleep {
+      background: rgba(239, 71, 111, 0.15);
+      color: var(--coral-sleep);
+      border: 1px solid var(--coral-sleep);
+    }
+
+    /* Expandable In-Lane Working Hours Editor */
+    .hours-editor-panel {
+      display: none;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .hours-editor-panel.open {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .hours-inputs-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--cream-muted);
+    }
+
+    .select-hour {
+      background: #090e1f;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+
+    .hour-schedule-presets {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-sched-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--cream-muted);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding: 0.25rem 0.55rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-sched-chip:hover {
+      border-color: var(--green-business);
+      color: #fff;
+    }
+
+    /* 24-Hour Timeline Track Bar */
+    .hours-bar-visual {
+      display: grid;
+      grid-template-columns: repeat(24, 1fr);
+      height: 28px;
+      border-radius: 8px;
+      overflow: hidden;
+      gap: 1px;
+      background: rgba(0, 0, 0, 0.4);
+      position: relative;
+    }
+
+    .hour-block {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hour-block:hover {
+      opacity: 1;
+      transform: scaleY(1.22);
+      z-index: 10;
+    }
+
+    .hour-block.block-business {
+      background: rgba(6, 214, 160, 0.8);
+      color: #032b20;
+      font-weight: 800;
+    }
+
+    .hour-block.block-awake {
+      background: rgba(255, 209, 102, 0.65);
+      color: #3b2c00;
+    }
+
+    .hour-block.block-sleep {
+      background: rgba(239, 71, 111, 0.3);
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    .hour-block.active-cursor {
+      outline: 2px solid #ffffff;
+      outline-offset: -2px;
+      box-shadow: 0 0 12px #ffffff;
+      z-index: 20;
+      transform: scaleY(1.15);
+    }
+
+    /* Add Participant Bar */
+    .add-participant-bar {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      border-top: 1px dashed rgba(255, 255, 255, 0.12);
+      padding-top: 1.5rem;
+    }
+
+    .btn-add-slot {
+      padding: 0.75rem 1.4rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px dashed var(--green-business);
+      color: var(--green-business);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-add-slot:hover {
+      background: var(--green-business);
+      color: #0d1722;
+      border-style: solid;
+      box-shadow: 0 0 20px var(--green-glow);
+    }
+
+    .btn-custom-city {
+      padding: 0.75rem 1.2rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--cream-text);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-custom-city:hover {
+      background: var(--cream-text);
+      color: #05070e;
+    }
+
+    /* Editable Meeting Parameters Suite */
+    .meeting-config-card {
+      background: rgba(14, 17, 34, 0.95);
+      border: 1px solid var(--card-navy-border);
+      border-radius: 20px;
+      padding: 2.25rem;
+      margin-bottom: 3.5rem;
+      backdrop-filter: blur(24px);
+    }
+
+    .meeting-config-title {
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      color: var(--cream-text);
+      margin-bottom: 0.5rem;
+    }
+
+    .meeting-config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+
+    .cfg-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .cfg-label {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--cream-muted);
+      letter-spacing: 0.08em;
+    }
+
+    .cfg-input {
+      background: #080a14;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 0.65rem 0.9rem;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .cfg-input:focus {
+      border-color: var(--green-business);
+      box-shadow: 0 0 15px var(--green-glow);
+    }
+
+    /* Export & Collaboration Suite */
+    .export-suite-card {
+      background: linear-gradient(180deg, rgba(19, 23, 43, 0.9) 0%, rgba(14, 17, 34, 0.95) 100%);
+      border: 1px solid var(--card-navy-border);
+      border-radius: 20px;
+      padding: 2.25rem;
+      backdrop-filter: blur(24px);
+    }
+
+    .export-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .export-title {
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      color: var(--cream-text);
+    }
+
+    .export-buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .btn-export-action {
+      padding: 0.9rem 1.25rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      color: var(--cream-text);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      transition: all 0.2s;
+    }
+
+    .btn-export-action:hover {
+      background: var(--cream-text);
+      color: var(--bg-editorial-deep);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+    }
+
+    .meeting-invite-preview {
+      background: #080a14;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 1.35rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: var(--cream-muted);
+      white-space: pre-wrap;
+      user-select: all;
+    }
+
+    /* CUSTOM CITY DIALOG MODAL */
+    .custom-city-dialog {
+      background: #0d1124;
+      border: 1.5px solid var(--green-business);
+      border-radius: 16px;
+      padding: 2rem;
+      color: #fff;
+      max-width: 440px;
+      width: 90%;
+      margin: auto;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85), 0 0 35px var(--green-glow);
+    }
+
+    .custom-city-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+    }
+
+    .dialog-title-bar {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: var(--green-business);
+      margin-bottom: 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Toast Pill */
+    .toast-pill {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--card-navy);
+      border: 1px solid var(--green-business);
+      color: var(--green-business);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      padding: 0.75rem 1.4rem;
+      border-radius: 999px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000;
+    }
+
+    .toast-pill.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 3rem 2rem 4rem;
+      margin-top: 6rem;
+      position: relative;
+      z-index: 10;
+      background: rgba(14, 17, 34, 0.95);
+    }
+
+    .footer-inner {
+      max-width: 1340px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--cream-muted);
+      text-decoration: none;
+      font-size: 0.82rem;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--cream-text);
+    }
+
+    @media (max-width: 768px) {
+      .hero-title { font-size: 2.8rem; }
+      nav { padding: 1rem 1.25rem; }
+      .nav-links { display: none; }
+      .timeline-board, .golden-spotlight-card, .export-suite-card { padding: 1.5rem 1.2rem; }
+      .city-lane-card { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Editorial Background & Symmetrical Silhouette Framing -->
+  <div class="editorial-bg"></div>
+  <canvas id="shockwaveCanvas"></canvas>
+  <div class="silhouette-frame">
+    <div class="silhouette-left" id="silLeft"></div>
+    <div class="silhouette-right" id="silRight"></div>
+  </div>
+
+  <!-- Global Header Navigation -->
+  <nav>
+    <a href="/" class="brand">
+      <div class="brand-crest">&#10022;</div>
+      <span class="brand-title">ALUMUNGANDR</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Apps & Ecosystem</a></li>
+      <li><a href="/speedtest">Speed Test</a></li>
+      <li><a href="/invoice">Invoice Studio</a></li>
+      <li><a href="/resizer">Social Resizer</a></li>
+      <li><a href="/subscriptions">Reality Check</a></li>
+      <li><a href="/ip">What Is My IP</a></li>
+      <li><a href="/timezone" class="active">Meeting Matcher</a></li>
+      <li><a href="/about">About & Journey</a></li>
+      <li><a href="/faq">FAQ Matrix</a></li>
+      <li><a href="/contact">Contact Uplink</a></li>
+      <li><a href="/privacy">Privacy</a></li>
+      <li><a href="/terms">Terms</a></li>
+    </ul>
+  </nav>
+
+  <!-- Editorial Minimalist Dots Status Bar -->
+  <div class="editorial-dots-bar" id="dotsBar">
+    <span class="dot-item"><span class="dot-pulse"></span> KINGSTON</span>
+    <span>&bull;</span>
+    <span class="dot-item"><span class="dot-pulse"></span> LONDON</span>
+    <span>&bull;</span>
+    <span class="dot-item"><span class="dot-pulse"></span> NEW YORK</span>
+    <span>&bull;</span>
+    <span class="dot-item"><span class="dot-pulse"></span> SAN FRANCISCO</span>
+    <span>&bull;</span>
+    <span style="color:var(--green-business); font-weight:700;">PLANETARY SYNCHRONY 100%</span>
+  </div>
+
+  <!-- Main Application Body -->
+  <main>
+
+    <!-- Hero Title in insidethehead.co Editorial Style -->
+    <section class="hero-editorial">
+      <div class="hero-badge ripple-target">
+        <span>&#9737; GLOBAL SYNCHRONY ENGINE</span>
+        <span>&bull;</span>
+        <span>ZERO JETLAG SCHEDULING</span>
+      </div>
+      <h1 class="hero-title ripple-target" id="heroTitle">
+        Global Timezone <em>Meeting Matcher</em>
+      </h1>
+      <p class="hero-tagline ripple-target" id="heroTagline">
+        Select up to six world cities, customize individual working hours, and drag the 24-hour visual slider to pinpoint the exact 1-to-2 hour sweet spot where all participants are awake and ready for business.
+      </p>
+
+      <!-- Celestial Sky Simulation Engine Canvas -->
+      <div class="celestial-graphic-wrap">
+        <canvas id="celestialCanvas"></canvas>
+      </div>
+
+      <!-- Quick Preset & Team Management Bar -->
+      <div class="presets-bar">
+        <button class="btn-preset" onclick="loadPreset('globalQuad')">&#127758; Global Quad</button>
+        <button class="btn-preset" onclick="loadPreset('transatlantic')">&#9992; Transatlantic</button>
+        <button class="btn-preset" onclick="loadPreset('euroAsia')">&#127759; Euro-Asian</button>
+        <button class="btn-preset" onclick="loadPreset('usCoast')">&#127964; US Coast-to-Coast</button>
+        <button class="btn-preset btn-team-save" onclick="saveTeamToStorage()">&#128190; Save Team</button>
+        <button class="btn-preset" onclick="loadTeamFromStorage()">&#128194; Load Saved Team</button>
+        <button class="btn-preset" onclick="resetToDefaultTeam()">&#8635; Reset Defaults</button>
+      </div>
+    </section>
+
+    <!-- User Assistance & Guide Accordion -->
+    <div class="guide-banner">
+      <button class="guide-toggle" id="btnGuideToggle">
+        <span>&#128161; How the Meeting Matcher Works &amp; User Assistance (Fully Editable)</span>
+        <span id="guideArrow">&#9660;</span>
+      </button>
+      <div class="guide-content" id="guideContent">
+        <p>
+          Distributed team scheduling without the spreadsheet headache. Every parameter is completely customizable:
+        </p>
+        <div class="guide-grid">
+          <div class="guide-step">
+            <div class="guide-step-num">01. CUSTOMIZE CITIES &amp; SLOTS</div>
+            <p>Select from 50+ global cities or click <strong>+ Custom City</strong> for any fractional UTC offset. Add up to 6 team participants.</p>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">02. EDIT WORKING HOURS</div>
+            <p>Click <strong>⚙️ Hours</strong> on any participant to set custom work hours (Early Bird, Night Owl, or exact custom times).</p>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">03. SCRUB 24-HOUR SLIDER</div>
+            <p>Watch local times roll smoothly in real-time. Click <strong>⚡ SNAP TO GOLDEN WINDOW</strong> to jump straight to optimal synchrony.</p>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">04. 1-CLICK CALENDAR EXPORT</div>
+            <p>Customize your meeting subject and agenda below, then download a universal <code>.ics</code> file, open Google Calendar, or copy Slack markdown.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- The Spotlight Golden Window Banner -->
+    <section class="golden-spotlight-card" id="goldenCard">
+      <div class="golden-spotlight-inner">
+        <div class="golden-info-left">
+          <div class="golden-tag">&#10022; THE GOLDEN WINDOW // OPTIMAL SYNCHRONY</div>
+          <h2 class="golden-headline" id="goldenHeadline">15:00 - 17:00 UTC (2 Hours)</h2>
+          <p class="golden-subtext" id="goldenSubtext">
+            All participants are actively awake and within standard working hours. Zero night owls, zero dawn risers.
+          </p>
+        </div>
+        <div class="golden-actions-right">
+          <button class="btn-snap-sweet" id="btnSnapGolden">
+            <span>&#9889; SNAP TO GOLDEN WINDOW</span>
+          </button>
+          <button class="btn-audio-toggle" id="btnAudioToggle">
+            <span id="audioIcon">&#128266;</span>
+            <span id="audioText">Chime: On</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Multi-Lane Timeline Board -->
+    <section class="timeline-board">
+      <div class="timeline-header">
+        <div class="timeline-title-area">
+          <h2>Synchronized 24-Hour Horizon</h2>
+          <p style="font-size:0.85rem; color:var(--cream-muted);">Each lane reflects the local 24-hour schedule and customizable working hours for that team member.</p>
+        </div>
+        <div class="timeline-legend">
+          <div class="legend-chip" title="Standard 9 AM - 5 PM business hours (customizable per team member)">
+            <div class="chip-swatch" style="background:var(--green-business);"></div>
+            <span>Business Hours <span class="tip-helper-badge">(?)</span></span>
+          </div>
+          <div class="legend-chip" title="Awake shoulder hours (early morning 7-9 AM or evening 5-10 PM). Acceptable for quick team syncs.">
+            <div class="chip-swatch" style="background:var(--golden-awake);"></div>
+            <span>Awake / Shoulder <span class="tip-helper-badge">(?)</span></span>
+          </div>
+          <div class="legend-chip" title="Late night / sleeping hours (10 PM - 7 AM). Highly disruptive to personal health & sleep.">
+            <div class="chip-swatch" style="background:var(--coral-sleep);"></div>
+            <span>Sleeping (Disruptive) <span class="tip-helper-badge">(?)</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Master 24-Hour Scrubber -->
+      <div class="master-scrubber-area">
+        <div class="scrubber-labels-row">
+          <div>
+            <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--cream-muted); letter-spacing:0.08em;" title="Coordinated Universal Time (UTC) — the global standard time without daylight saving confusion.">MASTER UTC SCRUBBER <span class="tip-helper-badge">(?)</span>:</span>
+            <strong class="active-time-readout" id="activeUtcReadout">15:00 UTC</strong>
+          </div>
+          <div style="font-family:var(--font-mono); font-size:0.82rem; color:var(--cream-muted);" id="currentOverlapStatus">
+            4 / 4 Participants Available
+          </div>
+        </div>
+
+        <div class="slider-track-wrap">
+          <input type="range" id="timeSlider" class="timeline-slider" min="0" max="23.5" step="0.5" value="15">
+        </div>
+
+        <div class="hour-ticks-row">
+          <span>00:00</span>
+          <span>03:00</span>
+          <span>06:00</span>
+          <span>09:00</span>
+          <span>12:00</span>
+          <span>15:00</span>
+          <span>18:00</span>
+          <span>21:00</span>
+          <span>23:00</span>
+        </div>
+      </div>
+
+      <!-- City Lanes Container -->
+      <div class="city-lanes-stack" id="cityLanesContainer"></div>
+
+      <!-- Add Participant Controls -->
+      <div class="add-participant-bar">
+        <button class="btn-add-slot" id="btnAddSlot" onclick="addNewSlot()">
+          <span>+ ADD PARTICIPANT / CITY</span>
+        </button>
+        <button class="btn-custom-city" onclick="openCustomCityModal()">
+          <span>+ Custom City / Timezone</span>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- Editable Meeting Configuration Suite -->
+    <section class="meeting-config-card">
+      <h2 class="meeting-config-title">Meeting Details &amp; Agenda (Editable)</h2>
+      <p style="font-size:0.85rem; color:var(--cream-muted);">Customize the meeting name, duration, and agenda notes. All changes dynamically update the Google Calendar link, Slack markdown, and .ICS file.</p>
+
+      <div class="meeting-config-grid">
+        <div class="cfg-field">
+          <label class="cfg-label">MEETING TITLE</label>
+          <input type="text" id="cfgMeetingTitle" class="cfg-input" value="Global Team Synchrony Sync">
+        </div>
+        <div class="cfg-field">
+          <label class="cfg-label">DURATION</label>
+          <select id="cfgDuration" class="cfg-input" style="cursor:pointer;">
+            <option value="30">30 Minutes</option>
+            <option value="45">45 Minutes</option>
+            <option value="60" selected>1 Hour</option>
+            <option value="90">1.5 Hours</option>
+            <option value="120">2 Hours</option>
+          </select>
+        </div>
+        <div class="cfg-field">
+          <label class="cfg-label">CONFERENCE PLATFORM</label>
+          <input type="text" id="cfgLink" class="cfg-input" value="Google Meet / Zoom (Link TBD)">
+        </div>
+      </div>
+
+      <div class="cfg-field" style="margin-top:1.25rem;">
+        <label class="cfg-label">AGENDA &amp; CALL NOTES</label>
+        <textarea id="cfgAgenda" class="cfg-input" rows="2" style="resize:vertical;">Sprint Review, Technical Architecture Alignment & Distributed Team Check-in.</textarea>
+      </div>
+    </section>
+
+    <!-- Export & Collaboration Suite -->
+    <section class="export-suite-card">
+      <div class="export-header">
+        <div>
+          <h2 class="export-title">Export &amp; Schedule Meeting</h2>
+          <p style="font-size:0.85rem; color:var(--cream-muted);">1-click export formatted for international team distribution.</p>
+        </div>
+      </div>
+
+      <div class="export-buttons-grid">
+        <button class="btn-export-action" id="btnCopyInvite">
+          <span>&#128203; Copy Meeting Invite</span>
+        </button>
+        <button class="btn-export-action" id="btnGoogleCalendar">
+          <span>&#128197; Add to Google Calendar</span>
+        </button>
+        <button class="btn-export-action" id="btnDownloadIcs">
+          <span>&#128229; Download .ICS Calendar</span>
+        </button>
+        <button class="btn-export-action" id="btnCopySlack">
+          <span>&#128172; Copy Slack / Discord Markdown</span>
+        </button>
+      </div>
+
+      <div class="meeting-invite-preview" id="invitePreview">Generating team invite...</div>
+    </section>
+
+  </main>
+
+  <!-- CUSTOM CITY MODAL DIALOG -->
+  <dialog id="customCityDialog" class="custom-city-dialog">
+    <div class="dialog-title-bar">
+      <span>+ ADD CUSTOM CITY &amp; TIMEZONE</span>
+      <span style="cursor:pointer; font-size:1.2rem;" onclick="closeCustomCityModal()">&times;</span>
+    </div>
+
+    <div class="cfg-field" style="margin-bottom:1rem;">
+      <label class="cfg-label">CITY &amp; REGION NAME</label>
+      <input type="text" id="customCityName" class="cfg-input" placeholder="e.g. Montego Bay, Jamaica or Kathmandu, Nepal">
+    </div>
+
+    <div class="cfg-field" style="margin-bottom:1rem;">
+      <label class="cfg-label">UTC OFFSET (e.g. -5, +1, +5.5, +5.75, +9.5)</label>
+      <input type="number" id="customCityOffset" class="cfg-input" step="0.25" placeholder="-5.0">
+    </div>
+
+    <div class="cfg-field" style="margin-bottom:1.5rem;">
+      <label class="cfg-label">TIMEZONE ABBREVIATION</label>
+      <input type="text" id="customCityTz" class="cfg-input" placeholder="e.g. EST, NPT, IST, ACST">
+    </div>
+
+    <div style="display:flex; gap:0.75rem;">
+      <button class="btn-snap-sweet" style="flex:1;" onclick="submitCustomCity()">ADD TO REGISTRY</button>
+      <button class="btn-preset" onclick="closeCustomCityModal()">CANCEL</button>
+    </div>
+  </dialog>
+
+  <!-- Toast Notification -->
+  <div class="toast-pill" id="toastPill">Invite copied to clipboard</div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div style="font-size:0.85rem; color:var(--cream-muted);">
+        &copy; 2026 ALUMUNGANDR Platform. All rights reserved. Intellectual Property of David Anthony Jones ("Alu").
+      </div>
+      <div class="footer-links">
+        <a href="/">Apps & Ecosystem</a>
+        <a href="/speedtest">Speed Test</a>
+        <a href="/invoice">Invoice Studio</a>
+        <a href="/resizer">Social Resizer</a>
+        <a href="/subscriptions">Reality Check</a>
+        <a href="/ip">What Is My IP</a>
+        <a href="/timezone" class="active">Meeting Matcher</a>
+        <a href="/about">About & Journey</a>
+        <a href="/faq">FAQ Matrix</a>
+        <a href="/contact">Contact Uplink</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // --- 1. Global City Registry (50+ Hubs + Custom Hubs) ---
+    let WORLD_CITIES = [
+      { id: 'kin', name: 'Kingston, Jamaica', offset: -5, tz: 'EST' },
+      { id: 'lon', name: 'London, UK', offset: 1, tz: 'BST' },
+      { id: 'nyc', name: 'New York, USA', offset: -4, tz: 'EDT' },
+      { id: 'sfo', name: 'San Francisco, USA', offset: -7, tz: 'PDT' },
+      { id: 'tok', name: 'Tokyo, Japan', offset: 9, tz: 'JST' },
+      { id: 'syd', name: 'Sydney, Australia', offset: 10, tz: 'AEST' },
+      { id: 'par', name: 'Paris, France', offset: 2, tz: 'CEST' },
+      { id: 'ber', name: 'Berlin, Germany', offset: 2, tz: 'CEST' },
+      { id: 'dxb', name: 'Dubai, UAE', offset: 4, tz: 'GST' },
+      { id: 'sin', name: 'Singapore', offset: 8, tz: 'SGT' },
+      { id: 'hkg', name: 'Hong Kong', offset: 8, tz: 'HKT' },
+      { id: 'del', name: 'New Delhi, India', offset: 5.5, tz: 'IST' },
+      { id: 'sao', name: 'São Paulo, Brazil', offset: -3, tz: 'BRT' },
+      { id: 'tor', name: 'Toronto, Canada', offset: -4, tz: 'EDT' },
+      { id: 'chi', name: 'Chicago, USA', offset: -5, tz: 'CDT' },
+      { id: 'lax', name: 'Los Angeles, USA', offset: -7, tz: 'PDT' },
+      { id: 'sea', name: 'Seattle, USA', offset: -7, tz: 'PDT' },
+      { id: 'den', name: 'Denver, USA', offset: -6, tz: 'MDT' },
+      { id: 'phx', name: 'Phoenix, USA', offset: -7, tz: 'MST' },
+      { id: 'hnl', name: 'Honolulu, USA', offset: -10, tz: 'HST' },
+      { id: 'akl', name: 'Auckland, New Zealand', offset: 12, tz: 'NZST' },
+      { id: 'sel', name: 'Seoul, South Korea', offset: 9, tz: 'KST' },
+      { id: 'bkk', name: 'Bangkok, Thailand', offset: 7, tz: 'ICT' },
+      { id: 'ams', name: 'Amsterdam, Netherlands', offset: 2, tz: 'CEST' },
+      { id: 'zrh', name: 'Zurich, Switzerland', offset: 2, tz: 'CEST' },
+      { id: 'mad', name: 'Madrid, Spain', offset: 2, tz: 'CEST' },
+      { id: 'sto', name: 'Stockholm, Sweden', offset: 2, tz: 'CEST' },
+      { id: 'dub', name: 'Dublin, Ireland', offset: 1, tz: 'IST' },
+      { id: 'lis', name: 'Lisbon, Portugal', offset: 1, tz: 'WEST' },
+      { id: 'ath', name: 'Athens, Greece', offset: 3, tz: 'EEST' },
+      { id: 'ist', name: 'Istanbul, Turkey', offset: 3, tz: 'TRT' },
+      { id: 'cai', name: 'Cairo, Egypt', offset: 3, tz: 'EEST' },
+      { id: 'nbo', name: 'Nairobi, Kenya', offset: 3, tz: 'EAT' },
+      { id: 'jnb', name: 'Johannesburg, South Africa', offset: 2, tz: 'SAST' },
+      { id: 'los', name: 'Lagos, Nigeria', offset: 1, tz: 'WAT' },
+      { id: 'bue', name: 'Buenos Aires, Argentina', offset: -3, tz: 'ART' },
+      { id: 'scl', name: 'Santiago, Chile', offset: -4, tz: 'CLT' },
+      { id: 'mex', name: 'Mexico City, Mexico', offset: -6, tz: 'CST' },
+      { id: 'yvr', name: 'Vancouver, Canada', offset: -7, tz: 'PDT' },
+      { id: 'tlv', name: 'Tel Aviv, Israel', offset: 3, tz: 'IDT' },
+      { id: 'jkt', name: 'Jakarta, Indonesia', offset: 7, tz: 'WIB' },
+      { id: 'mnl', name: 'Manila, Philippines', offset: 8, tz: 'PST' },
+      { id: 'tpe', name: 'Taipei, Taiwan', offset: 8, tz: 'CST' },
+      { id: 'mel', name: 'Melbourne, Australia', offset: 10, tz: 'AEST' },
+      { id: 'per', name: 'Perth, Australia', offset: 8, tz: 'AWST' }
+    ];
+
+    // Presets
+    const PRESETS = {
+      globalQuad: [
+        { cityId: 'kin', alias: 'Alu (Lead Eng)', workStart: 9, workEnd: 17 },
+        { cityId: 'lon', alias: 'Sarah (Design)', workStart: 9, workEnd: 17 },
+        { cityId: 'nyc', alias: 'Dave (DevOps)', workStart: 9, workEnd: 17 },
+        { cityId: 'sfo', alias: 'Alex (Product)', workStart: 9, workEnd: 17 }
+      ],
+      transatlantic: [
+        { cityId: 'lon', alias: 'London HQ', workStart: 9, workEnd: 17 },
+        { cityId: 'par', alias: 'Paris Studio', workStart: 9, workEnd: 17 },
+        { cityId: 'nyc', alias: 'New York Team', workStart: 9, workEnd: 17 },
+        { cityId: 'sfo', alias: 'West Coast Eng', workStart: 9, workEnd: 17 }
+      ],
+      euroAsia: [
+        { cityId: 'lon', alias: 'London HQ', workStart: 9, workEnd: 17 },
+        { cityId: 'dxb', alias: 'Dubai Hub', workStart: 9, workEnd: 17 },
+        { cityId: 'sin', alias: 'Singapore Ops', workStart: 9, workEnd: 17 },
+        { cityId: 'tok', alias: 'Tokyo Studio', workStart: 9, workEnd: 17 }
+      ],
+      usCoast: [
+        { cityId: 'sfo', alias: 'San Francisco', workStart: 9, workEnd: 17 },
+        { cityId: 'den', alias: 'Denver', workStart: 9, workEnd: 17 },
+        { cityId: 'chi', alias: 'Chicago', workStart: 9, workEnd: 17 },
+        { cityId: 'nyc', alias: 'New York', workStart: 9, workEnd: 17 }
+      ]
+    };
+
+    // Active slots (default 4, supports 2 to 6)
+    let activeSlots = JSON.parse(JSON.stringify(PRESETS.globalQuad));
+    let currentUtcHour = 15.0; // 3:00 PM UTC default
+    let isAudioActive = true;
+    let audioCtx = null;
+
+    // --- 2. Word & Letter Ripple Animation Physics ---
+    function initWordRipples() {
+      const targets = document.querySelectorAll('.ripple-target');
+      targets.forEach(el => {
+        const text = el.innerText.trim();
+        el.innerHTML = '';
+        const words = text.split(' ');
+        words.forEach((word, wIdx) => {
+          const wordSpan = document.createElement('span');
+          wordSpan.style.display = 'inline-block';
+          wordSpan.style.whiteSpace = 'nowrap';
+          for (let i = 0; i < word.length; i++) {
+            const charSpan = document.createElement('span');
+            charSpan.className = 'ripple-char';
+            charSpan.innerText = word[i];
+            charSpan.addEventListener('mouseenter', (e) => {
+              triggerLocalRipple(e.target);
+            });
+            wordSpan.appendChild(charSpan);
+          }
+          el.appendChild(wordSpan);
+          if (wIdx < words.length - 1) {
+            el.appendChild(document.createTextNode(' '));
+          }
+        });
+      });
+    }
+
+    function triggerLocalRipple(charElem) {
+      charElem.style.transform = 'translateY(-10px) scale(1.25)';
+      charElem.style.color = '#ffffff';
+      charElem.style.textShadow = '0 0 20px var(--blush-accent)';
+      setTimeout(() => {
+        charElem.style.transform = 'none';
+        charElem.style.color = '';
+        charElem.style.textShadow = '';
+      }, 350);
+    }
+
+    function triggerGlobalShockwave(originX, originY) {
+      const chars = document.querySelectorAll('.ripple-char');
+      chars.forEach((c, idx) => {
+        setTimeout(() => {
+          c.classList.remove('wave-ripple-active');
+          void c.offsetWidth;
+          c.classList.add('wave-ripple-active');
+          setTimeout(() => c.classList.remove('wave-ripple-active'), 650);
+        }, idx * 6);
+      });
+
+      if (window._addShockwave) {
+        window._addShockwave(originX, originY);
+      }
+    }
+
+    // --- 3. Shockwave Canvas Particles on Snap ---
+    let shockwaves = [];
+    function initShockwaveCanvas() {
+      const cv = document.getElementById('shockwaveCanvas');
+      const ctx = cv.getContext('2d');
+      function resize() {
+        cv.width = window.innerWidth;
+        cv.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      window._addShockwave = function(x, y) {
+        shockwaves.push({ x: x || window.innerWidth / 2, y: y || window.innerHeight / 2, radius: 10, maxRadius: 550, opacity: 0.85 });
+      };
+
+      function loop() {
+        ctx.clearRect(0, 0, cv.width, cv.height);
+        for (let i = shockwaves.length - 1; i >= 0; i--) {
+          const sw = shockwaves[i];
+          sw.radius += 20;
+          sw.opacity -= 0.025;
+          if (sw.opacity <= 0 || sw.radius >= sw.maxRadius) {
+            shockwaves.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(6, 214, 160, ${sw.opacity})`;
+          ctx.lineWidth = 3;
+          ctx.shadowBlur = 25;
+          ctx.shadowColor = '#06d6a0';
+          ctx.stroke();
+          ctx.restore();
+        }
+        requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    // --- 4. Interactive Celestial Sky Simulation Engine ---
+    function initCelestialGraphic() {
+      const cv = document.getElementById('celestialCanvas');
+      const ctx = cv.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = 560;
+      const h = 120;
+      cv.width = w * dpr;
+      cv.height = h * dpr;
+      ctx.scale(dpr, dpr);
+
+      // Pre-generate static stars
+      const stars = [];
+      for (let i = 0; i < 45; i++) {
+        stars.push({
+          x: Math.random() * w,
+          y: Math.random() * (h * 0.7),
+          r: Math.random() * 1.5 + 0.5,
+          alpha: Math.random() * 0.7 + 0.3,
+          twinkleSpeed: Math.random() * 0.04 + 0.01
+        });
+      }
+
+      let timeAnim = 0;
+
+      function draw() {
+        timeAnim += 0.03;
+        ctx.clearRect(0, 0, w, h);
+        const progress = currentUtcHour / 24;
+
+        // Dynamic Sky Atmosphere Gradient
+        const skyGrad = ctx.createLinearGradient(0, 0, w, h);
+        if (progress > 0.25 && progress < 0.75) {
+          // Daylight dominance
+          skyGrad.addColorStop(0, 'rgba(40, 25, 60, 0.6)');
+          skyGrad.addColorStop(1, 'rgba(15, 20, 45, 0.85)');
+        } else {
+          // Night dominance
+          skyGrad.addColorStop(0, 'rgba(10, 12, 28, 0.9)');
+          skyGrad.addColorStop(1, 'rgba(5, 7, 18, 0.95)');
+        }
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Twinkling Starfield in night sky
+        stars.forEach(s => {
+          const isNearSun = Math.abs(s.x - (40 + (w - 80) * progress)) < 90;
+          const currentAlpha = isNearSun ? 0.05 : (s.alpha * (0.6 + Math.sin(timeAnim * 2 + s.x) * 0.4));
+          ctx.fillStyle = `rgba(255, 255, 255, ${currentAlpha})`;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Undulating Horizon Arc
+        ctx.beginPath();
+        ctx.moveTo(30, 85);
+        ctx.bezierCurveTo(w * 0.3, 35, w * 0.7, 35, w - 30, 85);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Sun Marker
+        const sunX = 30 + (w - 60) * progress;
+        const sunY = 85 - Math.sin(progress * Math.PI) * 60;
+
+        // Solar Corona Flare Rays
+        ctx.save();
+        ctx.translate(sunX, sunY);
+        ctx.rotate(timeAnim * 0.5);
+        ctx.strokeStyle = 'rgba(255, 209, 102, 0.25)';
+        ctx.lineWidth = 1.5;
+        for (let ray = 0; ray < 8; ray++) {
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(24 * Math.cos((ray * Math.PI) / 4), 24 * Math.sin((ray * Math.PI) / 4));
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Glowing Sun Orb
+        const sunGrad = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 26);
+        sunGrad.addColorStop(0, '#ffffff');
+        sunGrad.addColorStop(0.3, '#ffd166');
+        sunGrad.addColorStop(0.7, 'rgba(255, 209, 102, 0.4)');
+        sunGrad.addColorStop(1, 'rgba(255, 209, 102, 0)');
+
+        ctx.fillStyle = sunGrad;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 26, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Moon Marker in Symmetrical Opposition
+        const moonProgress = (progress + 0.5) % 1;
+        const moonX = 30 + (w - 60) * moonProgress;
+        const moonY = 85 - Math.sin(moonProgress * Math.PI) * 60;
+
+        const moonGrad = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, 14);
+        moonGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+        moonGrad.addColorStop(0.6, 'rgba(255, 255, 255, 0.3)');
+        moonGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+        ctx.fillStyle = moonGrad;
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    // --- 5. Harmonic Web Audio Sweet Spot Chime ---
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+    }
+
+    function playGoldenChime() {
+      if (!isAudioActive) return;
+      initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const now = audioCtx.currentTime;
+      // Multi-tone harmonic chime: F#5 -> A#5 -> C#6 (Major Triad)
+      [739.99, 932.33, 1108.73].forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+        gain.gain.setValueAtTime(0.09, now + idx * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + 0.9);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.08);
+        osc.stop(now + idx * 0.08 + 0.9);
+      });
+    }
+
+    // --- 6. Time Formatting & Status Classification ---
+    function formatTime(decimalHour) {
+      const normalized = (decimalHour + 24) % 24;
+      const h = Math.floor(normalized);
+      const m = Math.round((normalized - h) * 60);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const displayH = h % 12 === 0 ? 12 : h % 12;
+      const displayM = m === 0 ? '00' : (m < 10 ? '0' + m : m);
+      return `${displayH}:${displayM} ${ampm}`;
+    }
+
+    function formatUtc(decimalHour) {
+      const normalized = (decimalHour + 24) % 24;
+      const h = Math.floor(normalized);
+      const m = Math.round((normalized - h) * 60);
+      const hh = h < 10 ? '0' + h : h;
+      const mm = m === 0 ? '00' : (m < 10 ? '0' + m : m);
+      return `${hh}:${mm} UTC`;
+    }
+
+    function getHourStatus(localHour, workStart = 9, workEnd = 17) {
+      const h = (localHour + 24) % 24;
+      if (h >= workStart && h < workEnd) return 'business'; // 🟢 Work
+      if (h >= 7 && h < 22) return 'awake';                // 🟡 Shoulder awake
+      return 'sleep';                                      // 🔴 Asleep
+    }
+
+    // --- 7. Golden Window Detection Algorithm ---
+    function computeGoldenWindows() {
+      const durationHours = parseFloat(document.getElementById('cfgDuration')?.value || 60) / 60;
+      const scores = [];
+
+      for (let h = 0; h < 24; h += 0.5) {
+        let businessCount = 0;
+        let sleepCount = 0;
+
+        activeSlots.forEach(slot => {
+          const city = WORLD_CITIES.find(c => c.id === slot.cityId);
+          if (!city) return;
+          const localH = (h + city.offset + 24) % 24;
+          const st = getHourStatus(localH, slot.workStart, slot.workEnd);
+          if (st === 'business') businessCount++;
+          if (st === 'sleep') sleepCount++;
+        });
+
+        scores.push({
+          utcHour: h,
+          businessCount,
+          sleepCount,
+          allBusiness: businessCount === activeSlots.length,
+          allAwake: sleepCount === 0
+        });
+      }
+
+      // 1. Check for 100% Golden Windows
+      const goldenHours = scores.filter(s => s.allBusiness);
+      if (goldenHours.length > 0) {
+        const start = goldenHours[0].utcHour;
+        const end = (goldenHours[goldenHours.length - 1].utcHour + 1);
+        return {
+          type: 'optimal',
+          startUtc: start,
+          endUtc: end,
+          headline: `${formatUtc(start)} – ${formatUtc(end)} (${(end - start)} Hours Available)`,
+          subtext: `100% Planetary Synchrony! All ${activeSlots.length} teammates are within their custom business hours.`
+        };
+      }
+
+      // 2. Fallback: Zero sleepers
+      const awakeHours = scores.filter(s => s.allAwake);
+      if (awakeHours.length > 0) {
+        awakeHours.sort((a, b) => b.businessCount - a.businessCount);
+        const best = awakeHours[0];
+        return {
+          type: 'compromise',
+          startUtc: best.utcHour,
+          endUtc: best.utcHour + durationHours,
+          headline: `${formatUtc(best.utcHour)} – ${formatUtc(best.utcHour + durationHours)} (Best Compromise)`,
+          subtext: `Zero sleepers! ${best.businessCount} of ${activeSlots.length} participants are in business hours, with others in acceptable shoulder hours.`
+        };
+      }
+
+      // 3. Minimum sleepers
+      scores.sort((a, b) => a.sleepCount - b.sleepCount);
+      const best = scores[0];
+      return {
+        type: 'asymmetric',
+        startUtc: best.utcHour,
+        endUtc: best.utcHour + durationHours,
+        headline: `${formatUtc(best.utcHour)} – ${formatUtc(best.utcHour + durationHours)} (Hard Compromise)`,
+        subtext: `Opposing timezones. This window minimizes sleep disruption across the team.`
+      };
+    }
+
+    // --- 8. Render City Lanes Stack with Full In-Line Edit Controls ---
+    function renderCityLanes() {
+      const container = document.getElementById('cityLanesContainer');
+      container.innerHTML = '';
+
+      activeSlots.forEach((slot, index) => {
+        const city = WORLD_CITIES.find(c => c.id === slot.cityId) || WORLD_CITIES[0];
+        const localHour = (currentUtcHour + city.offset + 24) % 24;
+        const currentStatus = getHourStatus(localHour, slot.workStart, slot.workEnd);
+
+        const card = document.createElement('div');
+        card.className = 'city-lane-card';
+        card.id = `cityLane_${index}`;
+
+        // Options dropdown
+        let cityOptionsHtml = '';
+        WORLD_CITIES.forEach(c => {
+          const selected = c.id === city.id ? 'selected' : '';
+          const offsetSign = c.offset >= 0 ? `+${c.offset}` : c.offset;
+          cityOptionsHtml += `<option value="${c.id}" ${selected}>${c.name} (${c.tz} UTC${offsetSign})</option>`;
+        });
+
+        const statusLabel = currentStatus === 'business' ? 'Business Hours' : (currentStatus === 'awake' ? 'Awake / Shoulder' : 'Sleeping');
+        const badgeClass = currentStatus === 'business' ? 'badge-business' : (currentStatus === 'awake' ? 'badge-awake' : 'badge-sleep');
+
+        card.innerHTML = `
+          <div class="city-lane-top">
+            <div class="city-identity">
+              <div class="city-slot-num">0${index + 1}</div>
+              <select class="city-name-select" onchange="changeCitySlot(${index}, this.value)">
+                ${cityOptionsHtml}
+              </select>
+              <input type="text" class="participant-alias" value="${slot.alias}" placeholder="Participant Name" onchange="changeAlias(${index}, this.value)">
+            </div>
+            
+            <div class="city-lane-controls">
+              <button class="btn-edit-hours" onclick="toggleHoursEditor(${index})" title="Customize work schedule">
+                ⚙️ Hours: ${slot.workStart}:00 - ${slot.workEnd}:00
+              </button>
+              ${activeSlots.length > 2 ? `<button class="btn-delete-slot" onclick="deleteSlot(${index})" title="Remove participant">🗑️</button>` : ''}
+              <div class="city-time-badge ${badgeClass}" id="timeBadge_${index}">
+                <span>${formatTime(localHour)}</span>
+                <span style="font-size:0.75rem; font-weight:500;">(${statusLabel})</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expandable Working Hours Editor Panel -->
+          <div class="hours-editor-panel" id="hoursPanel_${index}">
+            <div class="hours-inputs-wrap">
+              <span>WORK START:</span>
+              <select class="select-hour" onchange="updateWorkingHours(${index}, 'start', this.value)">
+                ${[6, 7, 8, 9, 10, 11, 12].map(h => `<option value="${h}" ${h === slot.workStart ? 'selected' : ''}>${h}:00 AM</option>`).join('')}
+              </select>
+              <span>WORK END:</span>
+              <select class="select-hour" onchange="updateWorkingHours(${index}, 'end', this.value)">
+                ${[15, 16, 17, 18, 19, 20, 21].map(h => `<option value="${h}" ${h === slot.workEnd ? 'selected' : ''}>${h % 12 || 12}:00 PM</option>`).join('')}
+              </select>
+            </div>
+            <div class="hour-schedule-presets">
+              <button class="btn-sched-chip" onclick="applySchedulePreset(${index}, 9, 17)">Standard (9-5)</button>
+              <button class="btn-sched-chip" onclick="applySchedulePreset(${index}, 7, 15)">Early Bird (7-3)</button>
+              <button class="btn-sched-chip" onclick="applySchedulePreset(${index}, 12, 20)">Night Owl (12-8)</button>
+              <button class="btn-sched-chip" onclick="applySchedulePreset(${index}, 10, 18)">Core (10-6)</button>
+            </div>
+          </div>
+
+          <div class="hours-bar-visual" id="hoursBar_${index}"></div>
+        `;
+
+        container.appendChild(card);
+
+        // Populate 24 Hour Blocks
+        const hoursBar = card.querySelector(`#hoursBar_${index}`);
+        for (let h = 0; h < 24; h++) {
+          const blockLocalHour = (h + city.offset + 24) % 24;
+          const blockStatus = getHourStatus(blockLocalHour, slot.workStart, slot.workEnd);
+          const block = document.createElement('div');
+          block.className = `hour-block block-${blockStatus} ${Math.floor(currentUtcHour) === h ? 'active-cursor' : ''}`;
+          block.innerText = Math.floor(blockLocalHour);
+          block.title = `UTC ${h}:00 -> Local ${formatTime(blockLocalHour)} (${blockStatus})`;
+          
+          block.addEventListener('click', () => {
+            document.getElementById('timeSlider').value = h;
+            setUtcHour(h);
+          });
+          hoursBar.appendChild(block);
+        }
+      });
+    }
+
+    function updateActiveDisplay() {
+      document.getElementById('activeUtcReadout').innerText = formatUtc(currentUtcHour);
+
+      let availableCount = 0;
+      activeSlots.forEach((slot, index) => {
+        const city = WORLD_CITIES.find(c => c.id === slot.cityId) || WORLD_CITIES[0];
+        const localHour = (currentUtcHour + city.offset + 24) % 24;
+        const status = getHourStatus(localHour, slot.workStart, slot.workEnd);
+        if (status === 'business' || status === 'awake') availableCount++;
+
+        const badge = document.getElementById(`timeBadge_${index}`);
+        if (badge) {
+          const statusLabel = status === 'business' ? 'Business Hours' : (status === 'awake' ? 'Awake / Shoulder' : 'Sleeping');
+          badge.className = `city-time-badge badge-${status}`;
+          badge.innerHTML = `<span>${formatTime(localHour)}</span><span style="font-size:0.75rem; font-weight:500;">(${statusLabel})</span>`;
+        }
+
+        const hoursBar = document.getElementById(`hoursBar_${index}`);
+        if (hoursBar) {
+          const blocks = hoursBar.children;
+          for (let b = 0; b < blocks.length; b++) {
+            if (b === Math.floor(currentUtcHour)) {
+              blocks[b].classList.add('active-cursor');
+            } else {
+              blocks[b].classList.remove('active-cursor');
+            }
+          }
+        }
+      });
+
+      document.getElementById('currentOverlapStatus').innerText = `${availableCount} / ${activeSlots.length} Participants Available`;
+
+      // Update Golden Spotlight
+      const golden = computeGoldenWindows();
+      document.getElementById('goldenHeadline').innerText = golden.headline;
+      document.getElementById('goldenSubtext').innerText = golden.subtext;
+
+      // Update Top Dots Bar
+      updateTopDotsBar();
+
+      // Update Meeting Invite Text
+      updateMeetingInvite(golden);
+    }
+
+    function updateTopDotsBar() {
+      const dotsBar = document.getElementById('dotsBar');
+      let html = '';
+      activeSlots.forEach((s, idx) => {
+        const c = WORLD_CITIES.find(city => city.id === s.cityId) || WORLD_CITIES[0];
+        html += `<span class="dot-item"><span class="dot-pulse"></span> ${c.name.split(',')[0].toUpperCase()}</span>`;
+        if (idx < activeSlots.length - 1) html += `<span>&bull;</span>`;
+      });
+      html += `<span>&bull;</span><span style="color:var(--green-business); font-weight:700;">PLANETARY SYNCHRONY</span>`;
+      dotsBar.innerHTML = html;
+    }
+
+    function setUtcHour(h) {
+      currentUtcHour = parseFloat(h);
+      updateActiveDisplay();
+    }
+
+    function changeCitySlot(slotIndex, newCityId) {
+      activeSlots[slotIndex].cityId = newCityId;
+      renderCityLanes();
+      updateActiveDisplay();
+      showToast(`Slot 0${slotIndex + 1} city updated`);
+    }
+
+    function changeAlias(slotIndex, newAlias) {
+      activeSlots[slotIndex].alias = newAlias;
+      updateActiveDisplay();
+    }
+
+    // --- 9. Full Working Hours & Slot Customization ---
+    function toggleHoursEditor(slotIndex) {
+      const panel = document.getElementById(`hoursPanel_${slotIndex}`);
+      if (panel) panel.classList.toggle('open');
+    }
+
+    function updateWorkingHours(slotIndex, field, value) {
+      const val = parseInt(value, 10);
+      if (field === 'start') activeSlots[slotIndex].workStart = val;
+      if (field === 'end') activeSlots[slotIndex].workEnd = val;
+      renderCityLanes();
+      updateActiveDisplay();
+      showToast(`Updated schedule for Slot 0${slotIndex + 1}`);
+    }
+
+    function applySchedulePreset(slotIndex, start, end) {
+      activeSlots[slotIndex].workStart = start;
+      activeSlots[slotIndex].workEnd = end;
+      renderCityLanes();
+      updateActiveDisplay();
+      showToast(`Applied ${start}:00 - ${end}:00 schedule to Slot 0${slotIndex + 1}`);
+    }
+
+    function addNewSlot() {
+      if (activeSlots.length >= 6) {
+        showToast('Maximum 6 participant slots reached');
+        return;
+      }
+      const unusedCity = WORLD_CITIES.find(c => !activeSlots.some(s => s.cityId === c.id)) || WORLD_CITIES[0];
+      activeSlots.push({
+        cityId: unusedCity.id,
+        alias: `Teammate 0${activeSlots.length + 1}`,
+        workStart: 9,
+        workEnd: 17
+      });
+      renderCityLanes();
+      updateActiveDisplay();
+      showToast(`Added Slot 0${activeSlots.length}`);
+    }
+
+    function deleteSlot(slotIndex) {
+      if (activeSlots.length <= 2) {
+        showToast('Minimum 2 participants required');
+        return;
+      }
+      activeSlots.splice(slotIndex, 1);
+      renderCityLanes();
+      updateActiveDisplay();
+      showToast('Participant slot removed');
+    }
+
+    // --- 10. Custom City Registry Modal ---
+    function openCustomCityModal() {
+      document.getElementById('customCityDialog').showModal();
+    }
+
+    function closeCustomCityModal() {
+      document.getElementById('customCityDialog').close();
+    }
+
+    function submitCustomCity() {
+      const name = document.getElementById('customCityName').value.trim();
+      const offset = parseFloat(document.getElementById('customCityOffset').value);
+      const tz = document.getElementById('customCityTz').value.trim().toUpperCase() || 'CUSTOM';
+
+      if (!name || isNaN(offset)) {
+        showToast('Please enter a valid city name and numeric UTC offset');
+        return;
+      }
+
+      const id = 'custom_' + Date.now();
+      const newCity = { id, name, offset, tz };
+      WORLD_CITIES.unshift(newCity); // add to top of dropdown
+
+      // Assign to last slot
+      activeSlots[activeSlots.length - 1].cityId = id;
+
+      closeCustomCityModal();
+      renderCityLanes();
+      updateActiveDisplay();
+      showToast(`Added custom city: ${name} (UTC${offset >= 0 ? '+' : ''}${offset})`);
+    }
+
+    // --- 11. Presets & LocalStorage Team Persistence ---
+    function loadPreset(presetKey) {
+      const preset = PRESETS[presetKey];
+      if (!preset) return;
+      activeSlots = JSON.parse(JSON.stringify(preset));
+      renderCityLanes();
+      snapToGoldenWindow();
+      showToast(`Loaded ${presetKey.toUpperCase()} preset`);
+    }
+
+    function saveTeamToStorage() {
+      try {
+        localStorage.setItem('alu_saved_team', JSON.stringify(activeSlots));
+        showToast('Team configuration saved to browser storage!');
+      } catch (e) {
+        showToast('Unable to save to localStorage');
+      }
+    }
+
+    function loadTeamFromStorage() {
+      try {
+        const data = localStorage.getItem('alu_saved_team');
+        if (data) {
+          activeSlots = JSON.parse(data);
+          renderCityLanes();
+          snapToGoldenWindow();
+          showToast('Loaded saved team from storage!');
+        } else {
+          showToast('No saved team found in storage');
+        }
+      } catch (e) {
+        showToast('Error loading team');
+      }
+    }
+
+    function resetToDefaultTeam() {
+      activeSlots = JSON.parse(JSON.stringify(PRESETS.globalQuad));
+      renderCityLanes();
+      snapToGoldenWindow();
+      showToast('Reset team to default Global Quad');
+    }
+
+    function snapToGoldenWindow() {
+      const golden = computeGoldenWindows();
+      document.getElementById('timeSlider').value = golden.startUtc;
+      setUtcHour(golden.startUtc);
+      playGoldenChime();
+
+      // Trigger Visual Shockwave & Aura Pulse
+      const card = document.getElementById('goldenCard');
+      card.classList.remove('pulse-aura');
+      void card.offsetWidth;
+      card.classList.add('pulse-aura');
+
+      const btn = document.getElementById('btnSnapGolden');
+      const rect = btn.getBoundingClientRect();
+      triggerGlobalShockwave(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+      showToast(`Snapped to sweet spot: ${formatUtc(golden.startUtc)}`);
+    }
+
+    // --- 12. Meeting Export & Invite Generator ---
+    function updateMeetingInvite(golden) {
+      const targetUtc = currentUtcHour;
+      const title = document.getElementById('cfgMeetingTitle')?.value || 'Global Team Sync';
+      const duration = parseInt(document.getElementById('cfgDuration')?.value || '60', 10);
+      const agenda = document.getElementById('cfgAgenda')?.value || 'Technical Alignment';
+      const link = document.getElementById('cfgLink')?.value || 'Google Meet / Zoom';
+
+      let timesList = '';
+      activeSlots.forEach(slot => {
+        const city = WORLD_CITIES.find(c => c.id === slot.cityId);
+        if (!city) return;
+        const localH = (targetUtc + city.offset + 24) % 24;
+        const localEndH = (localH + duration / 60 + 24) % 24;
+        timesList += `  • ${slot.alias} (${city.name}): ${formatTime(localH)} - ${formatTime(localEndH)} (${city.tz})
+`;
+      });
+
+      const invite = 
+`📅 ${title.toUpperCase()} // ALUMUNGANDR™
+=====================================================
+DURATION: ${duration} Minutes
+UTC REFERENCE: ${formatUtc(targetUtc)} - ${formatUtc(targetUtc + duration / 60)}
+GOLDEN WINDOW STATUS: ${golden.headline}
+
+PARTICIPANT LOCAL TIMES:
+${timesList}
+AGENDA: ${agenda}
+PLATFORM / LINK: ${link}
+=====================================================
+Generated by Alumungandr Global Timezone Matcher`;
+
+      document.getElementById('invitePreview').innerText = invite;
+    }
+
+    function copyToClipboard(text, msg = 'Copied to clipboard!') {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(msg);
+      });
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toastPill');
+      t.innerText = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2400);
+    }
+
+    // .ICS File Downloader
+    function downloadIcs() {
+      const now = new Date();
+      const targetDate = new Date(now.getTime() + 86400000); // Tomorrow
+      const utcFullHour = Math.floor(currentUtcHour);
+      const utcMinutes = Math.round((currentUtcHour - utcFullHour) * 60);
+      const durationMin = parseInt(document.getElementById('cfgDuration')?.value || '60', 10);
+      const title = document.getElementById('cfgMeetingTitle')?.value || 'Global Team Synchrony Sync';
+      const agenda = document.getElementById('cfgAgenda')?.value || 'Team Alignment';
+      const meetLink = document.getElementById('cfgLink')?.value || 'Google Meet';
+
+      targetDate.setUTCHours(utcFullHour, utcMinutes, 0, 0);
+      const endDate = new Date(targetDate.getTime() + durationMin * 60000);
+
+      function toIcsFormat(d) {
+        return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      }
+
+      const icsData = 
+`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Alumungandr//Global Timezone Meeting Matcher//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+SUMMARY:${title}
+DESCRIPTION:${agenda}\n\nScheduled via Alumungandr Timezone Matcher.
+DTSTART:${toIcsFormat(targetDate)}
+DTEND:${toIcsFormat(endDate)}
+STATUS:CONFIRMED
+LOCATION:${meetLink}
+END:VEVENT
+END:VCALENDAR`;
+
+      const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `Alumungandr-${title.replace(/\s+/g, '-')}.ics`;
+      a.click();
+      showToast('Downloaded .ICS Calendar Event');
+    }
+
+    function openGoogleCalendar() {
+      const now = new Date();
+      const targetDate = new Date(now.getTime() + 86400000);
+      const utcFullHour = Math.floor(currentUtcHour);
+      const utcMinutes = Math.round((currentUtcHour - utcFullHour) * 60);
+      const durationMin = parseInt(document.getElementById('cfgDuration')?.value || '60', 10);
+      const title = encodeURIComponent(document.getElementById('cfgMeetingTitle')?.value || 'Global Team Synchrony Sync');
+      const details = encodeURIComponent(document.getElementById('invitePreview').innerText);
+
+      targetDate.setUTCHours(utcFullHour, utcMinutes, 0, 0);
+      const endDate = new Date(targetDate.getTime() + durationMin * 60000);
+
+      function toGcalFormat(d) {
+        return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      }
+
+      const dates = `${toGcalFormat(targetDate)}/${toGcalFormat(endDate)}`;
+      const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&dates=${dates}`;
+      window.open(url, '_blank');
+    }
+
+    // --- 13. Initialization & Listeners ---
+    document.addEventListener('DOMContentLoaded', () => {
+      initWordRipples();
+      initShockwaveCanvas();
+      initCelestialGraphic();
+      renderCityLanes();
+      updateActiveDisplay();
+
+      // Scrubber input
+      document.getElementById('timeSlider').addEventListener('input', (e) => {
+        setUtcHour(e.target.value);
+      });
+
+      // Guide Accordion Toggle
+      const guideToggle = document.getElementById('btnGuideToggle');
+      const guideContent = document.getElementById('guideContent');
+      const guideArrow = document.getElementById('guideArrow');
+      guideToggle.addEventListener('click', () => {
+        const isOpen = guideContent.classList.toggle('open');
+        guideArrow.innerHTML = isOpen ? '&#9650;' : '&#9660;';
+      });
+
+      // Snap Button
+      document.getElementById('btnSnapGolden').addEventListener('click', snapToGoldenWindow);
+
+      // Audio Toggle
+      const audioBtn = document.getElementById('btnAudioToggle');
+      audioBtn.addEventListener('click', () => {
+        initAudio();
+        isAudioActive = !isAudioActive;
+        document.getElementById('audioIcon').innerHTML = isAudioActive ? '&#128266;' : '&#128263;';
+        document.getElementById('audioText').innerText = isAudioActive ? 'Chime: On' : 'Chime: Off';
+        showToast(`Sound chimes ${isAudioActive ? 'enabled' : 'muted'}`);
+        if (isAudioActive) playGoldenChime();
+      });
+
+      // Meeting parameters live updates
+      ['cfgMeetingTitle', 'cfgDuration', 'cfgLink', 'cfgAgenda'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', () => updateActiveDisplay());
+          el.addEventListener('change', () => updateActiveDisplay());
+        }
+      });
+
+      // Export Actions
+      document.getElementById('btnCopyInvite').addEventListener('click', () => {
+        copyToClipboard(document.getElementById('invitePreview').innerText, 'Meeting invite copied to clipboard');
+      });
+
+      document.getElementById('btnGoogleCalendar').addEventListener('click', openGoogleCalendar);
+      document.getElementById('btnDownloadIcs').addEventListener('click', downloadIcs);
+
+      document.getElementById('btnCopySlack').addEventListener('click', () => {
+        const title = document.getElementById('cfgMeetingTitle')?.value || 'Global Team Sync';
+        const slackText = 
+`*📅 ${title} (${formatUtc(currentUtcHour)})*
+\`\`\`
+${document.getElementById('invitePreview').innerText}
+\`\`\``;
+        copyToClipboard(slackText, 'Slack / Discord markdown copied!');
+      });
+
+      // Subtle Parallax on Silhouettes
+      window.addEventListener('mousemove', (e) => {
+        const nx = (e.clientX / window.innerWidth - 0.5) * 20;
+        const ny = (e.clientY / window.innerHeight - 0.5) * 20;
+        const silLeft = document.getElementById('silLeft');
+        const silRight = document.getElementById('silRight');
+        if (silLeft) silLeft.style.transform = `translate(${nx}px, ${ny}px) rotate(-15deg)`;
+        if (silRight) silRight.style.transform = `translate(${-nx}px, ${ny}px) rotate(15deg)`;
+      });
+    });
+  </script>
+</body>
+</html>
