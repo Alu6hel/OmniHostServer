@@ -33,6 +33,9 @@ def format_size(bytes_val: int) -> str:
     else:
         return f"{bytes_val / (1024 * 1024 * 1024):.2f} GB"
 
+def xml_escape(s: Any) -> str:
+    return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
 def set_desktop_wallpaper(image_path: str) -> bool:
     abs_path = os.path.abspath(image_path)
     if not os.path.exists(abs_path):
@@ -115,11 +118,45 @@ class ModularWebHandler(BaseHTTPRequestHandler):
         )
 
     def do_OPTIONS(self):
+        if self.path == "/webdav" or self.path.startswith("/webdav/"):
+            self.send_response(200)
+            self.send_header("DAV", "1, 2")
+            self.send_header("MS-Author-Via", "DAV")
+            self.send_header("Allow", "OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, PROPFIND, PROPPATCH, MKCOL, COPY, MOVE, LOCK, UNLOCK")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, HEAD, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Range")
         self.end_headers()
+
+    def do_PROPFIND(self):
+        self._handle_webdav("PROPFIND")
+
+    def do_MKCOL(self):
+        self._handle_webdav("MKCOL")
+
+    def do_PUT(self):
+        if self.path == "/webdav" or self.path.startswith("/webdav/"):
+            self._handle_webdav("PUT")
+        else:
+            self.send_error(405, "Method Not Allowed")
+
+    def do_MOVE(self):
+        self._handle_webdav("MOVE")
+
+    def do_COPY(self):
+        self._handle_webdav("COPY")
+
+    def do_LOCK(self):
+        self._handle_webdav("LOCK")
+
+    def do_UNLOCK(self):
+        self._handle_webdav("UNLOCK")
 
     def do_HEAD(self):
         self._is_head = True
@@ -129,6 +166,16 @@ class ModularWebHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = unquote(parsed.path)
         query = {k: v[0] for k, v in parse_qs(parsed.query).items()}
+
+        # WebDAV Endpoint
+        if path == "/webdav" or path.startswith("/webdav/"):
+            self._handle_webdav(self.command)
+            return
+
+        # Web App Dashboard (Full OLED dashboard parity with Android)
+        if path in ("/app", "/app/", "/admin", "/admin/", "/dashboard", "/dashboard/") or path.startswith("/app/"):
+            self._serve_web_app_ui(path)
+            return
 
         # 1. Management API
         if path == "/api/status":
@@ -729,12 +776,16 @@ class ModularWebHandler(BaseHTTPRequestHandler):
         path = unquote(parsed.path)
         query = {k: v[0] for k, v in parse_qs(parsed.query).items()}
 
+        if path == "/webdav" or path.startswith("/webdav/"):
+            self._handle_webdav("DELETE")
+            return
+
         if path == "/api/files/delete":
             self._handle_file_delete(query)
             return
         self._send_json(404, {"error": "Endpoint not found"})
 
-    # --- File Explorer Implementations ---
+    # --- File Explorer & WebDAV Implementations ---
 
     def _serve_file_manager_ui(self):
         ui_path = os.path.join(self.server_manager.sites_dir, "file_manager", "index.html")
@@ -755,6 +806,274 @@ class ModularWebHandler(BaseHTTPRequestHandler):
             )
         else:
             self._send_json(404, {"error": "File manager UI not found"})
+
+    def _serve_web_app_ui(self, path: str):
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        web_app_dir = os.path.join(base_dir, "web_app")
+
+        rel = path.lstrip("/")
+        if rel in ("app", "app/", "admin", "admin/", "dashboard", "dashboard/"):
+            target_file = os.path.join(web_app_dir, "index.html")
+        else:
+            if rel.startswith("app/"):
+                rel = rel[4:]
+            target_file = os.path.join(web_app_dir, rel)
+
+        if not os.path.exists(target_file) or os.path.isdir(target_file):
+            target_file = os.path.join(web_app_dir, "index.html")
+
+        if os.path.exists(target_file):
+            mime, _ = mimetypes.guess_type(target_file)
+            if target_file.endswith(".html"):
+                mime = "text/html; charset=utf-8"
+            elif target_file.endswith(".js"):
+                mime = "application/javascript"
+            elif target_file.endswith(".css"):
+                mime = "text/css"
+            with open(target_file, "rb") as f:
+                data = f.read()
+            self.send_response(200)
+            self.send_header("Content-Type", mime or "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            if not getattr(self, "_is_head", False):
+                self.wfile.write(data)
+            self.server_manager.telemetry.record_request(
+                self.client_address[0], "GET", path, 200, len(data)
+            )
+        else:
+            self._send_json(404, {"error": "Dashboard UI not found"})
+
+    def _send_webdav_response(self, code: int, content_type: str, body: bytes):
+        self.send_response(code)
+        if content_type:
+            self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        if not getattr(self, "_is_head", False) and body:
+            self.wfile.write(body)
+        self.server_manager.telemetry.record_request(
+            self.client_address[0], self.command, self.path, code, len(body)
+        )
+
+    def _handle_webdav(self, method: str):
+        parsed = urlparse(self.path)
+        path = unquote(parsed.path)
+        sub_path = ""
+        if len(path) > 7:
+            sub_path = path[7:]
+        sub_path = sub_path.lstrip("/\\")
+
+        target = self._get_safe_path(sub_path)
+        if target is None:
+            self._send_webdav_response(403, "text/plain", b"Access denied")
+            return
+
+        if method == "OPTIONS":
+            self.send_response(200)
+            self.send_header("DAV", "1, 2")
+            self.send_header("MS-Author-Via", "DAV")
+            self.send_header("Allow", "OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, PROPFIND, PROPPATCH, MKCOL, COPY, MOVE, LOCK, UNLOCK")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+
+        elif method == "PROPFIND":
+            if not os.path.exists(target):
+                self._send_webdav_response(404, "text/plain", b"Resource not found")
+                return
+
+            depth = self.headers.get("depth", "1")
+            items = [target]
+            if depth != "0" and os.path.isdir(target):
+                try:
+                    children = [os.path.join(target, name) for name in os.listdir(target)]
+                    children.sort(key=lambda p: (not os.path.isdir(p), os.path.basename(p).lower()))
+                    items.extend(children)
+                except Exception:
+                    pass
+
+            xml_lines = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                '<D:multistatus xmlns:D="DAV:">'
+            ]
+            for f in items:
+                rel = self._get_relative_path(f)
+                href = f"/webdav/{rel}" if rel else "/webdav"
+                if os.path.isdir(f) and not href.endswith("/"):
+                    href += "/"
+
+                xml_lines.append("  <D:response>")
+                xml_lines.append(f"    <D:href>{xml_escape(href)}</D:href>")
+                xml_lines.append("    <D:propstat>")
+                xml_lines.append("      <D:prop>")
+                display_name = os.path.basename(f) if rel else "webdav"
+                xml_lines.append(f"        <D:displayname>{xml_escape(display_name)}</D:displayname>")
+                if os.path.isdir(f):
+                    xml_lines.append("        <D:resourcetype><D:collection/></D:resourcetype>")
+                else:
+                    xml_lines.append("        <D:resourcetype/>")
+                    try:
+                        sz = os.path.getsize(f)
+                    except Exception:
+                        sz = 0
+                    xml_lines.append(f"        <D:getcontentlength>{sz}</D:getcontentlength>")
+                    mime, _ = mimetypes.guess_type(f)
+                    xml_lines.append(f"        <D:getcontenttype>{mime or 'application/octet-stream'}</D:getcontenttype>")
+                try:
+                    mtime = os.path.getmtime(f)
+                    time_str = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(mtime))
+                except Exception:
+                    time_str = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+                xml_lines.append(f"        <D:getlastmodified>{time_str}</D:getlastmodified>")
+                xml_lines.append("      </D:prop>")
+                xml_lines.append("      <D:status>HTTP/1.1 200 OK</D:status>")
+                xml_lines.append("    </D:propstat>")
+                xml_lines.append("  </D:response>")
+            xml_lines.append("</D:multistatus>\n")
+            xml_bytes = "\n".join(xml_lines).encode("utf-8")
+            self.send_response(207, "Multi-Status")
+            self.send_header("Content-Type", "application/xml; charset=utf-8")
+            self.send_header("Content-Length", str(len(xml_bytes)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            if not getattr(self, "_is_head", False):
+                self.wfile.write(xml_bytes)
+            self.server_manager.telemetry.record_request(
+                self.client_address[0], "PROPFIND", self.path, 207, len(xml_bytes)
+            )
+            return
+
+        elif method == "MKCOL":
+            if os.path.exists(target):
+                self._send_webdav_response(405, "text/plain", b"Folder already exists")
+                return
+            parent = os.path.dirname(target)
+            if not os.path.exists(parent):
+                self._send_webdav_response(409, "text/plain", b"Parent folder does not exist")
+                return
+            try:
+                os.makedirs(target, exist_ok=True)
+                self._send_webdav_response(201, "text/plain", b"")
+            except Exception as e:
+                self._send_webdav_response(500, "text/plain", str(e).encode("utf-8"))
+            return
+
+        elif method == "PUT":
+            existed = os.path.exists(target)
+            try:
+                content_len = int(self.headers.get("content-length", 0))
+            except ValueError:
+                content_len = 0
+            try:
+                os.makedirs(os.path.dirname(target), exist_ok=True)
+                with open(target, "wb") as f:
+                    remaining = content_len
+                    chunk_sz = 65536
+                    while remaining > 0:
+                        chunk = self.rfile.read(min(remaining, chunk_sz))
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        remaining -= len(chunk)
+                self._send_webdav_response(204 if existed else 201, "text/plain", b"")
+            except Exception as e:
+                self._send_webdav_response(500, "text/plain", str(e).encode("utf-8"))
+            return
+
+        elif method == "DELETE":
+            if not os.path.exists(target):
+                self._send_webdav_response(404, "text/plain", b"Resource not found")
+                return
+            try:
+                if os.path.isdir(target):
+                    shutil.rmtree(target)
+                else:
+                    os.remove(target)
+                self._send_webdav_response(204, "text/plain", b"")
+            except Exception as e:
+                self._send_webdav_response(500, "text/plain", str(e).encode("utf-8"))
+            return
+
+        elif method in ("MOVE", "COPY"):
+            dest_header = self.headers.get("Destination", "")
+            if not dest_header:
+                self._send_webdav_response(400, "text/plain", b"Destination header missing")
+                return
+            dest_parsed = urlparse(dest_header)
+            dest_path = unquote(dest_parsed.path)
+            if dest_path.startswith("/webdav"):
+                dest_path = dest_path[7:]
+            dest_path = dest_path.lstrip("/\\")
+            dest_target = self._get_safe_path(dest_path)
+            if dest_target is None:
+                self._send_webdav_response(403, "text/plain", b"Invalid destination path")
+                return
+            if not os.path.exists(target):
+                self._send_webdav_response(404, "text/plain", b"Source not found")
+                return
+            dest_existed = os.path.exists(dest_target)
+            try:
+                os.makedirs(os.path.dirname(dest_target), exist_ok=True)
+                if method == "MOVE":
+                    shutil.move(target, dest_target)
+                else:
+                    if os.path.isdir(target):
+                        shutil.copytree(target, dest_target, dirs_exist_ok=True)
+                    else:
+                        shutil.copy2(target, dest_target)
+                self._send_webdav_response(204 if dest_existed else 201, "text/plain", b"")
+            except Exception as e:
+                self._send_webdav_response(500, "text/plain", str(e).encode("utf-8"))
+            return
+
+        elif method in ("GET", "HEAD"):
+            if not os.path.exists(target):
+                self._send_webdav_response(404, "text/plain", b"Resource not found")
+                return
+            if os.path.isdir(target):
+                files = os.listdir(target)
+                items_html = "".join([f'<li><a href="/webdav/{self._get_relative_path(os.path.join(target, name))}">{name}</a></li>' for name in sorted(files)])
+                html = f"<!DOCTYPE html><html><head><title>WebDAV: /{sub_path}</title></head><body><h2>📁 WebDAV Folder: /{sub_path}</h2><ul>{items_html}</ul></body></html>".encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(html)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                if method == "GET":
+                    self.wfile.write(html)
+                return
+            else:
+                mime, _ = mimetypes.guess_type(target)
+                file_sz = os.path.getsize(target)
+                self.send_response(200)
+                self.send_header("Content-Type", mime or "application/octet-stream")
+                self.send_header("Content-Length", str(file_sz))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                if method == "GET":
+                    with open(target, "rb") as f:
+                        shutil.copyfileobj(f, self.wfile, 65536)
+                return
+
+        elif method == "LOCK":
+            lock_xml = '<?xml version="1.0" encoding="utf-8" ?>\n<D:prop xmlns:D="DAV:"><D:lockdiscovery><D:activelock><D:locktype><D:write/></D:locktype><D:lockscope><D:exclusive/></D:lockscope><D:depth>0</D:depth><D:timeout>Second-3600</D:timeout><D:locktoken><D:href>urn:uuid:omnihost-lock-token</D:href></D:locktoken></D:activelock></D:lockdiscovery></D:prop>'.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/xml; charset=utf-8")
+            self.send_header("Lock-Token", "<urn:uuid:omnihost-lock-token>")
+            self.send_header("Content-Length", str(len(lock_xml)))
+            self.end_headers()
+            self.wfile.write(lock_xml)
+            return
+
+        elif method == "UNLOCK":
+            self.send_response(204, "No Content")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
 
     def _get_safe_path(self, rel_path: str) -> Optional[str]:
         rel = (rel_path or "").lstrip("/\\")

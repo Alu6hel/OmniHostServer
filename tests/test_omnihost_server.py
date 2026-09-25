@@ -27,7 +27,7 @@ class TestOmniHostServer(unittest.TestCase):
         base = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         cls.sites_dir = os.path.join(base, "sites")
 
-        cls.web = ModularWebsiteServer(sites_dir=cls.sites_dir, port=8290)
+        cls.web = ModularWebsiteServer(sites_dir=cls.sites_dir, default_site="default", port=8290)
         cls.web.start()
 
         mount = os.path.join(cls.sites_dir, "default")
@@ -218,6 +218,53 @@ class TestOmniHostServer(unittest.TestCase):
             data = json.loads(resp.read().decode("utf-8"))
             self.assertEqual(data["status"], "ok")
             self.assertIn("applied", data)
+
+    def test_16_webdav_rfc4918(self):
+        # 1. OPTIONS
+        req = urllib.request.Request("http://127.0.0.1:8290/webdav", method="OPTIONS")
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 200)
+            self.assertIn("1, 2", resp.headers.get("DAV", ""))
+            self.assertEqual(resp.headers.get("MS-Author-Via", ""), "DAV")
+
+        # 2. PROPFIND
+        req = urllib.request.Request("http://127.0.0.1:8290/webdav", method="PROPFIND", headers={"Depth": "1"})
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 207)
+            body = resp.read().decode("utf-8")
+            self.assertIn("<D:multistatus", body)
+            self.assertIn("<D:response>", body)
+
+        # 3. MKCOL
+        req = urllib.request.Request("http://127.0.0.1:8290/webdav/unit_test_dav", method="MKCOL")
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 201)
+
+        # 4. PUT
+        content = b"OmniHost WebDAV PC Sync Verified!"
+        req = urllib.request.Request("http://127.0.0.1:8290/webdav/unit_test_dav/verified.txt", data=content, method="PUT")
+        with urllib.request.urlopen(req) as resp:
+            self.assertIn(resp.status, (201, 204))
+
+        # 5. GET
+        req = urllib.request.Request("http://127.0.0.1:8290/webdav/unit_test_dav/verified.txt")
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 200)
+            self.assertEqual(resp.read(), content)
+
+        # 6. DELETE
+        req = urllib.request.Request("http://127.0.0.1:8290/webdav/unit_test_dav", method="DELETE")
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 204)
+
+    def test_17_web_app_dashboard(self):
+        req = urllib.request.Request("http://127.0.0.1:8290/app")
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 200)
+            html = resp.read().decode("utf-8")
+            self.assertIn("OmniHost Pro", html)
+            self.assertIn("Hotspot", html)
+            self.assertIn("GalaxSee Hub", html)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
