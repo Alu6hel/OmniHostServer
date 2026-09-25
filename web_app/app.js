@@ -1010,6 +1010,14 @@ function getFtpUrl() {
     return `ftp://${lanIp}:2121`;
 }
 
+function getExplorerUrl() {
+    return `http://${lanIp}:8090/files`;
+}
+
+function getDropUrl() {
+    return `http://${lanIp}:8090/file_manager.html`;
+}
+
 function showFtpQr() {
     showQrModal('Wireless File Drop', getFtpUrl(), 'Connect from your PC, Mac, or phone wirelessly.');
 }

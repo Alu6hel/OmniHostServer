@@ -30,7 +30,7 @@
                 <span class="item-icon">📶</span>
                 <span>WiFi Hotspot &amp; Server</span>
             </button>
-            <button class="drawer-item" onclick="openExplorerUrl(); toggleDrawer(false)">
+            <button class="drawer-item" onclick="selectTab('files'); toggleDrawer(false)">
                 <span class="item-icon">📁</span>
                 <span>Web File Explorer &amp; Hub</span>
             </button>
@@ -259,7 +259,7 @@
                             <span class="url-text" id="display-explorer-url">● Offline — Tap Power to Start</span>
                             <div class="btn-group-strip">
                                 <button class="btn-strip btn-qr" onclick="showQrModal('Media & File Library', getExplorerUrl(), 'Open the in-browser media viewer on any device.')" title="Scan to Browse">📱 QR</button>
-                                <button class="btn-copy" id="btn-open-explorer" style="background: #06B6D4; color: #000; font-weight: 700;" onclick="openExplorerUrl()">Open</button>
+                                <button class="btn-copy" id="btn-open-explorer" style="background: #06B6D4; color: #000; font-weight: 700;" onclick="selectTab('files')">Open</button>
                                 <button class="btn-copy" id="btn-copy-explorer" onclick="copyValue('display-explorer-url')">Copy</button>
                             </div>
                         </div>
