@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.*;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.*;
@@ -105,6 +106,34 @@ public class MainActivity extends Activity {
                 super.onPageFinished(view, url);
                 syncStateToWebView();
             }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                if (request != null && request.getUrl() != null) {
+                    return handleExternalUrl(request.getUrl().toString());
+                }
+                return false;
+            }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return handleExternalUrl(url);
+            }
+
+            private boolean handleExternalUrl(String url) {
+                if (url == null) return false;
+                if (url.startsWith("file:///android_asset/")) {
+                    return false;
+                }
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }
         });
 
         webView.setWebChromeClient(new WebChromeClient() {
@@ -125,6 +154,18 @@ public class MainActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
         handleIncomingShareIntent(intent);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webView != null) {
+            String currentUrl = webView.getUrl();
+            if (currentUrl != null && !currentUrl.startsWith("file:///android_asset/www/index.html")) {
+                webView.loadUrl("file:///android_asset/www/index.html");
+                return;
+            }
+        }
+        super.onBackPressed();
     }
 
     private void startServers() {

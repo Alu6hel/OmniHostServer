@@ -106,52 +106,51 @@ function updateUrls() {
     const elWeb = document.getElementById('display-web-url');
     const elFtp = document.getElementById('display-ftp-url');
     const elExplorer = document.getElementById('display-explorer-url');
+    const elWebdav = document.getElementById('display-webdav-url');
     const elFtpFull = document.getElementById('ftp-full-url');
     const elFtpGuide = document.getElementById('ftp-guide-url');
+    const elWebdavStatus = document.getElementById('webdav-status-url');
+    const elWebdavGuide = document.getElementById('webdav-guide-url');
+    const elFtpStatus = document.getElementById('ftp-status-url');
     const elSiteTag = document.getElementById('current-site-tag');
 
-    const stripWeb = document.getElementById('strip-web');
-    const stripFtp = document.getElementById('strip-ftp');
-    const stripExplorer = document.getElementById('strip-explorer');
-    const btnCopyWeb = document.getElementById('btn-copy-web');
-    const btnCopyFtp = document.getElementById('btn-copy-ftp');
-    const btnCopyExplorer = document.getElementById('btn-copy-explorer');
-    const btnOpenExplorer = document.getElementById('btn-open-explorer');
+    const topDot = document.getElementById('top-live-dot');
+    const trayDot = document.getElementById('tray-dot-power');
+    const trayNote = document.getElementById('tray-note-power');
 
     if (!isServersRunning) {
         if (elWeb) elWeb.innerText = "● Offline — Tap Power to Start";
         if (elFtp) elFtp.innerText = "● Offline — Tap Power to Start";
         if (elExplorer) elExplorer.innerText = "● Offline — Tap Power to Start";
+        if (elWebdav) elWebdav.innerText = "● Offline — Tap Power to Start";
         if (elFtpFull) elFtpFull.innerText = "● Offline — Tap Power to Start";
         if (elFtpGuide) elFtpGuide.innerText = `ftp://${lanIp}:2121 (Offline)`;
+        if (elWebdavStatus) elWebdavStatus.innerText = `http://${lanIp}:8090/webdav (Offline)`;
+        if (elWebdavGuide) elWebdavGuide.innerText = `http://${lanIp}:8090/webdav (Offline)`;
+        if (elFtpStatus) elFtpStatus.innerText = `ftp://${lanIp}:2121 (Offline)`;
 
-        if (stripWeb) stripWeb.classList.add('offline');
-        if (stripFtp) stripFtp.classList.add('offline');
-        if (stripExplorer) stripExplorer.classList.add('offline');
-
-        if (btnCopyWeb) btnCopyWeb.classList.add('disabled');
-        if (btnCopyFtp) btnCopyFtp.classList.add('disabled');
-        if (btnCopyExplorer) btnCopyExplorer.classList.add('disabled');
-        if (btnOpenExplorer) btnOpenExplorer.classList.add('disabled');
+        if (topDot) { topDot.classList.remove('online'); topDot.classList.add('offline'); }
+        if (trayDot) { trayDot.classList.remove('online'); trayDot.classList.add('offline'); }
+        if (trayNote) trayNote.innerText = "Offline";
     } else {
         const webUrl = `http://${lanIp}:8090`;
         const ftpUrl = `ftp://${lanIp}:2121`;
         const explorerUrl = `http://${lanIp}:8090/files`;
+        const webdavUrl = `http://${lanIp}:8090/webdav`;
 
         if (elWeb) elWeb.innerText = webUrl;
         if (elFtp) elFtp.innerText = ftpUrl;
         if (elExplorer) elExplorer.innerText = explorerUrl;
+        if (elWebdav) elWebdav.innerText = webdavUrl;
         if (elFtpFull) elFtpFull.innerText = ftpUrl;
         if (elFtpGuide) elFtpGuide.innerText = ftpUrl;
+        if (elWebdavStatus) elWebdavStatus.innerText = webdavUrl;
+        if (elWebdavGuide) elWebdavGuide.innerText = webdavUrl;
+        if (elFtpStatus) elFtpStatus.innerText = ftpUrl;
 
-        if (stripWeb) stripWeb.classList.remove('offline');
-        if (stripFtp) stripFtp.classList.remove('offline');
-        if (stripExplorer) stripExplorer.classList.remove('offline');
-
-        if (btnCopyWeb) btnCopyWeb.classList.remove('disabled');
-        if (btnCopyFtp) btnCopyFtp.classList.remove('disabled');
-        if (btnCopyExplorer) btnCopyExplorer.classList.remove('disabled');
-        if (btnOpenExplorer) btnOpenExplorer.classList.remove('disabled');
+        if (topDot) { topDot.classList.remove('offline'); topDot.classList.add('online'); }
+        if (trayDot) { trayDot.classList.remove('offline'); trayDot.classList.add('online'); }
+        if (trayNote) trayNote.innerText = "Online";
     }
 
     if (elSiteTag) elSiteTag.innerText = activeSite;
@@ -481,7 +480,7 @@ function pushLimitsToBridge() {
     }
 }
 
-// Navigation Tabs (6 Tabs)
+// Navigation Tabs (5 Clean Tabs)
 function selectTab(tabId) {
     currentTab = tabId;
     document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
@@ -494,9 +493,8 @@ function selectTab(tabId) {
     if (navBtn) navBtn.classList.add('active');
 
     const titleMap = {
-        'hotspot': 'WiFi Hotspot',
+        'hotspot': 'OmniHost Pro',
         'sites': 'Modular Sites',
-        'files': 'Media & Files',
         'ftp': 'WiFi FTP Server',
         'speed': 'Speed Test',
         'data': 'Data Usage'
@@ -511,6 +509,48 @@ function selectTab(tabId) {
 
     if (tabId === 'sites') {
         previewSite(activeSite);
+    }
+}
+
+function getWebDavUrl() {
+    return isServersRunning ? `http://${lanIp}:8090/webdav` : `http://${lanIp}:8090/webdav (Offline)`;
+}
+
+function copyWebDavUrl() {
+    if (!isServersRunning) {
+        showToast("Server is offline — tap Power to start");
+        return;
+    }
+    const url = `http://${lanIp}:8090/webdav`;
+    copyValueText(url, "WebDAV Cloud Drive URL copied!");
+}
+
+function copyAllEndpoints() {
+    if (!isServersRunning) {
+        showToast("Server is offline — tap Power to start");
+        return;
+    }
+    const text = `OmniHost Pro Endpoints:\n` +
+                 `• Website: http://${lanIp}:8090/\n` +
+                 `• GalaxSee Hub: http://${lanIp}:8090/files\n` +
+                 `• WebDAV Cloud Drive: http://${lanIp}:8090/webdav\n` +
+                 `• WiFi FTP: ftp://${lanIp}:2121\n` +
+                 (isTunnelActive && tunnelPublicUrl ? `• Public HTTPS: ${tunnelPublicUrl}\n` : '');
+    copyValueText(text, "All Server Endpoints copied!");
+}
+
+function copyValueText(text, successMsg) {
+    if (hasNativeBridge && window.OmniHostBridge.copyToClipboard) {
+        window.OmniHostBridge.copyToClipboard(text);
+        showToast(successMsg || ("Copied: " + text));
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast(successMsg || ("Copied: " + text));
+        }).catch(() => {
+            showToast("Copied: " + text);
+        });
+    } else {
+        showToast(successMsg || ("Copied: " + text));
     }
 }
 

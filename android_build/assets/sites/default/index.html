@@ -46,9 +46,68 @@
             </div>
         </div>
         <div class="cta-bar">
-            <a href="/api/status" class="btn btn-primary">Inspect Telemetry API</a>
-            <a href="https://github.com" class="btn btn-sec">Documentation</a>
+            <button class="btn btn-primary" onclick="openTelemetryModal()">Inspect Telemetry</button>
+            <a href="/files/" class="btn btn-sec">GalaxSee Hub</a>
         </div>
     </div>
+
+    <!-- In-Page Telemetry Modal (Zero Raw JSON Dumps) -->
+    <div id="telemetry-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:999; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#131722; border:1px solid #242C40; border-radius:18px; padding:28px; max-width:440px; width:100%; box-shadow:0 20px 40px rgba(0,0,0,0.8); text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="font-size:1.15rem; color:#F8FAFC; display:flex; align-items:center; gap:8px;">
+                    <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#10B981;"></span>
+                    Live Server Telemetry
+                </h3>
+                <button onclick="closeTelemetryModal()" style="background:none; border:none; color:#94A3B8; font-size:1.2rem; cursor:pointer;">✕</button>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px;">
+                <div style="background:#1B2030; padding:12px; border-radius:10px; border:1px solid #242C40;">
+                    <span style="font-size:0.75rem; color:#94A3B8; display:block;">STATUS</span>
+                    <strong id="m-status" style="font-size:1rem; color:#10B981;">Online</strong>
+                </div>
+                <div style="background:#1B2030; padding:12px; border-radius:10px; border:1px solid #242C40;">
+                    <span style="font-size:0.75rem; color:#94A3B8; display:block;">HTTP PORT</span>
+                    <strong id="m-port" style="font-size:1rem; color:#3B82F6;">:8090</strong>
+                </div>
+                <div style="background:#1B2030; padding:12px; border-radius:10px; border:1px solid #242C40;">
+                    <span style="font-size:0.75rem; color:#94A3B8; display:block;">REQUESTS</span>
+                    <strong id="m-reqs" style="font-size:1rem; color:#F8FAFC;">0</strong>
+                </div>
+                <div style="background:#1B2030; padding:12px; border-radius:10px; border:1px solid #242C40;">
+                    <span style="font-size:0.75rem; color:#94A3B8; display:block;">BANDWIDTH</span>
+                    <strong id="m-bytes" style="font-size:1rem; color:#F8FAFC;">0 KB</strong>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="refreshTelemetry()" style="flex:1; padding:10px; background:#10B981; color:#000; font-weight:700; border-radius:8px; border:none; cursor:pointer;">Refresh</button>
+                <button onclick="closeTelemetryModal()" style="flex:1; padding:10px; background:#242C40; color:#F8FAFC; font-weight:600; border-radius:8px; border:none; cursor:pointer;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openTelemetryModal() {
+            const m = document.getElementById('telemetry-modal');
+            m.style.display = 'flex';
+            refreshTelemetry();
+        }
+        function closeTelemetryModal() {
+            document.getElementById('telemetry-modal').style.display = 'none';
+        }
+        function refreshTelemetry() {
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('m-status').textContent = (data.status || 'online').toUpperCase();
+                    document.getElementById('m-port').textContent = ':' + (data.port || 8090);
+                    document.getElementById('m-reqs').textContent = data.total_requests || 0;
+                    document.getElementById('m-bytes').textContent = Math.round((data.total_bytes || 0) / 1024) + ' KB';
+                })
+                .catch(() => {
+                    document.getElementById('m-status').textContent = 'STANDALONE';
+                });
+        }
+    </script>
 </body>
 </html>

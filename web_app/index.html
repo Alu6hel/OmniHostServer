@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>OmniHost Pro // Mobile Hotspot & Cloud Node</title>
+    <title>OmniHost Pro // Mobile Hotspot &amp; Cloud Node</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="theme-fluent-dark">
@@ -30,9 +30,13 @@
                 <span class="item-icon">📶</span>
                 <span>WiFi Hotspot &amp; Server</span>
             </button>
-            <button class="drawer-item" onclick="selectTab('files'); toggleDrawer(false)">
+            <button class="drawer-item" onclick="openExplorerUrl(); toggleDrawer(false)">
                 <span class="item-icon">📁</span>
-                <span>Web File Explorer &amp; Hub</span>
+                <span>GalaxSee Photos &amp; File Hub</span>
+            </button>
+            <button class="drawer-item" onclick="copyWebDavUrl(); toggleDrawer(false)">
+                <span class="item-icon">🗂️</span>
+                <span>WebDAV Cloud Drive (RFC 4918)</span>
             </button>
             <button class="drawer-item" onclick="openHotspotSettings(); toggleDrawer(false)">
                 <span class="item-icon">⚙️</span>
@@ -96,7 +100,7 @@
 
     <!-- Main Mobile Application Layout -->
     <div class="app-layout">
-        <!-- Top App Bar (Image 2 Inspiration) -->
+        <!-- Top App Bar (Image 4 Inspiration) -->
         <header class="top-bar">
             <button class="icon-btn" onclick="toggleDrawer(true)" aria-label="Open Menu">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -108,27 +112,122 @@
             <button class="icon-btn" id="top-bar-back-btn" onclick="selectTab('hotspot')" style="display: none; margin-right: 4px;" aria-label="Back to Hotspot" title="Exit to Hotspot Home">
                 <span style="font-size: 16px;">⬅️</span>
             </button>
-            <div class="top-title-group">
-                <h1 id="top-bar-title">WiFi Hotspot</h1>
+            <div class="top-title-group" onclick="selectTab('hotspot')" style="cursor: pointer;">
+                <div class="top-title-row">
+                    <h1 id="top-bar-title">OmniHost Pro</h1>
+                    <span class="title-dropdown-arrow">▾</span>
+                    <span class="live-status-dot online" id="top-live-dot" title="Server Online"></span>
+                </div>
             </div>
             <div class="top-bar-right">
+                <button class="icon-action-btn" onclick="showQrModal('OmniHost Pro', getWebUrl(), 'Scan with any smartphone camera to connect to your personal cloud server.')" title="QR Code" aria-label="QR Code">
+                    📱
+                </button>
                 <div class="crown-icon" title="Commercial Pro Active" onclick="showProInfo()">
                     👑
                 </div>
             </div>
         </header>
 
-        <!-- Main Content Area with 5 View Tabs -->
+        <!-- Horizontal Live Nodes Tray (Image 4 / Instagram Story Style) -->
+        <div class="nodes-tray-container">
+            <div class="nodes-tray">
+                <!-- Singularity Hotspot Node -->
+                <div class="node-item" onclick="selectTab('hotspot')">
+                    <div class="node-avatar-wrapper ring-pulsing">
+                        <div class="node-note-bubble" id="tray-note-power">Online</div>
+                        <div class="node-avatar cosmic-singularity">
+                            <span class="node-icon">🌌</span>
+                        </div>
+                        <span class="node-status-dot online" id="tray-dot-power"></span>
+                    </div>
+                    <span class="node-label">Hotspot</span>
+                </div>
+
+                <!-- GalaxSee Media Hub Node -->
+                <div class="node-item" onclick="openExplorerUrl()">
+                    <div class="node-avatar-wrapper ring-cyan">
+                        <div class="node-note-bubble">GalaxSee</div>
+                        <div class="node-avatar cosmic-galaxsee">
+                            <span class="node-icon">📁</span>
+                        </div>
+                        <span class="node-status-dot online"></span>
+                    </div>
+                    <span class="node-label">GalaxSee Hub</span>
+                </div>
+
+                <!-- WebDAV Cloud Drive Node -->
+                <div class="node-item" onclick="copyWebDavUrl()">
+                    <div class="node-avatar-wrapper ring-emerald">
+                        <div class="node-note-bubble">WebDAV</div>
+                        <div class="node-avatar cosmic-webdav">
+                            <span class="node-icon">🗂️</span>
+                        </div>
+                        <span class="node-status-dot online"></span>
+                    </div>
+                    <span class="node-label">Cloud Drive</span>
+                </div>
+
+                <!-- WiFi FTP Node -->
+                <div class="node-item" onclick="selectTab('ftp')">
+                    <div class="node-avatar-wrapper ring-purple">
+                        <div class="node-note-bubble">:2121</div>
+                        <div class="node-avatar cosmic-ftp">
+                            <span class="node-icon">📡</span>
+                        </div>
+                        <span class="node-status-dot online"></span>
+                    </div>
+                    <span class="node-label">WiFi FTP</span>
+                </div>
+
+                <!-- Cloudflare Tunnel Node -->
+                <div class="node-item" onclick="toggleTunnelAction()">
+                    <div class="node-avatar-wrapper ring-blue">
+                        <div class="node-note-bubble" id="tray-note-tunnel">Standby</div>
+                        <div class="node-avatar cosmic-tunnel">
+                            <span class="node-icon">🛡️</span>
+                        </div>
+                        <span class="node-status-dot standby" id="tray-dot-tunnel"></span>
+                    </div>
+                    <span class="node-label">Tunnel</span>
+                </div>
+
+                <!-- Network Speed Node -->
+                <div class="node-item" onclick="selectTab('speed')">
+                    <div class="node-avatar-wrapper ring-gold">
+                        <div class="node-note-bubble">Speed</div>
+                        <div class="node-avatar cosmic-speed">
+                            <span class="node-icon">⚡</span>
+                        </div>
+                        <span class="node-status-dot online"></span>
+                    </div>
+                    <span class="node-label">Speed</span>
+                </div>
+
+                <!-- Live Data & Telemetry Node -->
+                <div class="node-item" onclick="selectTab('data')">
+                    <div class="node-avatar-wrapper ring-slate">
+                        <div class="node-note-bubble">Stats</div>
+                        <div class="node-avatar cosmic-data">
+                            <span class="node-icon">📊</span>
+                        </div>
+                        <span class="node-status-dot online"></span>
+                    </div>
+                    <span class="node-label">Data</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area with 5 Clean View Tabs -->
         <main class="main-content">
-            <!-- TAB 1: HOTSPOT & SERVER MAIN VIEW (Image 2 Inspiration) -->
+            <!-- TAB 1: HOTSPOT & SERVER MAIN VIEW -->
             <section id="tab-hotspot" class="tab-view active">
                 <div class="status-indicator-bar">
                     <span class="status-dot" id="global-status-dot"></span>
-                    <span class="status-text" id="global-status-text">Serving :8090 &amp; :2121</span>
+                    <span class="status-text" id="global-status-text">Serving :8090 (HTTP), :2121 (FTP), /webdav</span>
                 </div>
 
-
-                <!-- Power Toggle Button with Dynamic Shape & Live Black Hole -->
+                <!-- Power Toggle Button with Dynamic Shape & Live Relativistic Black Hole -->
                 <div class="power-toggle-container shape-round" onclick="toggleMasterPower()">
                     <!-- Live Black Hole Relativistic Accretion Canvas -->
                     <canvas id="blackhole-canvas" class="blackhole-canvas" width="260" height="260"></canvas>
@@ -184,44 +283,100 @@
                     </div>
                 </div>
 
-                <!-- Fast Server Access Cards -->
+                <!-- Active Services Section Header (Image 4 'Accounts to follow' Style) -->
+                <div class="section-header-row">
+                    <h2 class="section-title">Active Services</h2>
+                    <button class="section-action-btn" onclick="copyAllEndpoints()">Share All</button>
+                </div>
+
+                <!-- Fast Server Access Cards (Image 4 List Style with Blue Pill Buttons) -->
                 <div class="cards-stack">
-                    <!-- Personal Web Link Card -->
+                    <!-- Modular Website Host Card -->
                     <div class="service-card" id="card-web">
                         <div class="service-head">
-                            <div class="service-icon-box blue">🌐</div>
+                            <div class="service-icon-avatar cosmic-web-glow">🌐</div>
                             <div class="service-meta">
-                                <div class="service-name">Personal Web Link</div>
-                                <div class="service-tag">Active Design: <strong id="current-site-tag">default</strong></div>
+                                <div class="service-name">
+                                    Modular Website Host
+                                    <span class="verified-badge" title="Active">✓</span>
+                                </div>
+                                <div class="service-tag">Active Site: <strong id="current-site-tag">default</strong> &bull; HTTP :8090</div>
                             </div>
-                            <div class="service-port">Web Page</div>
+                            <div class="service-port-badge">:8090</div>
                         </div>
                         <div class="url-strip" id="strip-web">
                             <span class="url-text" id="display-web-url">● Offline — Tap Power to Start</span>
-                            <div class="btn-group-strip">
-                                <button class="btn-strip btn-qr" onclick="showQrModal('Personal Web Link', getWebUrl(), 'Scan with any phone camera to open this webpage instantly.')" title="Scan with Phone Camera">📱 QR</button>
-                                <button class="btn-strip btn-open" onclick="openWebUrl(activeSite)">Open</button>
-                                <button class="btn-copy" id="btn-copy-web" onclick="copyValue('display-web-url')">Copy</button>
+                            <div class="action-pills-row">
+                                <button class="btn-pill-qr" onclick="showQrModal('Modular Website', getWebUrl(), 'Scan with any phone camera to view webpage.')" title="Scan QR">📱 QR</button>
+                                <button class="btn-pill-dark" id="btn-copy-web" onclick="copyValue('display-web-url')">Copy</button>
+                                <button class="btn-pill-blue" id="btn-open-web" onclick="openWebUrl(activeSite)">Open</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Wireless File Drop Card -->
+                    <!-- Web File Explorer & GalaxSee Hub Card -->
+                    <div class="service-card" id="card-explorer">
+                        <div class="service-head">
+                            <div class="service-icon-avatar cosmic-galaxsee-glow">📁</div>
+                            <div class="service-meta">
+                                <div class="service-name">
+                                    Web File Explorer &amp; GalaxSee Hub
+                                    <span class="verified-badge" title="GalaxSee Pro Hub">✓</span>
+                                </div>
+                                <div class="service-tag">GalaxSee Photos &bull; Video Streaming &bull; ZIP Downloads</div>
+                            </div>
+                            <div class="service-port-badge">:8090/files</div>
+                        </div>
+                        <div class="url-strip" id="strip-explorer">
+                            <span class="url-text" id="display-explorer-url">● Offline — Tap Power to Start</span>
+                            <div class="action-pills-row">
+                                <button class="btn-pill-qr" onclick="showQrModal('GalaxSee Hub', getExplorerUrl(), 'Open GalaxSee media viewer on any connected device.')" title="Scan QR">📱 QR</button>
+                                <button class="btn-pill-dark" id="btn-copy-explorer" onclick="copyValue('display-explorer-url')">Copy</button>
+                                <button class="btn-pill-blue" id="btn-open-explorer" onclick="openExplorerUrl()">GalaxSee</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WebDAV Cloud Drive (RFC 4918) Card -->
+                    <div class="service-card" id="card-webdav">
+                        <div class="service-head">
+                            <div class="service-icon-avatar cosmic-webdav-glow">🗂️</div>
+                            <div class="service-meta">
+                                <div class="service-name">
+                                    WebDAV Cloud Drive (RFC 4918)
+                                    <span class="verified-badge" title="RFC 4918 Standard">✓</span>
+                                </div>
+                                <div class="service-tag">Mount in Windows File Explorer &bull; Mac Finder &bull; Solid Explorer</div>
+                            </div>
+                            <div class="service-port-badge">:8090/webdav</div>
+                        </div>
+                        <div class="url-strip" id="strip-webdav">
+                            <span class="url-text" id="display-webdav-url">● Offline — Tap Power to Start</span>
+                            <div class="action-pills-row">
+                                <button class="btn-pill-qr" onclick="showQrModal('WebDAV Cloud Drive', getWebDavUrl(), 'Mount as a network drive on Windows, Mac, or phone.')" title="Scan QR">📱 QR</button>
+                                <button class="btn-pill-blue" id="btn-copy-webdav" onclick="copyWebDavUrl()">Copy Drive</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WiFi FTP Server (RFC 959) Card -->
                     <div class="service-card" id="card-ftp">
                         <div class="service-head">
-                            <div class="service-icon-box purple">📡</div>
+                            <div class="service-icon-avatar cosmic-ftp-glow">📡</div>
                             <div class="service-meta">
-                                <div class="service-name">Wireless File Drop</div>
-                                <div class="service-tag">Drag &amp; drop photos or files without cords (FTP &bull; WebDAV)</div>
+                                <div class="service-name">
+                                    WiFi FTP Server (RFC 959)
+                                    <span class="verified-badge" title="High-Speed Sync">✓</span>
+                                </div>
+                                <div class="service-tag">Wireless Photo &amp; File Upload &bull; FileZilla &amp; Explorer</div>
                             </div>
-                            <div class="service-port">Direct File Sync</div>
+                            <div class="service-port-badge">:2121</div>
                         </div>
                         <div class="url-strip" id="strip-ftp">
                             <span class="url-text" id="display-ftp-url">● Offline — Tap Power to Start</span>
-                            <div class="btn-group-strip">
-                                <button class="btn-strip btn-qr" onclick="showQrModal('Wireless File Drop', getFtpUrl(), 'Connect from your PC, Mac, or phone wirelessly.')" title="Scan to Connect">📱 QR</button>
-                                <button class="btn-strip btn-share" onclick="shareFtpInfo()">Share</button>
-                                <button class="btn-copy" id="btn-copy-ftp" onclick="copyValue('display-ftp-url')">Copy</button>
+                            <div class="action-pills-row">
+                                <button class="btn-pill-qr" onclick="showQrModal('WiFi FTP Server', getFtpUrl(), 'Connect from your PC, Mac, or phone wirelessly.')" title="Scan QR">📱 QR</button>
+                                <button class="btn-pill-blue" id="btn-copy-ftp" onclick="copyValue('display-ftp-url')">Copy FTP</button>
                             </div>
                         </div>
                     </div>
@@ -229,53 +384,35 @@
                     <!-- Cloudflare Public HTTPS Tunnel Card -->
                     <div class="service-card" id="card-tunnel">
                         <div class="service-head">
-                            <div class="service-icon-box green">🛡️</div>
+                            <div class="service-icon-avatar cosmic-tunnel-glow">🛡️</div>
                             <div class="service-meta">
-                                <div class="service-name">Encrypted Worldwide Link</div>
-                                <div class="service-tag">Access from anywhere &bull; Home IP Hidden</div>
+                                <div class="service-name">
+                                    Cloudflare Outbound Tunnel
+                                    <span class="verified-badge" title="Encrypted">✓</span>
+                                </div>
+                                <div class="service-tag">Zero Port Forwarding &bull; Origin IP Masked</div>
                             </div>
-                            <div class="service-badge" id="tunnel-badge" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10B981; color: #10B981; font-size: 10px; padding: 2px 8px; border-radius: 6px;">STANDBY</div>
+                            <div class="service-badge" id="tunnel-badge">STANDBY</div>
                         </div>
                         <div class="url-strip" id="strip-tunnel">
                             <span class="url-text" id="display-tunnel-url">● Standby — Tap to Activate</span>
-                            <div class="btn-group-strip">
-                                <button class="btn-copy" id="btn-toggle-tunnel" style="background: #10B981; color: #000; font-weight: 700;" onclick="toggleTunnelAction()">Activate</button>
-                                <button class="btn-copy" id="btn-copy-tunnel" onclick="copyValue('display-tunnel-url')">Copy</button>
+                            <div class="action-pills-row">
+                                <button class="btn-pill-dark" id="btn-copy-tunnel" onclick="copyValue('display-tunnel-url')">Copy</button>
+                                <button class="btn-pill-blue" id="btn-toggle-tunnel" onclick="toggleTunnelAction()">Activate</button>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Web File Explorer & Media Hub Card -->
-                    <div class="service-card" id="card-explorer" style="border-color: rgba(6, 182, 212, 0.4);">
-                        <div class="service-head">
-                            <div class="service-icon-box" style="background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); font-size: 18px;">📁</div>
-                            <div class="service-meta">
-                                <div class="service-name">Media &amp; File Library</div>
-                                <div class="service-tag">Photos &bull; Video Player &bull; Instant ZIP Downloads</div>
-                            </div>
-                            <div class="service-port" style="color: #06B6D4;">Media Hub</div>
-                        </div>
-                        <div class="url-strip" id="strip-explorer">
-                            <span class="url-text" id="display-explorer-url">● Offline — Tap Power to Start</span>
-                            <div class="btn-group-strip">
-                                <button class="btn-strip btn-qr" onclick="showQrModal('Media & File Library', getExplorerUrl(), 'Open the in-browser media viewer on any device.')" title="Scan to Browse">📱 QR</button>
-                                <button class="btn-copy" id="btn-open-explorer" style="background: #06B6D4; color: #000; font-weight: 700;" onclick="selectTab('files')">Open</button>
-                                <button class="btn-copy" id="btn-copy-explorer" onclick="copyValue('display-explorer-url')">Copy</button>
-                            </div>
-                        </div>
-                    </div>
-
 
                     <!-- Hotspot System Action -->
                     <div class="service-card hotspot-action-card" onclick="openHotspotSettings()">
-                        <div class="hotspot-action-content">
-                            <div class="service-icon-box orange">📶</div>
-                            <div>
+                        <div class="service-head">
+                            <div class="service-icon-avatar cosmic-hotspot-glow">📶</div>
+                            <div class="service-meta">
                                 <div class="service-name">System Hotspot &amp; Tethering</div>
                                 <div class="service-tag">1-Tap to open Android WiFi Hotspot settings</div>
                             </div>
+                            <button class="btn-pill-dark" onclick="event.stopPropagation(); openHotspotSettings()">Settings ➔</button>
                         </div>
-                        <span class="arrow-indicator">➔</span>
                     </div>
                 </div>
             </section>
@@ -296,8 +433,8 @@
                         <h3>default</h3>
                         <p>Welcoming OmniHost Pro Cloud Node landing portal &amp; connection guide.</p>
                         <div class="site-actions">
-                            <button class="btn-sm" onclick="event.stopPropagation(); previewSite('default')">Preview</button>
-                            <button class="btn-sm btn-outline" onclick="event.stopPropagation(); openWebUrl('default')">Open :8090</button>
+                            <button class="btn-pill-dark" onclick="event.stopPropagation(); previewSite('default')">Preview</button>
+                            <button class="btn-pill-blue" onclick="event.stopPropagation(); openWebUrl('default')">Open :8090</button>
                         </div>
                     </div>
 
@@ -309,8 +446,8 @@
                         <h3>portfolio</h3>
                         <p>Modern developer &amp; creator dark portfolio with project showcase.</p>
                         <div class="site-actions">
-                            <button class="btn-sm" onclick="event.stopPropagation(); previewSite('portfolio')">Preview</button>
-                            <button class="btn-sm btn-outline" onclick="event.stopPropagation(); openWebUrl('portfolio')">Open :8090</button>
+                            <button class="btn-pill-dark" onclick="event.stopPropagation(); previewSite('portfolio')">Preview</button>
+                            <button class="btn-pill-blue" onclick="event.stopPropagation(); openWebUrl('portfolio')">Open :8090</button>
                         </div>
                     </div>
 
@@ -320,10 +457,10 @@
                             <span class="site-type">SaaS</span>
                         </div>
                         <h3>business</h3>
-                        <p>High-converting SaaS landing page with feature cards and pricing.</p>
+                        <p>Corporate dark-mode landing page with responsive cards and lead capture.</p>
                         <div class="site-actions">
-                            <button class="btn-sm" onclick="event.stopPropagation(); previewSite('business')">Preview</button>
-                            <button class="btn-sm btn-outline" onclick="event.stopPropagation(); openWebUrl('business')">Open :8090</button>
+                            <button class="btn-pill-dark" onclick="event.stopPropagation(); previewSite('business')">Preview</button>
+                            <button class="btn-pill-blue" onclick="event.stopPropagation(); openWebUrl('business')">Open :8090</button>
                         </div>
                     </div>
 
@@ -333,74 +470,66 @@
                             <span class="site-type">Editorial</span>
                         </div>
                         <h3>blog</h3>
-                        <p>Clean typography-focused tech essay and engineering publication.</p>
+                        <p>Minimalist editorial blog layout optimized for reading and sharing.</p>
                         <div class="site-actions">
-                            <button class="btn-sm" onclick="event.stopPropagation(); previewSite('blog')">Preview</button>
-                            <button class="btn-sm btn-outline" onclick="event.stopPropagation(); openWebUrl('blog')">Open :8090</button>
+                            <button class="btn-pill-dark" onclick="event.stopPropagation(); previewSite('blog')">Preview</button>
+                            <button class="btn-pill-blue" onclick="event.stopPropagation(); openWebUrl('blog')">Open :8090</button>
                         </div>
                     </div>
 
-                    <div class="site-card" id="card-site-file_manager" onclick="selectSite('file_manager')">
+                    <div class="site-card" id="card-site-galaxsee" onclick="openExplorerUrl()">
                         <div class="site-card-header">
-                            <span class="site-badge">Template</span>
-                            <span class="site-type">Media &amp; Files</span>
+                            <span class="site-badge" style="background: rgba(6,182,212,0.2); color: #06B6D4;">GalaxSee Pro</span>
+                            <span class="site-type">Gallery Hub</span>
                         </div>
-                        <h3>file_manager</h3>
-                        <p>Web File Explorer &amp; Media Hub (Streaming Video, Instant ZIP, Search).</p>
+                        <h3>GalaxSee Hub</h3>
+                        <p>Full-screen photo &amp; wallpaper gallery, video streaming, and instant ZIP packager.</p>
                         <div class="site-actions">
-                            <button class="btn-sm" onclick="event.stopPropagation(); previewSite('file_manager')">Preview</button>
-                            <button class="btn-sm btn-outline" onclick="event.stopPropagation(); openWebUrl('file_manager')">Open :8090</button>
+                            <button class="btn-pill-blue" onclick="event.stopPropagation(); openExplorerUrl()" style="width: 100%;">Launch GalaxSee 🚀</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="site-preview-container" id="preview-box">
-                    <div class="preview-header">
-                        <span class="preview-dot red"></span>
-                        <span class="preview-dot yellow"></span>
-                        <span class="preview-dot green"></span>
-                        <span class="preview-url" id="preview-url-text">http://localhost:8090/</span>
-                    </div>
-                    <iframe id="site-preview-iframe" class="preview-frame" src="about:blank"></iframe>
+                <div class="card-title-bar" style="margin-top: 24px;">Live Preview</div>
+                <div class="preview-frame-container">
+                    <iframe id="site-preview-frame" class="preview-frame" src="about:blank"></iframe>
                 </div>
             </section>
 
-            <!-- TAB 3: WIFI FTP SERVER (RFC 959) -->
+            <!-- TAB 3: FTP & WEBDAV FILE SERVER -->
             <section id="tab-ftp" class="tab-view">
                 <div class="section-banner">
-                    <h2>High-Speed WiFi FTP Server</h2>
-                    <p>Mount your website folder or storage wirelessly. Transfer files over WiFi at full router speed:</p>
+                    <h2>Wireless Storage &amp; FTP Sync</h2>
+                    <p>Mount your phone storage wirelessly on any computer without USB cables:</p>
                 </div>
 
                 <div class="ftp-info-card">
-                    <div class="ftp-stat-row">
-                        <span class="label">Server Status</span>
-                        <span class="val green" id="ftp-status-badge">● LISTENING (:2121)</span>
+                    <div class="ftp-info-row">
+                        <span class="f-label">FTP Address:</span>
+                        <span class="f-val mono" id="ftp-status-url">ftp://192.168.x.x:2121</span>
+                        <button class="btn-pill-blue" onclick="copyValue('ftp-status-url')">Copy</button>
                     </div>
-                    <div class="ftp-stat-row">
-                        <span class="label">Access URL</span>
-                        <span class="val mono" id="ftp-full-url">ftp://192.168.x.x:2121</span>
+                    <div class="ftp-info-row">
+                        <span class="f-label">WebDAV Drive:</span>
+                        <span class="f-val mono" id="webdav-status-url">http://192.168.x.x:8090/webdav</span>
+                        <button class="btn-pill-blue" onclick="copyWebDavUrl()">Copy</button>
                     </div>
-                    <div class="ftp-stat-row">
-                        <span class="label">Username</span>
-                        <span class="val mono">admin <em style="opacity:0.6;">(or anonymous)</em></span>
+                    <div class="ftp-info-row">
+                        <span class="f-label">Credentials:</span>
+                        <span class="f-val">Anonymous (Read / Write Access)</span>
                     </div>
-                    <div class="ftp-stat-row">
-                        <span class="label">Password</span>
-                        <span class="val mono">omnihost</span>
-                    </div>
-                    <div class="ftp-stat-row">
-                        <span class="label">Mount Point</span>
-                        <span class="val" id="ftp-mount-point">/data/data/com.omnihost.pro/files/ftp_root</span>
+                    <div class="ftp-info-row">
+                        <span class="f-label">Root Directory:</span>
+                        <span class="f-val mono">/sdcard/Download/omnihost_sites</span>
                     </div>
                 </div>
 
-                <div class="ftp-instructions-card">
-                    <h3>💡 How to Connect from Any PC or Mac:</h3>
-                    <ol>
-                        <li>Connect your computer to the same WiFi network or mobile hotspot.</li>
-                        <li>Open <strong>Windows File Explorer</strong>, <strong>FileZilla</strong>, or <strong>Cyberduck</strong>.</li>
-                        <li>Enter <strong class="mono" id="ftp-guide-url">ftp://192.168.x.x:2121</strong> into the address bar.</li>
+                <div class="connection-guide-card">
+                    <div class="guide-title">How to connect from your PC / Mac:</div>
+                    <ol class="guide-steps">
+                        <li>Ensure your computer is connected to the same WiFi or Hotspot.</li>
+                        <li>Open <strong>Windows File Explorer</strong> (or Mac Finder &rarr; Connect to Server).</li>
+                        <li>Enter <strong class="mono" id="ftp-guide-url">ftp://192.168.x.x:2121</strong> or <strong class="mono" id="webdav-guide-url">http://192.168.x.x:8090/webdav</strong>.</li>
                         <li>Drag and drop files, photos, or HTML code directly to upload wirelessly!</li>
                     </ol>
                 </div>
@@ -441,7 +570,7 @@
                         </div>
                     </div>
 
-                    <button class="btn-primary btn-speed-test" id="btn-run-speed-test" onclick="startSpeedTest()">
+                    <button class="btn-pill-blue btn-speed-test" id="btn-run-speed-test" onclick="startSpeedTest()">
                         ⚡ Run Network Speed Test
                     </button>
                 </div>
@@ -519,20 +648,9 @@
                     </div>
                 </div>
             </section>
-
-            <!-- TAB 6: DEDICATED FILES & MEDIA LIBRARY TAB -->
-            <section id="tab-files" class="tab-view">
-                <div class="section-banner">
-                    <h2>Media &amp; File Library</h2>
-                    <p>View photos, play videos, and download files directly from your phone:</p>
-                </div>
-                <div class="file-embed-container">
-                    <iframe id="file-manager-iframe" class="file-embed-frame" src="file_manager.html"></iframe>
-                </div>
-            </section>
         </main>
 
-        <!-- Bottom Navigation Bar (Audiomack & Hotspot Style - 6 Tabs) -->
+        <!-- Bottom Navigation Bar (5 Clean Tabs - Image 4 & Audiomack Standard) -->
         <nav class="bottom-nav">
             <button class="nav-tab active" id="nav-hotspot" onclick="selectTab('hotspot')">
                 <div class="nav-icon">📶</div>
@@ -541,10 +659,6 @@
             <button class="nav-tab" id="nav-sites" onclick="selectTab('sites')">
                 <div class="nav-icon">🌐</div>
                 <div class="nav-label">Sites</div>
-            </button>
-            <button class="nav-tab" id="nav-files" onclick="selectTab('files')">
-                <div class="nav-icon">📁</div>
-                <div class="nav-label">Files</div>
             </button>
             <button class="nav-tab" id="nav-ftp" onclick="selectTab('ftp')">
                 <div class="nav-icon">📡</div>
@@ -590,9 +704,9 @@
                 </div>
                 <div class="qr-url-pill" id="qr-modal-url">http://...</div>
                 <div class="qr-actions-row">
-                    <button class="btn-primary" onclick="copyValue('qr-modal-url')">📋 Copy Link</button>
-                    <button class="btn-outline" onclick="shareQrUrl()">↗️ Share</button>
-                    <button class="btn-outline" onclick="closeQrModal()">Close</button>
+                    <button class="btn-pill-blue" onclick="copyValue('qr-modal-url')">📋 Copy Link</button>
+                    <button class="btn-pill-dark" onclick="shareQrUrl()">↗️ Share</button>
+                    <button class="btn-pill-dark" onclick="closeQrModal()">Close</button>
                 </div>
             </div>
         </div>
@@ -627,8 +741,8 @@
                 </div>
 
                 <div class="limits-modal-actions">
-                    <button class="btn-primary" id="btn-apply-limit" onclick="applyLimitsFromModal()">✓ Save Limit</button>
-                    <button class="btn-outline" onclick="disableLimitFromModal()">Disable</button>
+                    <button class="btn-pill-blue" id="btn-apply-limit" onclick="applyLimitsFromModal()" style="padding: 12px; font-size: 13px;">✓ Save Limit</button>
+                    <button class="btn-pill-dark" onclick="disableLimitFromModal()" style="padding: 12px; font-size: 13px;">Disable</button>
                 </div>
             </div>
         </div>
