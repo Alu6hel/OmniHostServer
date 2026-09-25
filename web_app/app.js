@@ -164,6 +164,9 @@ function updateTunnelUI() {
     const btnToggle = document.getElementById('btn-toggle-tunnel');
     const btnCopy = document.getElementById('btn-copy-tunnel');
 
+    const trayDotTunnel = document.getElementById('tray-dot-tunnel');
+    const trayNoteTunnel = document.getElementById('tray-note-tunnel');
+
     if (isTunnelActive && tunnelPublicUrl) {
         if (elTunnel) elTunnel.innerText = tunnelPublicUrl;
         if (badge) {
@@ -178,6 +181,13 @@ function updateTunnelUI() {
             btnToggle.style.color = "#ffffff";
         }
         if (btnCopy) btnCopy.classList.remove('disabled');
+        if (trayDotTunnel) {
+            trayDotTunnel.classList.remove('standby');
+            trayDotTunnel.classList.add('online');
+        }
+        if (trayNoteTunnel) {
+            trayNoteTunnel.innerText = "Live";
+        }
     } else {
         if (elTunnel) elTunnel.innerText = "● Standby — Tap to Activate";
         if (badge) {
@@ -192,6 +202,13 @@ function updateTunnelUI() {
             btnToggle.style.color = "#000000";
         }
         if (btnCopy) btnCopy.classList.add('disabled');
+        if (trayDotTunnel) {
+            trayDotTunnel.classList.remove('online');
+            trayDotTunnel.classList.add('standby');
+        }
+        if (trayNoteTunnel) {
+            trayNoteTunnel.innerText = "Standby";
+        }
     }
 }
 
@@ -523,6 +540,7 @@ function copyWebDavUrl() {
     }
     const url = `http://${lanIp}:8090/webdav`;
     copyValueText(url, "WebDAV Cloud Drive URL copied!");
+    showQrModal('WebDAV Cloud Drive (RFC 4918)', url, 'URL copied! Mount phone storage as a local hard drive on Windows (Map Network Drive), macOS (Finder Cmd+K), or Solid Explorer.');
 }
 
 function copyAllEndpoints() {
@@ -617,6 +635,10 @@ function openWebUrl(siteName) {
 }
 
 function openExplorerUrl() {
+    if (!isServersRunning) {
+        showToast("Server is offline — tap Power to start");
+        return;
+    }
     window.open(`http://${lanIp}:8090/files`, '_blank');
 }
 
