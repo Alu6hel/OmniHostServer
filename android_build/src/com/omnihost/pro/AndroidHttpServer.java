@@ -437,7 +437,7 @@ public class AndroidHttpServer {
             if ("/api/speedtest/download".equals(path)) {
                 int size = 2097152;
                 if (queryParams.containsKey("size")) {
-                    try { size = Math.min(10485760, Integer.parseInt(queryParams.get("size"))); } catch (Exception ignored) {}
+                    try { size = Math.min(33554432, Integer.parseInt(queryParams.get("size"))); } catch (Exception ignored) {}
                 }
                 StringBuilder h = new StringBuilder();
                 h.append("HTTP/1.1 200 OK\r\n");

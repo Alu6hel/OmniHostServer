@@ -58,6 +58,8 @@ function setupDeviceState() {
             updateBatteryCardUI();
             updateUrls();
             updatePowerButtonUI();
+            highlightActiveSiteCard();
+            previewSite(activeSite);
         } catch (e) {
             console.error("Bridge parse err:", e);
         }
@@ -68,6 +70,8 @@ function setupDeviceState() {
         }
         updateUrls();
         initWebBatteryApi();
+        highlightActiveSiteCard();
+        previewSite(activeSite);
     }
 }
 
@@ -85,6 +89,7 @@ window.onHostStateSync = function(state) {
     updateUrls();
     updatePowerButtonUI();
     highlightActiveSiteCard();
+    previewSite(activeSite);
 };
 
 window.onFtpEvent = function(type, details) {
@@ -290,6 +295,7 @@ function updatePowerButtonUI() {
             ftpBadge.innerText = '● STOPPED';
         }
     }
+    previewSite(activeSite);
 }
 
 // 3 Limits Cycling (Image 2)
@@ -509,6 +515,9 @@ function selectTab(tabId) {
     const navBtn = document.getElementById(`nav-${tabId}`);
     if (navBtn) navBtn.classList.add('active');
 
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) mainContent.scrollTop = 0;
+
     const titleMap = {
         'hotspot': 'OmniHost Pro',
         'sites': 'Modular Sites',
@@ -619,13 +628,19 @@ function highlightActiveSiteCard() {
 }
 
 function previewSite(siteName) {
-    const iframe = document.getElementById('site-preview-iframe');
+    const iframe = document.getElementById('site-preview-frame') || document.getElementById('site-preview-iframe');
     const previewUrlText = document.getElementById('preview-url-text');
-    if (iframe) {
-        iframe.src = `http://${lanIp}:8090/`;
-    }
+    const host = hasNativeBridge ? '127.0.0.1' : (window.location.hostname || lanIp || '127.0.0.1');
     if (previewUrlText) {
         previewUrlText.innerText = `http://${lanIp}:8090/ (${siteName})`;
+    }
+    if (iframe) {
+        if (isServersRunning) {
+            iframe.removeAttribute('srcdoc');
+            iframe.src = `http://${host}:8090/?t=${Date.now()}`;
+        } else {
+            iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{background:#090B10;color:#94a3b8;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;box-sizing:border-box;padding:20px;}.icon{font-size:36px;margin-bottom:12px;filter:drop-shadow(0 0 12px rgba(0,240,255,0.4));}.title{font-size:15px;font-weight:700;color:#ffffff;margin-bottom:6px;letter-spacing:0.5px;}.sub{font-size:12px;color:#6b7280;line-height:1.5;max-width:320px;}.pill{display:inline-block;margin-top:14px;background:rgba(0,240,255,0.12);color:#00f0ff;border:1px solid rgba(0,240,255,0.3);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;font-family:monospace;}</style></head><body><div class="icon">⚡</div><div class="title">OMNIHOST PREVIEW</div><div class="sub">Server is currently in standby. Tap <strong>START SERVER</strong> on Dashboard to activate live local rendering for <em>${siteName}</em>.</div><div class="pill">PORT 8090 • STANDBY</div></body></html>`;
+        }
     }
 }
 
@@ -784,10 +799,10 @@ async function startSpeedTest() {
     // 2. Pure Web Browser Fallback (ReadableStream & XHR Progress)
     try {
         if (currentSpeedTestMode === 'wan') {
-            // Step A: Latency & Colo Trace
+            // Step A: Latency & Colo Trace (5 probes)
             let serverColo = "Cloudflare Global Edge";
             const pings = [];
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < 5; i++) {
                 const t0 = performance.now();
                 const res = await fetch(`https://cloudflare.com/cdn-cgi/trace?t=${Date.now()}`, { cache: 'no-store' });
                 const text = await res.text();
@@ -802,74 +817,108 @@ async function startSpeedTest() {
                     pingMs: curPing,
                     jitterMs: 0,
                     server: serverColo,
-                    statusText: `Pinging ${serverColo}...`
+                    statusText: `Probing latency to ${serverColo} (Packet ${i + 1}/5)...`
                 });
                 await new Promise(r => setTimeout(r, 60));
             }
             const avgPing = Math.round(pings.reduce((a, b) => a + b, 0) / pings.length);
-            const jitter = Math.round(Math.abs(pings[1] - pings[0]) + Math.abs(pings[2] - pings[1])) / 2;
+            let dJitter = 0.0;
+            for (let i = 1; i < pings.length; i++) {
+                const diff = Math.abs(pings[i] - pings[i - 1]);
+                dJitter += (diff - dJitter) / 16.0;
+            }
+            const finalJitter = Math.max(1, Math.round(dJitter));
 
-            // Step B: Real Download Streaming (5MB)
-            const downUrl = `https://speed.cloudflare.com/__down?bytes=5000000&t=${Date.now()}`;
+            // Step B: Real Sustained Download Streaming (25 MB)
+            const downUrl = `https://speed.cloudflare.com/__down?bytes=25000000&t=${Date.now()}`;
             const dlRes = await fetch(downUrl, { cache: 'no-store' });
-            if (!dlRes.ok) throw new Error("Cloudflare unreachable");
+            if (!dlRes.ok) throw new Error("Cloudflare test node unreachable");
             const reader = dlRes.body.getReader();
             let totalDown = 0;
+            let steadyDown = 0;
             const downStart = performance.now();
+            let steadyStart = downStart;
             let lastDownUpdate = downStart;
+            let warmedUp = false;
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
                 totalDown += value.length;
                 const now = performance.now();
-                if (now - lastDownUpdate > 80 && (now - downStart) > 100) {
-                    const curMbps = parseFloat(((totalDown * 8) / ((now - downStart) / 1000 * 1000000)).toFixed(1));
+
+                // Discard first 300ms TCP slow start warmup window
+                if (!warmedUp && (now - downStart) >= 300) {
+                    warmedUp = true;
+                    steadyStart = now;
+                    steadyDown = 0;
+                }
+                if (warmedUp) {
+                    steadyDown += value.length;
+                }
+
+                if (now - lastDownUpdate > 80 && (now - downStart) > 120) {
+                    const elapsedSec = warmedUp ? ((now - steadyStart) / 1000) : ((now - downStart) / 1000);
+                    const bytesCount = warmedUp ? steadyDown : totalDown;
+                    const curMbps = elapsedSec > 0 ? parseFloat(((bytesCount * 8) / (elapsedSec * 1000000)).toFixed(1)) : 0.0;
                     window.onSpeedTestProgress({
                         phase: 'download',
                         currentMbps: curMbps,
                         pingMs: avgPing,
-                        jitterMs: Math.round(jitter),
+                        jitterMs: finalJitter,
                         server: serverColo,
-                        statusText: `Testing Real Download: ${curMbps} Mbps...`
+                        statusText: `Testing Real Sustained Download: ${curMbps} Mbps...`
                     });
                     lastDownUpdate = now;
                 }
             }
-            const downDuration = (performance.now() - downStart) / 1000;
-            const dlMbps = parseFloat(((totalDown * 8) / (downDuration * 1000000)).toFixed(1));
+            const finalDlElapsed = warmedUp ? ((performance.now() - steadyStart) / 1000) : ((performance.now() - downStart) / 1000);
+            const finalDlBytes = warmedUp ? steadyDown : totalDown;
+            const dlMbps = finalDlElapsed > 0 ? parseFloat(((finalDlBytes * 8) / (finalDlElapsed * 1000000)).toFixed(1)) : 0.0;
 
-            // Step C: Real Upload (1.5MB)
-            const uploadBytes = new Uint8Array(1572864);
-            uploadBytes.fill(0xAA);
+            // Step C: Real Sustained Upload (4 MB)
+            const uploadBytes = new Uint8Array(4194304);
+            uploadBytes.fill(0x5A);
             const upStart = performance.now();
+            let steadyUpStart = upStart;
+            let steadyUpBytes = 0;
             let lastUpUpdate = upStart;
+            let upWarmedUp = false;
 
             await new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', `https://speed.cloudflare.com/__up?t=${Date.now()}`);
                 xhr.upload.onprogress = (e) => {
                     const now = performance.now();
+                    if (!upWarmedUp && (now - upStart) >= 300) {
+                        upWarmedUp = true;
+                        steadyUpStart = now;
+                        steadyUpBytes = e.loaded;
+                    }
+
                     if (now - lastUpUpdate > 80 && e.loaded > 0) {
-                        const curUpMbps = parseFloat(((e.loaded * 8) / ((now - upStart) / 1000 * 1000000)).toFixed(1));
+                        const elapsedSec = upWarmedUp ? ((now - steadyUpStart) / 1000) : ((now - upStart) / 1000);
+                        const loadedCount = upWarmedUp ? (e.loaded - steadyUpBytes) : e.loaded;
+                        const curUpMbps = elapsedSec > 0 ? parseFloat(((loadedCount * 8) / (elapsedSec * 1000000)).toFixed(1)) : 0.0;
                         window.onSpeedTestProgress({
                             phase: 'upload',
                             currentMbps: curUpMbps,
                             pingMs: avgPing,
-                            jitterMs: Math.round(jitter),
+                            jitterMs: finalJitter,
                             downloadMbps: dlMbps,
                             server: serverColo,
-                            statusText: `Testing Real Upload: ${curUpMbps} Mbps...`
+                            statusText: `Testing Real Sustained Upload: ${curUpMbps} Mbps...`
                         });
                         lastUpUpdate = now;
                     }
                 };
                 xhr.onload = () => resolve();
-                xhr.onerror = () => reject(new Error("Upload failed"));
+                xhr.onerror = () => reject(new Error("Upload test connection dropped"));
                 xhr.send(uploadBytes);
             });
-            const upDuration = (performance.now() - upStart) / 1000;
-            const ulMbps = parseFloat(((uploadBytes.byteLength * 8) / (upDuration * 1000000)).toFixed(1));
+            const finalUpElapsed = upWarmedUp ? ((performance.now() - steadyUpStart) / 1000) : ((performance.now() - upStart) / 1000);
+            const finalUpLoaded = upWarmedUp ? (uploadBytes.byteLength - steadyUpBytes) : uploadBytes.byteLength;
+            const ulMbps = finalUpElapsed > 0 ? parseFloat(((finalUpLoaded * 8) / (finalUpElapsed * 1000000)).toFixed(1)) : 0.0;
 
             let rating = dlMbps >= 100 ? '⚡ Gigabit/Fiber Grade — Ultra-Fast Stream & Server Hosting'
                        : dlMbps >= 50 ? '🚀 High-Speed Broadband — Excellent for Multi-Client Serving'
@@ -880,7 +929,7 @@ async function startSpeedTest() {
             window.onSpeedTestResult({
                 mode: 'wan',
                 pingMs: avgPing,
-                jitterMs: Math.round(jitter),
+                jitterMs: finalJitter,
                 downloadMbps: dlMbps,
                 uploadMbps: ulMbps,
                 server: serverColo,
@@ -888,31 +937,42 @@ async function startSpeedTest() {
                 isOffline: false
             });
         } else {
-            // Local LAN Benchmark against :8090
+            // Local LAN Direct Socket Throughput Benchmark against :8090
+            const host = (hasNativeBridge) ? '127.0.0.1' : (window.location.hostname || lanIp || '127.0.0.1');
             const pings = [];
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < 5; i++) {
                 const t0 = performance.now();
-                await fetch(`${API_BASE}/api/speedtest/ping?t=${Date.now()}`);
+                const pingRes = await fetch(`http://${host}:8090/api/speedtest/ping?t=${Date.now()}`);
+                if (!pingRes.ok) throw new Error("Local server (:8090) offline");
                 pings.push(performance.now() - t0);
+                await new Promise(r => setTimeout(r, 40));
             }
-            const avgPing = Math.round(pings.reduce((a, b) => a + b, 0) / pings.length);
-            const jitter = 1;
+            const avgPing = Math.max(1, Math.round(pings.reduce((a, b) => a + b, 0) / pings.length));
+            let dJitter = 0.0;
+            for (let i = 1; i < pings.length; i++) {
+                const diff = Math.abs(pings[i] - pings[i - 1]);
+                dJitter += (diff - dJitter) / 16.0;
+            }
+            const jitter = Math.max(1, Math.round(dJitter));
 
             const d0 = performance.now();
-            const dlRes = await fetch(`${API_BASE}/api/speedtest/download?size=4194304&t=${Date.now()}`);
+            const dlRes = await fetch(`http://${host}:8090/api/speedtest/download?size=16777216&t=${Date.now()}`);
+            if (!dlRes.ok) throw new Error("Download benchmark socket failed");
             const dlBuf = await dlRes.arrayBuffer();
             const dDuration = (performance.now() - d0) / 1000;
-            const dlMbps = parseFloat(((dlBuf.byteLength * 8) / (dDuration * 1000000)).toFixed(1));
+            const dlMbps = dDuration > 0 ? parseFloat(((dlBuf.byteLength * 8) / (dDuration * 1000000)).toFixed(1)) : 0.0;
 
-            const uploadBytes = new Uint8Array(2097152);
+            const uploadBytes = new Uint8Array(8388608);
+            uploadBytes.fill(0x3C);
             const u0 = performance.now();
-            await fetch(`${API_BASE}/api/speedtest/upload`, {
+            const upRes = await fetch(`http://${host}:8090/api/speedtest/upload`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/octet-stream' },
                 body: uploadBytes
             });
+            if (!upRes.ok) throw new Error("Upload benchmark socket failed");
             const uDuration = (performance.now() - u0) / 1000;
-            const ulMbps = parseFloat(((uploadBytes.byteLength * 8) / (uDuration * 1000000)).toFixed(1));
+            const ulMbps = uDuration > 0 ? parseFloat(((uploadBytes.byteLength * 8) / (uDuration * 1000000)).toFixed(1)) : 0.0;
 
             window.onSpeedTestResult({
                 mode: 'lan',
@@ -921,7 +981,7 @@ async function startSpeedTest() {
                 downloadMbps: dlMbps,
                 uploadMbps: ulMbps,
                 server: 'OmniHost Local Engine (:8090)',
-                rating: '🏠 Local WiFi / Device Bus Throughput (Direct LAN Benchmark)',
+                rating: '🏠 Local Device / Loopback Socket Throughput (Direct Hardware Benchmark)',
                 isOffline: false
             });
         }
