@@ -22,6 +22,7 @@ public class MainActivity extends Activity {
     private WebView webView;
     private AndroidHttpServer httpServer;
     private AndroidFtpServer ftpServer;
+    private WifiManager.WifiLock wifiLock;
 
     private int timerLimitMinutes = 0;
     private int batteryLimitPercent = 0;
@@ -116,9 +117,30 @@ public class MainActivity extends Activity {
         webView.addJavascriptInterface(new OmniHostBridge(), "OmniHostBridge");
         webView.loadUrl("file:///android_asset/www/index.html");
         timerHandler.post(batteryMonitorRunnable);
+        handleIncomingShareIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIncomingShareIntent(intent);
     }
 
     private void startServers() {
+        try {
+            if (wifiLock == null) {
+                WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                if (wm != null) {
+                    wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "OmniHost:HighPerfWifi");
+                    wifiLock.setReferenceCounted(false);
+                }
+            }
+            if (wifiLock != null && !wifiLock.isHeld()) {
+                wifiLock.acquire();
+            }
+        } catch (Exception ignored) {}
+
         try {
             if (!httpServer.isRunning()) httpServer.start();
         } catch (Exception e) {
@@ -133,6 +155,11 @@ public class MainActivity extends Activity {
     }
 
     private void stopServers() {
+        try {
+            if (wifiLock != null && wifiLock.isHeld()) {
+                wifiLock.release();
+            }
+        } catch (Exception ignored) {}
         if (httpServer.isRunning()) httpServer.stop();
         if (ftpServer.isRunning()) ftpServer.stop();
         syncStateToWebView();
@@ -614,9 +641,101 @@ public class MainActivity extends Activity {
         }
     }
 
+    // =========================================================================
+    // LOW-KEY NATIVE FILE SHARE RECEIVER (Intent.ACTION_SEND / SEND_MULTIPLE)
+    // Seamless Cross-App Integration with Zero Popups or Developer Jargon
+    // =========================================================================
+    private void handleIncomingShareIntent(Intent intent) {
+        if (intent == null) return;
+        String action = intent.getAction();
+        if (action == null) return;
+
+        if (Intent.ACTION_SEND.equals(action)) {
+            if (intent.hasExtra(Intent.EXTRA_STREAM)) {
+                android.net.Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                if (uri != null) {
+                    saveSharedUri(uri);
+                }
+            } else if (intent.hasExtra(Intent.EXTRA_TEXT)) {
+                String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+                if (text != null && !text.isEmpty()) {
+                    saveSharedText(text);
+                }
+            }
+        } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
+            ArrayList<android.net.Uri> uris = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+            if (uris != null && !uris.isEmpty()) {
+                for (android.net.Uri uri : uris) {
+                    saveSharedUri(uri);
+                }
+            }
+        }
+    }
+
+    private void saveSharedUri(android.net.Uri uri) {
+        new Thread(() -> {
+            try {
+                File sharedDir = new File(getFilesDir(), "ftp_root/Shared");
+                if (!sharedDir.exists()) sharedDir.mkdirs();
+
+                String displayName = "shared_" + System.currentTimeMillis();
+                try (android.database.Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
+                        if (nameIndex >= 0) {
+                            String name = cursor.getString(nameIndex);
+                            if (name != null && !name.isEmpty()) displayName = name;
+                        }
+                    }
+                } catch (Exception ignored) {}
+
+                File outFile = new File(sharedDir, displayName);
+                try (InputStream is = getContentResolver().openInputStream(uri);
+                     FileOutputStream fos = new FileOutputStream(outFile)) {
+                    if (is != null) {
+                        byte[] buf = new byte[8192];
+                        int n;
+                        while ((n = is.read(buf)) != -1) {
+                            fos.write(buf, 0, n);
+                        }
+                    }
+                }
+                final String savedName = displayName;
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "📥 Saved to WiFi Library: " + savedName, Toast.LENGTH_SHORT).show();
+                    syncStateToWebView();
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Shared file saved", Toast.LENGTH_SHORT).show());
+            }
+        }).start();
+    }
+
+    private void saveSharedText(String text) {
+        new Thread(() -> {
+            try {
+                File sharedDir = new File(getFilesDir(), "ftp_root/Shared");
+                if (!sharedDir.exists()) sharedDir.mkdirs();
+                File outFile = new File(sharedDir, "note_" + System.currentTimeMillis() + ".txt");
+                try (FileWriter fw = new FileWriter(outFile)) {
+                    fw.write(text);
+                }
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "📥 Note saved to WiFi Library", Toast.LENGTH_SHORT).show();
+                    syncStateToWebView();
+                });
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
     @Override
     protected void onDestroy() {
         stopServers();
+        try {
+            if (wifiLock != null && wifiLock.isHeld()) {
+                wifiLock.release();
+            }
+        } catch (Exception ignored) {}
         if (timerRunnable != null) timerHandler.removeCallbacks(timerRunnable);
         super.onDestroy();
     }

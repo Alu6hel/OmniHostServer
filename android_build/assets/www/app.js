@@ -277,23 +277,162 @@ function updatePowerButtonUI() {
 }
 
 // 3 Limits Cycling (Image 2)
-function cycleTimerLimit() {
-    timerIndex = (timerIndex + 1) % timerOptions.length;
-    timerLimitMin = timerOptions[timerIndex];
-    const el = document.getElementById('limit-timer-val');
-    if (el) {
-        el.innerText = timerLimitMin === 0 ? 'Disabled' : `${timerLimitMin} min`;
+// 3 Limits Interactive Bottom Sheet Modal
+let currentLimitsModalType = 'timer';
+let currentLimitsModalVal = 30;
+
+function openLimitsModal(type) {
+    currentLimitsModalType = type;
+    const container = document.getElementById('limits-modal-container');
+    const titleEl = document.getElementById('limits-modal-title');
+    const subEl = document.getElementById('limits-modal-desc') || document.getElementById('limits-modal-sub');
+    const valEl = document.getElementById('limits-current-val-text') || document.getElementById('limits-modal-val-display');
+    const slider = document.getElementById('limits-range-slider') || document.getElementById('limits-modal-slider');
+    const presetsRow = document.getElementById('limits-presets-container') || document.getElementById('limits-presets-row');
+
+    let presets = [];
+    if (type === 'timer') {
+        if (titleEl) titleEl.innerText = "⏱️ Set Auto-Stop Timer";
+        if (subEl) subEl.innerText = "Automatically stops sharing when time runs out";
+        if (slider) {
+            slider.min = "5";
+            slider.max = "240";
+            slider.step = "5";
+        }
+        currentLimitsModalVal = timerLimitMin > 0 ? timerLimitMin : 30;
+        presets = [15, 30, 60, 120];
+    } else if (type === 'battery') {
+        if (titleEl) titleEl.innerText = "🔋 Battery Guard";
+        if (subEl) subEl.innerText = `Stops sharing when battery drops to this level (Live: ${currentBatteryPct}%)`;
+        if (slider) {
+            slider.min = "10";
+            slider.max = "50";
+            slider.step = "5";
+        }
+        currentLimitsModalVal = batteryLimitPct > 0 ? batteryLimitPct : 20;
+        presets = [15, 20, 25, 30];
+    } else if (type === 'data') {
+        if (titleEl) titleEl.innerText = "📊 Data Allowance";
+        if (subEl) subEl.innerText = "Stops sharing after this amount of traffic is transferred";
+        if (slider) {
+            slider.min = "50";
+            slider.max = "5120";
+            slider.step = "50";
+        }
+        currentLimitsModalVal = dataLimitMb > 0 ? dataLimitMb : 500;
+        presets = [100, 500, 1024, 2048];
     }
-    pushLimitsToBridge();
+
+    if (slider) slider.value = currentLimitsModalVal;
+    updateLimitsDisplayVal(valEl);
+
+    if (presetsRow) {
+        presetsRow.innerHTML = '';
+        presets.forEach(p => {
+            const btn = document.createElement('button');
+            btn.className = 'limits-preset-btn' + (p === currentLimitsModalVal ? ' active' : '');
+            let label = p;
+            if (type === 'timer') label = `${p}m`;
+            else if (type === 'battery') label = `${p}%`;
+            else if (type === 'data') label = p >= 1024 ? `${p / 1024}G` : `${p}M`;
+            btn.innerText = label;
+            btn.onclick = () => setLimitPreset(p);
+            presetsRow.appendChild(btn);
+        });
+    }
+
+    if (container) {
+        container.classList.add('open');
+        container.style.display = 'flex';
+    }
 }
 
-function cycleBatteryLimit() {
-    batteryIndex = (batteryIndex + 1) % batteryOptions.length;
-    batteryLimitPct = batteryOptions[batteryIndex];
-    updateBatteryCardUI();
+function updateLimitsDisplayVal(valEl) {
+    if (!valEl) valEl = document.getElementById('limits-current-val-text') || document.getElementById('limits-modal-val-display');
+    if (!valEl) return;
+    let label = `${currentLimitsModalVal} min`;
+    if (currentLimitsModalType === 'battery') label = `${currentLimitsModalVal}%`;
+    else if (currentLimitsModalType === 'data') label = currentLimitsModalVal >= 1024 ? `${currentLimitsModalVal / 1024} GB` : `${currentLimitsModalVal} MB`;
+    valEl.innerText = label;
+}
+
+function onLimitsSliderInput(val) {
+    currentLimitsModalVal = parseInt(val, 10);
+    updateLimitsDisplayVal();
+    updateActivePresetBtn();
+}
+
+function setLimitPreset(val) {
+    currentLimitsModalVal = parseInt(val, 10);
+    const slider = document.getElementById('limits-range-slider') || document.getElementById('limits-modal-slider');
+    if (slider) slider.value = currentLimitsModalVal;
+    updateLimitsDisplayVal();
+    updateActivePresetBtn();
+}
+
+function updateActivePresetBtn() {
+    const presetsRow = document.getElementById('limits-presets-row');
+    if (!presetsRow) return;
+    const children = Array.from(presetsRow.children);
+    children.forEach(b => {
+        const txt = b.innerText.replace(/[^0-9]/g, '');
+        if (parseInt(txt, 10) === currentLimitsModalVal) {
+            b.classList.add('active');
+        } else {
+            b.classList.remove('active');
+        }
+    });
+}
+
+function applyLimitsFromModal() {
+    if (currentLimitsModalType === 'timer') {
+        timerLimitMin = currentLimitsModalVal;
+        const el = document.getElementById('limit-timer-val');
+        if (el) el.innerText = `${timerLimitMin} min`;
+        showToast(`⏱️ Auto-Off Timer set to ${timerLimitMin} min`);
+    } else if (currentLimitsModalType === 'battery') {
+        batteryLimitPct = currentLimitsModalVal;
+        updateBatteryCardUI();
+        checkBatteryLimitEnforcement();
+        showToast(`🔋 Battery Guard set to ${batteryLimitPct}%`);
+    } else if (currentLimitsModalType === 'data') {
+        dataLimitMb = currentLimitsModalVal;
+        const el = document.getElementById('limit-data-val');
+        if (el) {
+            el.innerText = dataLimitMb >= 1024 ? `${dataLimitMb / 1024} GB` : `${dataLimitMb} MB`;
+        }
+        showToast(`📊 Data Limit set to ${dataLimitMb >= 1024 ? (dataLimitMb / 1024) + ' GB' : dataLimitMb + ' MB'}`);
+    }
     pushLimitsToBridge();
-    checkBatteryLimitEnforcement();
-    showToast(batteryLimitPct === 0 ? "🔋 Battery Limit: Disabled" : `🔋 Battery Limit: Stop at ${batteryLimitPct}% (Live: ${currentBatteryPct}%)`);
+    closeLimitsModal();
+}
+
+function disableLimitFromModal() {
+    if (currentLimitsModalType === 'timer') {
+        timerLimitMin = 0;
+        const el = document.getElementById('limit-timer-val');
+        if (el) el.innerText = 'Disabled';
+        showToast('⏱️ Auto-Off Timer: Disabled');
+    } else if (currentLimitsModalType === 'battery') {
+        batteryLimitPct = 0;
+        updateBatteryCardUI();
+        showToast('🔋 Battery Guard: Disabled');
+    } else if (currentLimitsModalType === 'data') {
+        dataLimitMb = 0;
+        const el = document.getElementById('limit-data-val');
+        if (el) el.innerText = 'Disabled';
+        showToast('📊 Data Allowance: Disabled');
+    }
+    pushLimitsToBridge();
+    closeLimitsModal();
+}
+
+function closeLimitsModal() {
+    const container = document.getElementById('limits-modal-container');
+    if (container) {
+        container.classList.remove('open');
+        container.style.display = 'none';
+    }
 }
 
 function updateBatteryCardUI() {
@@ -336,25 +475,13 @@ function initWebBatteryApi() {
     }
 }
 
-function cycleDataLimit() {
-    dataIndex = (dataIndex + 1) % dataOptions.length;
-    dataLimitMb = dataOptions[dataIndex];
-    const el = document.getElementById('limit-data-val');
-    if (el) {
-        if (dataLimitMb === 0) el.innerText = 'Disabled';
-        else if (dataLimitMb >= 1024) el.innerText = `${dataLimitMb / 1024} GB`;
-        else el.innerText = `${dataLimitMb} MB`;
-    }
-    pushLimitsToBridge();
-}
-
 function pushLimitsToBridge() {
     if (hasNativeBridge && window.OmniHostBridge.setLimits) {
         window.OmniHostBridge.setLimits(timerLimitMin, batteryLimitPct, dataLimitMb);
     }
 }
 
-// Navigation Tabs
+// Navigation Tabs (6 Tabs)
 function selectTab(tabId) {
     currentTab = tabId;
     document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
@@ -369,6 +496,7 @@ function selectTab(tabId) {
     const titleMap = {
         'hotspot': 'WiFi Hotspot',
         'sites': 'Modular Sites',
+        'files': 'Media & Files',
         'ftp': 'WiFi FTP Server',
         'speed': 'Speed Test',
         'data': 'Data Usage'
@@ -830,6 +958,155 @@ function copyValue(elementId) {
             showToast("Copied to clipboard: " + text);
         }).catch(() => {
             showToast("Copied: " + text);
+        });
+    }
+}
+
+// Service Card Action Strips & QR Code Modals
+let currentQrUrl = '';
+
+function copyServiceUrl(type) {
+    let url = '';
+    if (type === 'http') {
+        url = `http://${lanIp}:8090`;
+    } else if (type === 'drop') {
+        url = `http://${lanIp}:8090/file_manager.html`;
+    } else if (type === 'ftp') {
+        url = `ftp://${lanIp}:2121`;
+    }
+    if (!url) return;
+    if (hasNativeBridge && window.OmniHostBridge.copyToClipboard) {
+        window.OmniHostBridge.copyToClipboard(url);
+        showToast("Copied to clipboard: " + url);
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+            showToast("Copied to clipboard: " + url);
+        }).catch(() => {
+            showToast("Copied: " + url);
+        });
+    } else {
+        showToast("Copied: " + url);
+    }
+}
+
+function openExternalUrl(type) {
+    let url = '';
+    if (type === 'http') {
+        url = `http://${lanIp}:8090`;
+    } else if (type === 'drop') {
+        url = `http://${lanIp}:8090/file_manager.html`;
+    } else if (type === 'ftp') {
+        url = `ftp://${lanIp}:2121`;
+    }
+    if (!url) return;
+    window.open(url, '_blank');
+}
+
+function getWebUrl() {
+    return `http://${lanIp}:8090`;
+}
+
+function getFtpUrl() {
+    return `ftp://${lanIp}:2121`;
+}
+
+function showFtpQr() {
+    showQrModal('Wireless File Drop', getFtpUrl(), 'Connect from your PC, Mac, or phone wirelessly.');
+}
+
+function showHttpQr() {
+    showQrModal('Personal Web Link', getWebUrl(), 'Point any phone or computer camera to open your hosted website immediately.');
+}
+
+function showDropQr() {
+    const url = `http://${lanIp}:8090/file_manager.html`;
+    showQrModal('Wireless File Drop', url, 'Scan to send or download photos, videos, and files directly to this phone.');
+}
+
+function showQrModal(title, url, tip) {
+    currentQrUrl = url;
+    const container = document.getElementById('qr-modal-container');
+    const titleEl = document.getElementById('qr-modal-title');
+    const canvasWrap = document.getElementById('qr-code-mount') || document.getElementById('qr-modal-canvas-wrap');
+    const urlEl = document.getElementById('qr-modal-url');
+    const tipEl = document.getElementById('qr-modal-instructions') || document.getElementById('qr-modal-tip');
+
+    if (titleEl) titleEl.innerText = `📱 ${title}`;
+    if (urlEl) urlEl.innerText = url;
+    if (tipEl && tip) tipEl.innerText = tip;
+
+    if (canvasWrap) {
+        canvasWrap.innerHTML = '';
+        if (window.QRCode && window.QRCode.toString) {
+            window.QRCode.toString(url, { type: 'svg', margin: 1 }, function(err, svgString) {
+                if (!err && svgString) {
+                    canvasWrap.innerHTML = svgString;
+                } else {
+                    canvasWrap.innerText = 'QR Error: ' + (err || 'Failed to render');
+                }
+            });
+        } else {
+            canvasWrap.innerText = 'QR Generator Loading...';
+        }
+    }
+
+    if (container) {
+        container.classList.add('open');
+        container.style.display = 'flex';
+    }
+}
+
+function closeQrModal() {
+    const container = document.getElementById('qr-modal-container');
+    if (container) {
+        container.classList.remove('open');
+        container.style.display = 'none';
+    }
+}
+
+function copyQrUrl() {
+    if (!currentQrUrl) return;
+    if (hasNativeBridge && window.OmniHostBridge.copyToClipboard) {
+        window.OmniHostBridge.copyToClipboard(currentQrUrl);
+        showToast("Copied to clipboard: " + currentQrUrl);
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(currentQrUrl).then(() => {
+            showToast("Copied to clipboard: " + currentQrUrl);
+        }).catch(() => {
+            showToast("Copied: " + currentQrUrl);
+        });
+    } else {
+        showToast("Copied: " + currentQrUrl);
+    }
+}
+
+function shareQrUrl() {
+    if (!currentQrUrl) return;
+    if (navigator.share) {
+        navigator.share({
+            title: 'OmniHost Connect',
+            text: 'Connect to my shared OmniHost link:',
+            url: currentQrUrl
+        }).catch(() => {});
+    } else if (hasNativeBridge && window.OmniHostBridge.shareText) {
+        window.OmniHostBridge.shareText(currentQrUrl);
+    } else {
+        copyQrUrl();
+    }
+}
+
+function shareFtpInfo() {
+    const info = `OmniHost Pro FTP Server\nHost: ftp://${lanIp}:2121\nPort: 2121\nMode: Anonymous / Full Read & Write`;
+    if (navigator.share) {
+        navigator.share({
+            title: 'OmniHost FTP Access',
+            text: info
+        }).catch(() => {});
+    } else if (hasNativeBridge && window.OmniHostBridge.shareText) {
+        window.OmniHostBridge.shareText(info);
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(info).then(() => {
+            showToast("FTP info copied to clipboard");
         });
     }
 }

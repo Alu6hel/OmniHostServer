@@ -303,6 +303,13 @@ public class AndroidHttpServer {
                 try { contentLength = Integer.parseInt(headers.get("content-length")); } catch (Exception ignored) {}
             }
 
+            // WebDAV Endpoint Routing (RFC 4918 for Windows Network Drive & Mac Finder)
+            if (path.equals("/webdav") || path.startsWith("/webdav/")) {
+                handleWebDav(method, path, headers, in, out, contentLength, clientIp);
+                client.close();
+                return;
+            }
+
             // OPTIONS preflight
             if ("OPTIONS".equalsIgnoreCase(method)) {
                 sendResponse(out, 200, "text/plain", "OK".getBytes(), clientIp, method, path);
@@ -1037,5 +1044,364 @@ public class AndroidHttpServer {
         if (lower.endsWith(".flac")) return "audio/flac";
         if (lower.endsWith(".zip")) return "application/zip";
         return "application/octet-stream";
+    }
+
+    // =========================================================================
+    // WEBDAV RFC 4918 NATIVE ENGINE (Mount Phone as Network Drive on Windows/Mac)
+    // =========================================================================
+    private void handleWebDav(String method, String path, Map<String, String> headers, InputStream in, OutputStream out, int contentLength, String clientIp) throws IOException {
+        String subPath = "";
+        if (path.length() > 7) {
+            subPath = path.substring(7); // after "/webdav"
+        }
+        if (subPath.startsWith("/")) subPath = subPath.substring(1);
+        try {
+            subPath = URLDecoder.decode(subPath, "UTF-8");
+        } catch (Exception ignored) {}
+
+        File target = subPath.isEmpty() ? storageRoot : new File(storageRoot, subPath);
+
+        // Security check: path traversal prevention
+        try {
+            if (!target.getCanonicalPath().startsWith(storageRoot.getCanonicalPath())) {
+                sendWebDavResponse(out, 403, "Forbidden", null, "Access denied".getBytes("UTF-8"), clientIp, method, path);
+                return;
+            }
+        } catch (Exception e) {
+            sendWebDavResponse(out, 400, "Bad Request", null, "Invalid path".getBytes("UTF-8"), clientIp, method, path);
+            return;
+        }
+
+        // 1. OPTIONS
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            Map<String, String> davHeaders = new HashMap<>();
+            davHeaders.put("DAV", "1, 2");
+            davHeaders.put("MS-Author-Via", "DAV");
+            davHeaders.put("Allow", "OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, PROPFIND, PROPPATCH, MKCOL, COPY, MOVE, LOCK, UNLOCK");
+            sendWebDavResponse(out, 200, "OK", davHeaders, new byte[0], clientIp, method, path);
+            return;
+        }
+
+        // 2. PROPFIND
+        if ("PROPFIND".equalsIgnoreCase(method)) {
+            if (!target.exists()) {
+                sendWebDavResponse(out, 404, "Not Found", null, "Resource not found".getBytes("UTF-8"), clientIp, method, path);
+                return;
+            }
+
+            SimpleDateFormat httpDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US);
+            httpDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+            String depth = headers.get("depth");
+            if (depth == null) depth = "1";
+
+            List<File> items = new ArrayList<>();
+            items.add(target);
+            if (!"0".equals(depth) && target.isDirectory()) {
+                File[] children = target.listFiles();
+                if (children != null) {
+                    Arrays.sort(children, (a, b) -> {
+                        if (a.isDirectory() && !b.isDirectory()) return -1;
+                        if (!a.isDirectory() && b.isDirectory()) return 1;
+                        return a.getName().compareToIgnoreCase(b.getName());
+                    });
+                    for (File c : children) items.add(c);
+                }
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+            sb.append("<D:multistatus xmlns:D=\"DAV:\">\n");
+
+            for (File f : items) {
+                String relPath = f.getCanonicalPath().substring(storageRoot.getCanonicalPath().length()).replace('\\', '/');
+                if (!relPath.startsWith("/")) relPath = "/" + relPath;
+                if ("/".equals(relPath)) relPath = "";
+                String href = "/webdav" + relPath;
+                if (f.isDirectory() && !href.endsWith("/")) href += "/";
+
+                sb.append("  <D:response>\n");
+                sb.append("    <D:href>").append(escapeXml(href)).append("</D:href>\n");
+                sb.append("    <D:propstat>\n");
+                sb.append("      <D:prop>\n");
+                sb.append("        <D:displayname>").append(escapeXml(f.getName().isEmpty() ? "webdav" : f.getName())).append("</D:displayname>\n");
+                if (f.isDirectory()) {
+                    sb.append("        <D:resourcetype><D:collection/></D:resourcetype>\n");
+                } else {
+                    sb.append("        <D:resourcetype/>\n");
+                    sb.append("        <D:getcontentlength>").append(f.length()).append("</D:getcontentlength>\n");
+                    sb.append("        <D:getcontenttype>").append(getMimeType(f.getName())).append("</D:getcontenttype>\n");
+                }
+                sb.append("        <D:getlastmodified>").append(httpDateFormat.format(new Date(f.lastModified()))).append("</D:getlastmodified>\n");
+                sb.append("      </D:prop>\n");
+                sb.append("      <D:status>HTTP/1.1 200 OK</D:status>\n");
+                sb.append("    </D:propstat>\n");
+                sb.append("  </D:response>\n");
+            }
+            sb.append("</D:multistatus>\n");
+
+            byte[] xmlBytes = sb.toString().getBytes("UTF-8");
+            Map<String, String> extra = new HashMap<>();
+            extra.put("Content-Type", "application/xml; charset=utf-8");
+            sendWebDavResponse(out, 207, "Multi-Status", extra, xmlBytes, clientIp, method, path);
+            return;
+        }
+
+        // 3. MKCOL
+        if ("MKCOL".equalsIgnoreCase(method)) {
+            if (target.exists()) {
+                sendWebDavResponse(out, 405, "Method Not Allowed", null, "Folder already exists".getBytes("UTF-8"), clientIp, method, path);
+                return;
+            }
+            File parent = target.getParentFile();
+            if (parent != null && !parent.exists()) {
+                sendWebDavResponse(out, 409, "Conflict", null, "Parent folder does not exist".getBytes("UTF-8"), clientIp, method, path);
+                return;
+            }
+            if (target.mkdir()) {
+                sendWebDavResponse(out, 201, "Created", null, new byte[0], clientIp, method, path);
+            } else {
+                sendWebDavResponse(out, 500, "Internal Server Error", null, "Failed to create folder".getBytes("UTF-8"), clientIp, method, path);
+            }
+            return;
+        }
+
+        // 4. PUT
+        if ("PUT".equalsIgnoreCase(method)) {
+            File parent = target.getParentFile();
+            if (parent != null && !parent.exists()) parent.mkdirs();
+            boolean existed = target.exists();
+            try (FileOutputStream fos = new FileOutputStream(target)) {
+                if (contentLength > 0) {
+                    byte[] buf = new byte[8192];
+                    long remaining = contentLength;
+                    while (remaining > 0) {
+                        int toRead = (int) Math.min(buf.length, remaining);
+                        int read = in.read(buf, 0, toRead);
+                        if (read == -1) break;
+                        fos.write(buf, 0, read);
+                        remaining -= read;
+                    }
+                }
+            }
+            sendWebDavResponse(out, existed ? 204 : 201, existed ? "No Content" : "Created", null, new byte[0], clientIp, method, path);
+            return;
+        }
+
+        // 5. DELETE
+        if ("DELETE".equalsIgnoreCase(method)) {
+            if (!target.exists()) {
+                sendWebDavResponse(out, 404, "Not Found", null, "Resource not found".getBytes("UTF-8"), clientIp, method, path);
+                return;
+            }
+            deleteRecursively(target);
+            sendWebDavResponse(out, 204, "No Content", null, new byte[0], clientIp, method, path);
+            return;
+        }
+
+        // 6. MOVE / COPY
+        if ("MOVE".equalsIgnoreCase(method) || "COPY".equalsIgnoreCase(method)) {
+            String dest = headers.get("destination");
+            if (dest == null || dest.isEmpty()) {
+                sendWebDavResponse(out, 400, "Bad Request", null, "Destination header missing".getBytes("UTF-8"), clientIp, method, path);
+                return;
+            }
+            try {
+                if (dest.startsWith("http://") || dest.startsWith("https://")) {
+                    URI u = new URI(dest);
+                    dest = u.getPath();
+                }
+            } catch (Exception ignored) {}
+            if (dest.startsWith("/webdav")) dest = dest.substring(7);
+            if (dest.startsWith("/")) dest = dest.substring(1);
+            try { dest = URLDecoder.decode(dest, "UTF-8"); } catch (Exception ignored) {}
+
+            File destFile = new File(storageRoot, dest);
+            try {
+                if (!destFile.getCanonicalPath().startsWith(storageRoot.getCanonicalPath())) {
+                    sendWebDavResponse(out, 403, "Forbidden", null, "Access denied".getBytes("UTF-8"), clientIp, method, path);
+                    return;
+                }
+            } catch (Exception e) {
+                sendWebDavResponse(out, 400, "Bad Request", null, "Invalid destination path".getBytes("UTF-8"), clientIp, method, path);
+                return;
+            }
+
+            File parent = destFile.getParentFile();
+            if (parent != null && !parent.exists()) parent.mkdirs();
+
+            boolean destExisted = destFile.exists();
+            if ("MOVE".equalsIgnoreCase(method)) {
+                if (destExisted) deleteRecursively(destFile);
+                boolean ok = target.renameTo(destFile);
+                if (!ok) {
+                    copyRecursively(target, destFile);
+                    deleteRecursively(target);
+                }
+                sendWebDavResponse(out, destExisted ? 204 : 201, destExisted ? "No Content" : "Created", null, new byte[0], clientIp, method, path);
+            } else {
+                if (destExisted) deleteRecursively(destFile);
+                copyRecursively(target, destFile);
+                sendWebDavResponse(out, destExisted ? 204 : 201, destExisted ? "No Content" : "Created", null, new byte[0], clientIp, method, path);
+            }
+            return;
+        }
+
+        // 7. GET / HEAD
+        if ("GET".equalsIgnoreCase(method) || "HEAD".equalsIgnoreCase(method)) {
+            if (!target.exists()) {
+                sendWebDavResponse(out, 404, "Not Found", null, "Resource not found".getBytes("UTF-8"), clientIp, method, path);
+                return;
+            }
+            if (target.isDirectory()) {
+                StringBuilder html = new StringBuilder();
+                html.append("<!DOCTYPE html><html><head><title>WebDAV: /").append(escapeXml(subPath)).append("</title></head>");
+                html.append("<body style=\"font-family:sans-serif; background:#0B0E14; color:#F1F5F9; padding:20px;\">");
+                html.append("<h2>📁 WebDAV Folder: /").append(escapeXml(subPath)).append("</h2><ul>");
+                File[] children = target.listFiles();
+                if (children != null) {
+                    for (File c : children) {
+                        String name = c.getName() + (c.isDirectory() ? "/" : "");
+                        html.append("<li><a style=\"color:#38BDF8;\" href=\"").append(escapeXml(name)).append("\">").append(escapeXml(name)).append("</a></li>");
+                    }
+                }
+                html.append("</ul></body></html>");
+                byte[] htmlBytes = html.toString().getBytes("UTF-8");
+                Map<String, String> extra = new HashMap<>();
+                extra.put("Content-Type", "text/html; charset=utf-8");
+                sendWebDavResponse(out, 200, "OK", extra, "HEAD".equalsIgnoreCase(method) ? new byte[0] : htmlBytes, clientIp, method, path);
+                return;
+            }
+
+            long fileLength = target.length();
+            String mime = getMimeType(target.getName());
+            Map<String, String> extra = new HashMap<>();
+            extra.put("Content-Type", mime);
+
+            if ("HEAD".equalsIgnoreCase(method)) {
+                extra.put("Content-Length", String.valueOf(fileLength));
+                sendWebDavResponse(out, 200, "OK", extra, new byte[0], clientIp, method, path);
+                return;
+            }
+
+            try (FileInputStream fis = new FileInputStream(target)) {
+                StringBuilder header = new StringBuilder();
+                header.append("HTTP/1.1 200 OK\r\n");
+                header.append("Content-Type: ").append(mime).append("\r\n");
+                header.append("Content-Length: ").append(fileLength).append("\r\n");
+                header.append("DAV: 1, 2\r\n");
+                header.append("MS-Author-Via: DAV\r\n");
+                header.append("Access-Control-Allow-Origin: *\r\n");
+                header.append("Connection: close\r\n\r\n");
+                out.write(header.toString().getBytes("UTF-8"));
+
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = fis.read(buf)) != -1) {
+                    out.write(buf, 0, n);
+                }
+                out.flush();
+                recordLog(method, path, 200, fileLength, clientIp);
+            }
+            return;
+        }
+
+        // 8. LOCK / UNLOCK (Compatibility for Windows WebClient / Office)
+        if ("LOCK".equalsIgnoreCase(method)) {
+            String lockXml = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                "<D:prop xmlns:D=\"DAV:\">\n" +
+                "  <D:lockdiscovery>\n" +
+                "    <D:activelock>\n" +
+                "      <D:locktype><D:write/></D:locktype>\n" +
+                "      <D:lockscope><D:exclusive/></D:lockscope>\n" +
+                "      <D:depth>0</D:depth>\n" +
+                "      <D:timeout>Second-3600</D:timeout>\n" +
+                "      <D:locktoken><D:href>urn:uuid:omnihost-dav-lock</D:href></D:locktoken>\n" +
+                "    </D:activelock>\n" +
+                "  </D:lockdiscovery>\n" +
+                "</D:prop>";
+            Map<String, String> extra = new HashMap<>();
+            extra.put("Lock-Token", "<urn:uuid:omnihost-dav-lock>");
+            extra.put("Content-Type", "application/xml; charset=utf-8");
+            sendWebDavResponse(out, 200, "OK", extra, lockXml.getBytes("UTF-8"), clientIp, method, path);
+            return;
+        }
+
+        if ("UNLOCK".equalsIgnoreCase(method)) {
+            sendWebDavResponse(out, 204, "No Content", null, new byte[0], clientIp, method, path);
+            return;
+        }
+
+        sendWebDavResponse(out, 501, "Not Implemented", null, new byte[0], clientIp, method, path);
+    }
+
+    private void sendWebDavResponse(OutputStream out, int status, String statusText, Map<String, String> extraHeaders, byte[] body, String clientIp, String method, String path) throws IOException {
+        StringBuilder header = new StringBuilder();
+        header.append("HTTP/1.1 ").append(status).append(" ").append(statusText).append("\r\n");
+        if (body != null && body.length > 0) {
+            String mime = "application/xml; charset=utf-8";
+            if (extraHeaders != null && extraHeaders.containsKey("Content-Type")) {
+                mime = extraHeaders.get("Content-Type");
+            }
+            header.append("Content-Type: ").append(mime).append("\r\n");
+            header.append("Content-Length: ").append(body.length).append("\r\n");
+        } else {
+            header.append("Content-Length: 0\r\n");
+        }
+        header.append("DAV: 1, 2\r\n");
+        header.append("MS-Author-Via: DAV\r\n");
+        header.append("Access-Control-Allow-Origin: *\r\n");
+        header.append("Access-Control-Allow-Methods: OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, PROPFIND, PROPPATCH, MKCOL, COPY, MOVE, LOCK, UNLOCK\r\n");
+        header.append("Access-Control-Allow-Headers: Content-Type, Depth, Destination, If, Lock-Token, Range\r\n");
+        if (extraHeaders != null) {
+            for (Map.Entry<String, String> e : extraHeaders.entrySet()) {
+                if (!e.getKey().equalsIgnoreCase("Content-Type")) {
+                    header.append(e.getKey()).append(": ").append(e.getValue()).append("\r\n");
+                }
+            }
+        }
+        header.append("Connection: close\r\n\r\n");
+
+        out.write(header.toString().getBytes("UTF-8"));
+        if (body != null && body.length > 0) {
+            out.write(body);
+        }
+        out.flush();
+
+        recordLog(method, path, status, body != null ? body.length : 0, clientIp);
+    }
+
+    private String escapeXml(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&apos;");
+    }
+
+    private void deleteRecursively(File f) {
+        if (f == null || !f.exists()) return;
+        if (f.isDirectory()) {
+            File[] files = f.listFiles();
+            if (files != null) {
+                for (File child : files) deleteRecursively(child);
+            }
+        }
+        f.delete();
+    }
+
+    private void copyRecursively(File src, File dest) throws IOException {
+        if (src.isDirectory()) {
+            if (!dest.exists()) dest.mkdirs();
+            File[] files = src.listFiles();
+            if (files != null) {
+                for (File child : files) {
+                    copyRecursively(child, new File(dest, child.getName()));
+                }
+            }
+        } else {
+            try (InputStream is = new FileInputStream(src); OutputStream os = new FileOutputStream(dest)) {
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = is.read(buf)) != -1) os.write(buf, 0, n);
+            }
+        }
     }
 }

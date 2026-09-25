@@ -165,56 +165,64 @@
 
                 <div class="power-subtext" id="power-subtext">Tap to Stop Servers</div>
 
-                <!-- 3 Quick Limit Cards (Image 2 Exact Layout) -->
+                <!-- 3 Quick Limit Cards (Consumer-First Tactile Modals) -->
                 <div class="limits-row">
-                    <div class="limit-card" onclick="cycleTimerLimit()">
+                    <div class="limit-card" onclick="openLimitsModal('timer')">
                         <div class="limit-icon">⏱️</div>
-                        <div class="limit-title">TIMER</div>
+                        <div class="limit-title">AUTO-STOP TIMER</div>
                         <div class="limit-val" id="limit-timer-val">Disabled</div>
                     </div>
-                    <div class="limit-card" onclick="cycleBatteryLimit()">
+                    <div class="limit-card" onclick="openLimitsModal('battery')">
                         <div class="limit-icon">🔋</div>
-                        <div class="limit-title">BATTERY LIMIT</div>
+                        <div class="limit-title">BATTERY GUARD</div>
                         <div class="limit-val" id="limit-battery-val">Disabled</div>
                     </div>
-                    <div class="limit-card" onclick="cycleDataLimit()">
+                    <div class="limit-card" onclick="openLimitsModal('data')">
                         <div class="limit-icon">📊</div>
-                        <div class="limit-title">DATA LIMIT</div>
+                        <div class="limit-title">DATA ALLOWANCE</div>
                         <div class="limit-val" id="limit-data-val">Disabled</div>
                     </div>
                 </div>
 
                 <!-- Fast Server Access Cards -->
                 <div class="cards-stack">
-                    <!-- Modular Web Server Card -->
+                    <!-- Personal Web Link Card -->
                     <div class="service-card" id="card-web">
                         <div class="service-head">
                             <div class="service-icon-box blue">🌐</div>
                             <div class="service-meta">
-                                <div class="service-name">Modular Website Host</div>
-                                <div class="service-tag">Active Site: <strong id="current-site-tag">default</strong></div>
+                                <div class="service-name">Personal Web Link</div>
+                                <div class="service-tag">Active Design: <strong id="current-site-tag">default</strong></div>
                             </div>
-                            <div class="service-port">HTTP :8090</div>
+                            <div class="service-port">Web Page</div>
                         </div>
                         <div class="url-strip" id="strip-web">
                             <span class="url-text" id="display-web-url">● Offline — Tap Power to Start</span>
-                            <button class="btn-copy" id="btn-copy-web" onclick="copyValue('display-web-url')">Copy</button>
+                            <div class="btn-group-strip">
+                                <button class="btn-strip btn-qr" onclick="showQrModal('Personal Web Link', getWebUrl(), 'Scan with any phone camera to open this webpage instantly.')" title="Scan with Phone Camera">📱 QR</button>
+                                <button class="btn-strip btn-open" onclick="openWebUrl(activeSite)">Open</button>
+                                <button class="btn-copy" id="btn-copy-web" onclick="copyValue('display-web-url')">Copy</button>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- WiFi FTP Server Card -->
+                    <!-- Wireless File Drop Card -->
                     <div class="service-card" id="card-ftp">
                         <div class="service-head">
                             <div class="service-icon-box purple">📡</div>
                             <div class="service-meta">
-                                <div class="service-name">WiFi FTP Server (RFC 959)</div>
-                                <div class="service-tag">Wireless Photo &amp; File Upload</div>
+                                <div class="service-name">Wireless File Drop</div>
+                                <div class="service-tag">Drag &amp; drop photos or files without cords (FTP &bull; WebDAV)</div>
                             </div>
-                            <div class="service-port">FTP :2121</div>
+                            <div class="service-port">Direct File Sync</div>
                         </div>
                         <div class="url-strip" id="strip-ftp">
                             <span class="url-text" id="display-ftp-url">● Offline — Tap Power to Start</span>
-                            <button class="btn-copy" id="btn-copy-ftp" onclick="copyValue('display-ftp-url')">Copy</button>
+                            <div class="btn-group-strip">
+                                <button class="btn-strip btn-qr" onclick="showQrModal('Wireless File Drop', getFtpUrl(), 'Connect from your PC, Mac, or phone wirelessly.')" title="Scan to Connect">📱 QR</button>
+                                <button class="btn-strip btn-share" onclick="shareFtpInfo()">Share</button>
+                                <button class="btn-copy" id="btn-copy-ftp" onclick="copyValue('display-ftp-url')">Copy</button>
+                            </div>
                         </div>
                     </div>
 
@@ -223,32 +231,37 @@
                         <div class="service-head">
                             <div class="service-icon-box green">🛡️</div>
                             <div class="service-meta">
-                                <div class="service-name">Cloudflare Outbound Tunnel</div>
-                                <div class="service-tag">Zero Port Forwarding &bull; Origin IP Masked</div>
+                                <div class="service-name">Encrypted Worldwide Link</div>
+                                <div class="service-tag">Access from anywhere &bull; Home IP Hidden</div>
                             </div>
                             <div class="service-badge" id="tunnel-badge" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10B981; color: #10B981; font-size: 10px; padding: 2px 8px; border-radius: 6px;">STANDBY</div>
                         </div>
                         <div class="url-strip" id="strip-tunnel">
                             <span class="url-text" id="display-tunnel-url">● Standby — Tap to Activate</span>
-                            <button class="btn-copy" id="btn-toggle-tunnel" style="background: #10B981; color: #000; font-weight: 700;" onclick="toggleTunnelAction()">Activate</button>
-                            <button class="btn-copy" id="btn-copy-tunnel" onclick="copyValue('display-tunnel-url')">Copy</button>
+                            <div class="btn-group-strip">
+                                <button class="btn-copy" id="btn-toggle-tunnel" style="background: #10B981; color: #000; font-weight: 700;" onclick="toggleTunnelAction()">Activate</button>
+                                <button class="btn-copy" id="btn-copy-tunnel" onclick="copyValue('display-tunnel-url')">Copy</button>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Web File Explorer & Media Hub Card (Matching Images 2, 3, 4) -->
+                    <!-- Web File Explorer & Media Hub Card -->
                     <div class="service-card" id="card-explorer" style="border-color: rgba(6, 182, 212, 0.4);">
                         <div class="service-head">
                             <div class="service-icon-box" style="background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); font-size: 18px;">📁</div>
                             <div class="service-meta">
-                                <div class="service-name">Web File Explorer &amp; GalaxSee Hub</div>
-                                <div class="service-tag">GalaxSee Photos &bull; Video Streaming &bull; ZIP Downloads</div>
+                                <div class="service-name">Media &amp; File Library</div>
+                                <div class="service-tag">Photos &bull; Video Player &bull; Instant ZIP Downloads</div>
                             </div>
-                            <div class="service-port" style="color: #06B6D4;">:8090/files</div>
+                            <div class="service-port" style="color: #06B6D4;">Media Hub</div>
                         </div>
                         <div class="url-strip" id="strip-explorer">
                             <span class="url-text" id="display-explorer-url">● Offline — Tap Power to Start</span>
-                            <button class="btn-copy" id="btn-copy-explorer" onclick="copyValue('display-explorer-url')">Copy</button>
-                            <button class="btn-copy" id="btn-open-explorer" style="background: #06B6D4; color: #000; font-weight: 700;" onclick="openExplorerUrl()">Open</button>
+                            <div class="btn-group-strip">
+                                <button class="btn-strip btn-qr" onclick="showQrModal('Media & File Library', getExplorerUrl(), 'Open the in-browser media viewer on any device.')" title="Scan to Browse">📱 QR</button>
+                                <button class="btn-copy" id="btn-open-explorer" style="background: #06B6D4; color: #000; font-weight: 700;" onclick="openExplorerUrl()">Open</button>
+                                <button class="btn-copy" id="btn-copy-explorer" onclick="copyValue('display-explorer-url')">Copy</button>
+                            </div>
                         </div>
                     </div>
 
@@ -506,9 +519,20 @@
                     </div>
                 </div>
             </section>
+
+            <!-- TAB 6: DEDICATED FILES & MEDIA LIBRARY TAB -->
+            <section id="tab-files" class="tab-view">
+                <div class="section-banner">
+                    <h2>Media &amp; File Library</h2>
+                    <p>View photos, play videos, and download files directly from your phone:</p>
+                </div>
+                <div class="file-embed-container">
+                    <iframe id="file-manager-iframe" class="file-embed-frame" src="file_manager.html"></iframe>
+                </div>
+            </section>
         </main>
 
-        <!-- Bottom Navigation Bar (Audiomack & Hotspot Style - Image 2 & 3) -->
+        <!-- Bottom Navigation Bar (Audiomack & Hotspot Style - 6 Tabs) -->
         <nav class="bottom-nav">
             <button class="nav-tab active" id="nav-hotspot" onclick="selectTab('hotspot')">
                 <div class="nav-icon">📶</div>
@@ -517,6 +541,10 @@
             <button class="nav-tab" id="nav-sites" onclick="selectTab('sites')">
                 <div class="nav-icon">🌐</div>
                 <div class="nav-label">Sites</div>
+            </button>
+            <button class="nav-tab" id="nav-files" onclick="selectTab('files')">
+                <div class="nav-icon">📁</div>
+                <div class="nav-label">Files</div>
             </button>
             <button class="nav-tab" id="nav-ftp" onclick="selectTab('ftp')">
                 <div class="nav-icon">📡</div>
@@ -544,9 +572,72 @@
                 <!-- Injected via JavaScript -->
             </div>
         </div>
+    </div>
+
+    <!-- 1-Tap Offline QR Code Modal -->
+    <div id="qr-modal-container" class="modal-container" onclick="closeQrModal()">
+        <div class="modal-box qr-modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="qr-modal-title">📱 Scan with Phone Camera</h3>
+                <button class="modal-close-btn" onclick="closeQrModal()">✕</button>
+            </div>
+            <div class="qr-modal-body">
+                <div class="qr-card-white">
+                    <div id="qr-code-mount" class="qr-code-mount"></div>
+                </div>
+                <div class="qr-instructions" id="qr-modal-instructions">
+                    Point any smartphone camera at this code to open the link instantly without typing.
+                </div>
+                <div class="qr-url-pill" id="qr-modal-url">http://...</div>
+                <div class="qr-actions-row">
+                    <button class="btn-primary" onclick="copyValue('qr-modal-url')">📋 Copy Link</button>
+                    <button class="btn-outline" onclick="shareQrUrl()">↗️ Share</button>
+                    <button class="btn-outline" onclick="closeQrModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consumer-First Tactile Limits Bottom Sheet Modal -->
+    <div id="limits-modal-container" class="modal-container" onclick="closeLimitsModal()">
+        <div class="modal-box limits-modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="limits-modal-title">⏱️ Set Auto-Stop Timer</h3>
+                <button class="modal-close-btn" onclick="closeLimitsModal()">✕</button>
+            </div>
+            <div class="limits-modal-body">
+                <p class="limits-modal-desc" id="limits-modal-desc">
+                    Automatically shut down servers after a set time to preserve your phone battery and data.
+                </p>
+
+                <!-- Value Display Card -->
+                <div class="limits-value-card">
+                    <span class="limits-large-num" id="limits-current-val-text">30 min</span>
+                    <span class="limits-badge-status" id="limits-status-pill">Active</span>
+                </div>
+
+                <!-- Range Slider -->
+                <div class="limits-slider-row">
+                    <input type="range" id="limits-range-slider" min="0" max="100" step="1" value="0" oninput="onLimitsSliderInput(this.value)">
+                </div>
+
+                <!-- Quick Presets Row -->
+                <div class="limits-presets-row" id="limits-presets-container">
+                    <!-- Injected dynamically based on limit type -->
+                </div>
+
+                <div class="limits-modal-actions">
+                    <button class="btn-primary" id="btn-apply-limit" onclick="applyLimitsFromModal()">✓ Save Limit</button>
+                    <button class="btn-outline" onclick="disableLimitFromModal()">Disable</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification Container -->
     <div id="toast-notify" class="toast-container"></div>
 
+    <script src="qrcode.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
